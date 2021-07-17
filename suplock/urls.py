@@ -15,5 +15,6 @@ urlpatterns = [
     path('buyERC865/', views.buyERC865),
     path('frontend/return/', views.PaymentReturnView.as_view()),
     path('wallet/' ,views.wallet.as_view(), name='wallet'),
+    path('company_info/', views.company_info.as_view(), name = 'company_info'),
 
 ]
