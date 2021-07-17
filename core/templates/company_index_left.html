@@ -1,0 +1,35 @@
+{% load static %}
+    <link rel="stylesheet" href="{%static 'css/company_index_left.css' %}">
+    <section class="introcard_button">
+        <div class="brand">
+            <img id = "mtk" src="{%static 'icon/MTK.jpeg' %}"alt="">
+        </div>
+        <h2 class="company_name">{{ request.user.username }}</h2>
+        <h3 class="sub_ID">@177321</h3>
+        <div class="account_link">
+            <a class="link_box">
+                <div class= "icon_title">
+                    <img id='align' src="{%static 'icon/bar-chart.svg' %}" alt="">
+                </div>
+                <h2 class="box_title">Overview</h2>
+            </a>
+            <div class="link_box">
+                <div class= "icon_title">
+                    <img id='align' src="{%static 'icon/card-text.svg' %}" alt="">
+                </div>
+                <h2 class="box_title">information</h2>
+            </div>
+            <a class="link_box" href="{% url 'wallet' %}">
+                <div class= "icon_title">
+                    <img id='align' src="{%static 'icon/wallet.svg' %}" alt="">
+                </div>
+                <h2 class="box_title">Wallet</h2>
+            </a>
+            <div class="link_box">
+                <div class= "icon_title">
+                    <img id='align' src="{%static 'icon/key.svg' %}"alt="">
+                </div>
+                <h2 class="box_title">Account security</h2>
+            </div>
+        </div>
+    </section>

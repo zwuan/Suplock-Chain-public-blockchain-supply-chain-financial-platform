@@ -1,12 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    {% load static %}
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>my wallet</title>
+    {% include 'nav_login.html' %}
 </head>
 <body>
-    
+    <main class="main_content" id = "fade_out">
+        {% include 'company_index_left.html' %}
+        <link rel="stylesheet" href="{%static 'css/wallet.css' %}">
+        <div class="wallet_content"> 
+            <div class="wallet_segement">
+                <section  class = "wallet_card">
+
+                </section>
+                <section class = "wallet_card">
+
+                </section>
+            </div>  
+            <div class="wallet_segement">
+                <section class = "wallet_card">
+
+                </section>
+                <section class = "wallet_card">
+            </div>
+            </section>
+        </div>
+    </main>
 </body>
 </html>
