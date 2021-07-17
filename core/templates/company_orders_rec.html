@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的訂單</title>
+    {% include 'nav_login.html' %}
+    {% load static %}
+    <link rel="stylesheet" href="{%static 'css/company_orders.css' %}">
+</head>
+<body>
+
+<main class="main_content">
+    <div class='content_title'> 
+        <h2>訂單管理</h2>
+    </div>
+    <!-- 點擊變暗 -->
+    <div id='overlay'></div>
+    <!-- 融資小卡 -->
+    <div id='pop_loan_div' class="add_rate">
+        <form action="" method="POST">
+            {% csrf_token %}
+            <div class="add_title">
+                <h2 class="title_text">設定融資金額及投資人分券利率</h2>
+            </div>
+            <!-- hidden input -->
+            <input type="text" style="display: none;" name="orders_interest" id="orders_interest" value="">
+            <input type="text" style="display: none;" name="optype" value="loan">
+            <!-- hidden input end -->
+            <div class="money_input">
+                <h2 class="title_text">訂單編號：</h2>
+                <input type="text" class="rec_comp" readonly="readonly" id="orders_id" name="orders_id" value="">
+            </div>
+            <div class="money_input">
+                <h2 class="title_text">廠商名稱：</h2>
+                <input type="text" class="rec_comp" readonly="readonly" id="orders_from_company_name" name="orders_from_company_name" value="">
+            </div>
+            <div class="money_input">
+                <h2 class="title_text">訂單金額：</h2>
+                <input type="text" class="rec_comp" id="orders_price" name="orders_price" placeholder="" value="">
+            </div>
+            <!-- <div class="money_input">
+                <h2 class="title_text">設定利率:</h2>
+                <select class="money_amount" name="rate">
+                    {% for value, label in form.fields.rate.choices %}
+                    　<option value="{{value}}">{{label}}</option>
+                    {% endfor %}
+                </select>
+            </div> -->
+            <div class="add_money_btn">
+                <button class="submit_btn" type="submit" id='sendloan' name="confirm">融資</button>
+            </div>
+        </form>
+    </div>
+    <!-- 融資小卡 end -->
+
+    <!-- 移轉小卡 -->
+    <div id='pop_bToC_div' class="add_rate">
+        <form action="" method="POST">
+            {% csrf_token %}
+            <div class="add_title">
+                <h2 class="title_text">設定融資金額及投資人分券利率</h2>
+            </div>
+            <!-- hidden input -->
+            <input type="text" style="display: none;" name="bToC_interest" id="bToC_interest" value="">
+            <input type="text" style="display: none;" name="optype" value="bToC">
+            <!-- hidden input end -->
+            <div class="money_input">
+                <h2 class="title_text">訂單編號：</h2>
+                <input type="text" class="rec_comp" readonly="readonly" id="bToC_id" name="bToC_id" value="">
+            </div>
+            <div class="money_input">
+                <h2 class="title_text">發出廠商名稱：</h2>
+                <input type="text" class="rec_comp" readonly="readonly" id="bToC_from_company_name"
+                    name="bToC_from_company_name" value="">
+            </div>
+            <!-- 下拉選單dropdown -->
+            <div class="money_input">
+                 <h2 class="title_text">移轉廠商名稱：</h2>
+                    {{form.bToC_to_company_name}}
+                <!-- <input type="text" class="rec_comp" for readonly='readonly' id='bToC_to_company_name'
+                    name='bToC_to_company_name' value=''> -->
+            </div>
+            <div class="money_input">
+                <h2 class="title_text">移轉數量：</h2>
+                <input type="text" class="rec_comp" id="bToC_price" name="bToC_price" placeholder="" value="">
+            </div>
+            <!-- <div class="money_input">
+                    <h2 class="title_text">設定利率:</h2>
+                    <select class="money_amount" name="rate">
+                        {% for value, label in form.fields.rate.choices %}
+                        　<option value="{{value}}">{{label}}</option>
+                        {% endfor %}
+                    </select>
+                </div> -->
+            <div class='add_money_btn'>
+                <button class="submit_btn" type="submit" id='sendbToC' name="confirm">融資</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 移轉小卡  end -->
+
+    <div class="outer">
+        <!-- <input class='btn_div-1' type = 'submit'  id = 'btn_1' value = '透過憑證借款'></input> -->
+        <div class="table_above_tag">
+            <a class='send_btn' id='clicked_1' href="{% url 'company_orders' %}">
+                <h2 class="send_order" >發出</h2>
+            </a>
+            <div class='recieve_btn' id= 'clicked_2'>
+                <h2 class="send_order" >收到</h2>
+            </div>
+        </div>
+        <div class="ordersTable" >
+            <table class="table table-striped" id="rec_table">
+                <thead>
+                    <tr>
+                        <th>利息</th>
+                        <th style="display: none;">訂單編號</th>
+                        <th>來源公司</th>
+                        <th>項目</th>
+                        <th>金額</th>
+                        <th>開始時間</th>
+                        <th>結束時間</th>
+                        <th>狀態</th>
+                        <th>操作</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in rec_orders %}
+                    <!-- <tr name = 'make_id' onclick = pop_setIndex()> -->
+                    <tr name='make_id'>
+                        <td name = 'percent'>{{order.get_rate_display}}</td>
+                        <td name = 'order_id' style="display: none;">{{order.id}}</td>
+                        <td>{{order.send_company.user}}</td>
+                        <td>{{order.product}}</td>
+                        <td>{{order.price}}</td>
+                        <td>{{order.start_date}}</td>
+                        <td>{{order.end_date}}</td>
+                        <td>{{order.get_state_display}}</td>
+                        <td><button type="button" class="pop_loan_btn">融資</button></td>
+                        <td><button type="button" class="pop_bToC_btn">移轉</button></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div class='paginator'>
+                {% if page_obj.has_previous %}
+                <a  href="?page={{ page_obj.previous_page_number }}">上一頁</a>
+                &emsp;
+                {% endif %}
+                {% if page_obj.has_next %}
+                <a  href="?page={{ page_obj.next_page_number }}">下一頁</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+  
+</main>
+<style>
+    .send_btn{
+        width: 50%;
+        background-color: white;
+        color: black;
+    }
+    .recieve_btn{
+        width: 60%;
+        color: white;
+        background-color:#ffc300;;
+    }
+</style>
+</body>
+<script>
+    $(document).ready(function () {
+
+        overlay.addEventListener('click', function(){
+            $('#pop_loan_div').removeClass('active');
+            $('#pop_bToC_div').removeClass('active');
+            $('#overlay').removeClass('active');
+        });
+
+        // 在每個button上設定訂單資訊
+        $('#rec_table tr').each((i, ele)=>{
+            var str = '';
+            $(ele).find('td').each(function (i, ele) {
+                if(i < 7) str += $(this).html()+'&';
+            });
+            $(ele).find('td:eq(8)').children().attr("caption", str);
+            $(ele).find('td:eq(9)').children().attr("caption", str);
+        });
+        
+        // on click, 取得訂單資訊以dynamic製造loan頁面
+        $('.pop_loan_btn').on('click', function (e){
+            e.preventDefault();
+            $('#pop_loan_div').addClass('active');
+            $('#overlay').addClass('active');
+            var valArr = $(this).attr("caption").split('&');
+            var interest = valArr[0];
+            var order_id = valArr[1];
+            var from_com_name = valArr[2];
+            var product = valArr[3];
+            var price = valArr[4];
+            $('#orders_id').val(order_id);
+            $('#orders_from_company_name').val(from_com_name);
+            $('#orders_price').attr('placeholder', price);
+            $('#orders_interest').val(interest);
+        });
+
+
+        $('.pop_bToC_btn').on('click', function(e){
+            e.preventDefault();
+            $('#pop_bToC_div').addClass('active');
+            $('#overlay').addClass('active');
+            var valArr = $(this).attr("caption").split('&');
+            var interest = valArr[0];
+            var order_id = valArr[1];
+            var from_com_name = valArr[2];
+            var product = valArr[3];
+            var price = valArr[4];
+            $('#bToC_id').val(order_id);
+            $('#bToC_from_company_name').val(from_com_name);
+            $('#bToC_price').attr('placeholder', price);
+            $('#bToC_interest').val(interest);
+        });
+
+
+
+
+
+    });
+
+</script>
+</html>

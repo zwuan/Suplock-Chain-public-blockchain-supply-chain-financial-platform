@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    
+    {% if company.core %}
+    <h2>Tx-hash：{{address}}</h2>
+    <h2>數量：{{mintA}}</h2>
+    <h2>付款金額：{{payment}}</h2>
+    {% else %}
+    <h2>合約地址:{{address}}</h2>
+    <h2>獲得數量：{{mintA}}</h2>
+    {% endif %}
+
+</body>
+</html>

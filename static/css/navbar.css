@@ -1,0 +1,51 @@
+#figure1{
+    width: 45px;
+    animation:0ms;
+    -webkit-animation:rotateImg 3s linear infinite;
+    vertical-align: middle;
+    filter: invert(66%) sepia(96%) saturate(470%) hue-rotate(338deg) brightness(105%) contrast(101%);
+  }
+  @keyframes rotateImg {
+    0% {transform : rotate(0deg);}
+    100% {transform : rotate(360deg);}
+  }
+  @-webkit-keyframes rotateImg {
+    100%{-webkit-transform : rotate(360deg);}
+  }
+
+
+#user{
+    filter: invert(84%) sepia(100%) saturate(5945%) hue-rotate(186deg) brightness(130%) contrast(96%);
+    width: 25px;
+    height: 25px;
+}
+#message{
+    filter: invert(84%) sepia(100%) saturate(5945%) hue-rotate(186deg) brightness(130%) contrast(96%);
+    width: 25px;
+    height: 25px;
+}
+#remain{
+    color:#FAFAFA;	
+}
+#plus{
+    filter: invert(66%) sepia(96%) saturate(470%) hue-rotate(338deg) brightness(105%) contrast(101%);
+    margin-right: 4px;
+}
+#navbar{
+  background-color: #212121;
+}
+.rightbar{
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+}
+label{
+  margin-top: .5em;  
+}
+#input_remain{
+  width: auto;
+  background-color:#212121;
+  color: white;
+  border: none;
+}

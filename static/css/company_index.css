@@ -1,0 +1,473 @@
+a{
+    color: black;
+    text-decoration: none;
+    background-color: transparent;
+}
+button{
+    border: none;
+}
+button:focus{
+    border: none;
+    outline: none;
+}
+a:hover{
+    text-decoration: none;
+    color: black ;
+}
+body{
+    background-color: rgb(245, 245, 245) ; 
+}
+#overlay{
+    position: fixed;
+    opacity: 0;
+    top:0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+    z-index: 9;
+}
+#overlay.active{
+    opacity: 1;
+    pointer-events: all;
+
+}
+.add_money{
+    width: 500px;
+    height: 350px;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%) scale(0);
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    border-radius: 1em;
+    box-shadow:0px 0px 9px rgb(155, 154, 154);
+    z-index: 10;
+    transition: 200ms ease-in-out;
+}
+.add_money.active{
+    transform: translate(-50%,-50%) scale(1);
+}
+/* 彈出小卡 */
+.add_title{
+    border-bottom: 1px solid rgb(187, 187, 187);   
+    padding: .5em;
+    margin-top: .5em;
+}
+.title_text{
+    font-size:18px;
+    margin-left: .5em;
+    margin-left: 10%;
+}
+.title_text-1{
+    font-size:18px;
+    margin-left: .5em;
+    margin-left: 10%;
+    display: inline;
+}
+
+.money_input{
+    margin-top: 1em;
+}
+.address_{
+    margin-left: 10%;
+    width: 80%;
+    background-color: rgb(202, 202, 202);
+    border-radius: 4px;
+    border: rgb(192, 192, 192);
+}
+.address_:focus{
+    outline: none;
+}
+.money_amount{
+    width: 80%;
+    margin-left: 10%;
+    border-radius: 4px;
+    border: 2px solid rgb(192, 192, 192);
+    
+}
+#exchange_coco{
+    border: none;
+    color: rgb(0, 165, 0);
+    font-size: 1.2em;
+    font-weight: 600;
+}
+#exchange_coco:focus{
+    outline: none;
+}
+.money_amount:focus{
+    outline: none;
+    border: 3px solid #e9bb24;
+}
+.add_money_btn{
+    margin-top: 2em;
+    width: 80%;
+    margin-left: 10%;
+}
+.submit_btn{
+    height: 40px;
+    width: 100%;
+    background-color:#e9bb24 ;
+    border: none;
+    border-radius: .2em;
+}
+.submit_btn:hover{
+    background-image: linear-gradient(rgba(0, 0, 0, 0.4) 0 0);
+    cursor: pointer;
+}
+/* 彈出小卡 */
+.main_content{
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    flex-wrap: wrap;
+    min-height: 100vh;
+    font-size: 1rem;
+}
+.introcard_button{
+    width: 15%;
+    height:100vh;
+    background-color: white;
+    margin-right: 8%;
+    display: flex;
+    flex-direction: column;
+    justify-content:flex-start;
+    align-items: center;   
+    border-right: 1.8px solid #ced4da;
+}
+.introcard_button-1{
+    width: 70%;
+    height:100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content:flex-start;
+}
+.brand{
+    margin-top: 10%;
+    height: 10%;
+    width: 80%;
+    
+}
+#mtk{
+    max-width: 100%;
+    max-height: 100%;
+    margin-top: 10%;
+}
+.company_name{
+    font-size: 1.5em;
+    margin-top: 10%;
+    text-align: center;
+    font-weight: 700;
+}
+.sub_ID{
+    font-size: .5em;
+    margin-top: 2%;
+    color: #6c757d;
+    font-weight: 600;
+}
+.account_link{
+    width:100%;
+    height:40%;
+    margin-top: 15%;
+}
+.link_box{
+    height:25%;
+    padding: 8%;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    border-top: 1.8px solid #ced4da;
+    transition: all .3s ease-in-out;
+}
+.link_box:last-child{
+    border-bottom: 1.8px solid #ced4da;
+}
+
+.icon_title{
+    width: 1.2em;
+    height: 1.2em;
+    font-size: 1.2em;
+    
+}
+.box_title{
+    font-size: 1.1em;
+    margin-left: .5em;
+    margin-top: auto;
+}
+#align{
+    width: 100%;
+    height: 100%;
+}
+.link_box:hover{
+    background-color:#d7dadd;
+}
+.right_label{
+    height:10%;
+    padding-top:5%;
+  
+}
+.label_text{
+    font-size: 2em;
+    color: #6c757d;
+}
+.upper_button{
+    margin-top: 2%;
+    height:25%;
+    width: 100%;
+   
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+.button_inside{
+    width:30%;
+    background-color:white;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    box-shadow:0px 0px 9px rgb(155, 154, 154);
+    padding: 2%;
+    transition: all .3s ease-in-out;
+    border-radius: .5em;
+    text-align: center;
+    cursor: pointer;
+    border :1px solid rgb(155, 154, 154);
+}
+.button_inside:hover{
+    box-shadow: rgba(0, 0, 0, 0.22) 0px 19px 43px;
+    transform: translate3d(0px, -1px, 0px);
+}
+.card_title{
+    font-size: 1.8em;
+    border-bottom: .1em solid grey;
+}
+.card_title-1{
+    width: 100%;
+    font-size: 1.8em;
+    border-bottom: .1em solid grey;
+}
+.sub_card_text{
+    font-size: 1em;
+    color:#616970 ;
+    margin-top: 2%;
+}
+.sub_card_text-1{
+    width: 80%;
+    font-size: 1em;
+    color:#616970 ;
+    margin-top: 2%;
+}
+.credit_amount{
+    margin-top: 2%;
+    font-size: 1.4em;
+}
+.credit_num{
+    font-size:2em ;
+    color: #e9bb24;
+}
+.send_receive{
+    width:90%;
+    height:50%;
+    margin-top: 2%;
+    display: flex;
+    flex-direction: row;
+}
+.send{
+    width: 50%;
+    text-align: center;
+}
+.receive{
+    width: 50%;
+    text-align: center;
+}
+.send_title{
+    font-size: 2.5em;
+    color: rgb(233, 1, 1);
+}
+.receive_title{
+    font-size: 2.5em;
+    color: rgb(0, 165, 0);
+}
+.already_{
+    font-size: 1.2em;
+}
+.lower_content{
+    margin-top: 3%;
+    height: 40%;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.money_table{
+    height: 100%;
+    width: 65%;
+    background-color: white;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    box-shadow:0px 0px 9px rgb(155, 154, 154);
+    text-align: center;
+    transition: all .3s ease-in-out;
+    border-radius: .5em;
+    border :1px solid rgb(155, 154, 154);
+}
+.deposit{
+    border-right: 1px solid cadetblue;
+    width: 50%;
+    padding: 2%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+}
+.withdraw{
+    padding: 2%;
+    width: 50%;
+    text-align: center;
+}
+.miscell{
+    width: 30%;
+    height: 100%;
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    box-shadow:0px 0px 9px rgb(155, 154, 154);
+    transition: all .3s ease-in-out;
+    border-radius: .5em;
+    border :1px solid rgb(155, 154, 154);
+}
+.miscell:hover{
+    box-shadow: rgba(0, 0, 0, 0.22) 0px 19px 43px;
+    transform: translate3d(0px, -1px, 0px);
+}
+.miscell-1{
+    height:50%;
+    text-align: center;
+    border-bottom: 2px solid grey;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    transition: all .3s ease-in-out;
+}
+.miscell-1:last-child{
+    border: none;
+}
+.miscell-1:hover{
+    background-color: #d7dadd;
+    border-radius:1em ;
+}
+.loan_title{
+    font-size: 1.8em;
+    margin-top: 1em;
+}
+.loan_sub{
+    max-width: 60%;
+    font-size: 1.2em;
+    color:#616970 ;
+    margin-top: 5%;
+    text-align: center;
+}
+.deposit_table{
+    height:80%;
+    width: 100%;
+  
+}
+.table_ele{
+    height: 15%;
+    border-bottom: .2em solid  rgb(240, 238, 238);
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+.ele_text{
+    font-size: .9em;
+    margin-top: none;
+}
+.add_deposit{
+    width: 200px;
+    height: 300px;
+    background-color: white;
+    position: absolute;
+}
+
+.loader-wrapper {
+width: 100%;
+height: 100%;
+position: absolute;
+top: 0;
+left: 0;
+background-color: #242f3f;
+display:flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+z-index: 20;
+display: none;
+
+}
+.loader {
+display: inline-block;
+width: 30px;
+height: 30px;
+position: relative;
+border: 4px solid #Fff;
+animation: loader 2s infinite ease;
+}
+.loader-inner {
+vertical-align: top;
+display: inline-block;
+width: 100%;
+background-color: #fff;
+animation: loader-inner 2s infinite ease-in;
+}
+@keyframes loader {
+0% { transform: rotate(0deg);}
+25% { transform: rotate(180deg);}
+50% { transform: rotate(180deg);}
+75% { transform: rotate(360deg);}
+100% { transform: rotate(360deg);}
+}
+@keyframes loader-inner {
+0% { height: 0%;}
+25% { height: 0%;}
+50% { height: 100%;}
+75% { height: 100%;}
+100% { height: 0%;}
+}
+
+@media(max-width:1200px){
+    .box_title{
+        font-size: 1em;
+    }
+    .icon_title{
+        width: 1em;
+        height: 1em;
+        font-size: 1em;
+    }
+
+}
+@media(max-width:1600px){
+    .card_title{
+        font-size: 1.4em;
+    }
+    .loan_title{        
+        font-size: 1.4em;
+    }
+    .card_title-1{
+        font-size: 1.4em;
+    }
+
+}
