@@ -290,14 +290,12 @@ class company_order_rec(generic.ListView):
                 event = logs[0]['args']
                 pass
                 #(address _from, address _to, uint256 _amount, uint256 _interest, uint _id, uint16 _class, uint16 c_class, uint256 _date)
-##################我的部分結束########################
+
 
 
 class wallet(generic.View):
      def get(self, request, *args, **kwargs):
         return render(request, 'wallet.html')
-
-    
 
 
 def temp(request):
