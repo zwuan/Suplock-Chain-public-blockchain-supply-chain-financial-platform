@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>我的首頁</title> 
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:400,600,700">
+    {% include 'nav_login.html' %} 
+    <link rel="stylesheet" href="{%static 'css/company_index.css' %}">
+</head>
+{% if request.user.is_authenticated %}
+<body>
+    <div class="loader-wrapper" id = 'waiting'>
+        <div>
+        <span class="loader"><span class="loader-inner"></span></span>
+        </div>
+        <h2 style="color: white; margin-top: 20px;">Wait for the transaction complete</h2>
+    </div>
+    <div id = 'overlay'></div>
+    <div id = 'pop_div' class = "add_money">
+        <form action='' method="post">
+            {% csrf_token %}
+        <div class="add_title">
+            <h2 class="title_text">儲值合約代幣額度</h2>
+        </div>
+        <div class="money_input">
+            <h2 class="title_text">我的地址：</h2>
+            {%for addr in msg%}
+            <input type="text" class = "address_"readonly='readonly' value='{{addr.public_address}}'>
+            {% endfor %}
+        </div>
+        
+        <div class="money_input">
+            <h2 class="title_text">充值平台幣:</h2>
+            <input type="text" placeholder="請輸入金額" class="money_amount" name = 'amount_a' id="coco" value="">
+        </div>
+        <div class="money_input">
+            <h2 class="title_text-1">將獲得合約代幣:</h2>
+            <input type="text" id='exchange_coco' value='' readonly='readonly' >
+        </div>
+        <div class='add_money_btn'>
+            <button class="submit_btn" type="submit" id='send' name="confirm">確認</button>
+        </div>
+    </form>
+    </div>
+    <main class="main_content" id = 'fade_out'>
+        
+        <section  class="introcard_button">
+            <div class="brand">
+                <img id = "mtk" src="{%static 'icon/MTK.jpeg' %}"alt="">
+            </div>
+            <h2 class="company_name">{{ request.user.username }}</h2>
+            <h3 class="sub_ID">@177321</h3>
+            <div class="account_link">
+                <div class="link_box">
+                    <div class= "icon_title">
+                        <img id='align' src="{%static 'icon/bar-chart.svg' %}" alt="">
+                    </div>
+                    <h2 class="box_title">Overview</h2>
+                </div>
+                <div class="link_box">
+                    <div class= "icon_title">
+                        <img id='align' src="{%static 'icon/card-text.svg' %}" alt="">
+                    </div>
+                    <h2 class="box_title">information</h2>
+                </div>
+                <div class="link_box">
+                    <div class= "icon_title">
+                        <img id='align' src="{%static 'icon/wallet.svg' %}" alt="">
+                    </div>
+                    <h2 class="box_title">Wallet</h2>
+                </div>
+                <div class="link_box">
+                    <div class= "icon_title">
+                        <img id='align' src="{%static 'icon/key.svg' %}"alt="">
+                    </div>
+                    <h2 class="box_title">Account security</h2>
+                </div>
+            </div>
+        </section>
+        <section class="introcard_button-1">
+            <div class = 'right_label'>
+                <h2 class = 'label_text'>公司帳號</h2>
+            </div>
+            <div class="upper_button">
+                <a href = "{% url 'company_orders' %}" class='button_inside'>
+                    <h2 class = "card_title">訂單</h2>
+                    <h2 class="sub_card_text">點擊以查看所有訂單</h2>
+                    <div class="send_receive">
+                        <div class="send">
+                            <h3 class="send_title" >25</h3>
+                            <h4 class="already_">已發出</h4>
+                        </div>
+                        <div class="receive">
+                            <h3 class="receive_title">13</h3>
+                            <h4 class="already_">已接收</h4>
+                        </div>
+                    </div>
+                </a>
+                <a href = '#' class='button_inside'>
+                    <h2 class = "card_title">應收</h2>
+                    <h2 class="sub_card_text">點擊以查看所有應收帳款</h2>
+                    <div class="send_receive">
+                        <div class="send">
+                            <h3 class="send_title">9</h3>
+                            <h4 class="already_">已發出</h4>
+                        </div>
+                        <div class="receive">
+                            <h3 class="receive_title">11</h3>
+                            <h4 class="already_">已接收</h4>
+                        </div>
+                    </div>
+                </a>
+                <button id = 'add_coco' class='button_inside'>
+                    <h2  class = "card_title">申請驗證</h2>
+                    <h2 class="sub_card_text-1">點擊以透過保證金或存貨提高憑證額度，並成為核心企業。</h2>
+                    <h3 class='credit_amount'>保證金比例</h3>
+                    <h2 class='credit_num'>1:10</h2>
+                </button>
+            </div>
+            <div class="lower_content">
+                <div class="money_table">
+                    <div class="deposit">
+                        <h2 class = 'card_title-1'>入金紀錄</h2>
+                        <div class='deposit_table'>
+                            <div class="table_ele">
+                                <h2 class="ele_text">2021-06-06</h2>
+                                <h2 class="ele_text">03:19</h2>
+                                <h2 class="ele_text">2000.00 TWD</h2>
+                                <h4 class="ele_text">已完成</h4>
+                            </div>
+                            <div class="table_ele">
+                                <h2 class="ele_text">2021-06-06</h2>
+                                <h2 class="ele_text">03:19</h2>
+                                <h2 class="ele_text">2000.00 TWD</h2>
+                                <h4 class="ele_text">已完成</h4>
+                            </div>
+                            <div class="table_ele">
+                                <h2 class="ele_text">2021-06-06</h2>
+                                <h2 class="ele_text">03:19</h2>
+                                <h2 class="ele_text">2000.00 TWD</h2>
+                                <h4 class="ele_text">已完成</h4>
+                            </div>
+                            <div class="table_ele">
+                                <h2 class="ele_text">2021-06-06</h2>
+                                <h2 class="ele_text">03:19</h2>
+                                <h2 class="ele_text">2000.00 TWD</h2>
+                                <h4 class="ele_text">已完成</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="withdraw">
+                        <h2 class = 'card_title-1'>出金紀錄</h2>
+                        <div class='deposit_table'>
+                            <div class="table_ele">
+                                <h2 class="ele_text">2021-06-06</h2>
+                                <h2 class="ele_text">03:19</h2>
+                                <h2 class="ele_text">2000.00 TWD</h2>
+                                <h4 class="ele_text">已完成</h4>
+                            </div>
+                            <div class="table_ele">
+                                <h2 class="ele_text">2021-06-06</h2>
+                                <h2 class="ele_text">03:19</h2>
+                                <h2 class="ele_text">2000.00 TWD</h2>
+                                <h4 class="ele_text">已完成</h4>
+                            </div>
+                            <div class="table_ele">
+                                <h2 class="ele_text">2021-06-06</h2>
+                                <h2 class="ele_text">03:19</h2>
+                                <h2 class="ele_text">2000.00 TWD</h2>
+                                <h4 class="ele_text">已完成</h4>
+                            </div>
+                            <div class="table_ele">
+                                <h2 class="ele_text">2021-06-06</h2>
+                                <h2 class="ele_text">03:19</h2>
+                                <h2 class="ele_text">2000.00 TWD</h2>
+                                <h4 class="ele_text">已完成</h4>
+                            </div>
+                            <div class="table_ele">
+                                <h2 class="ele_text">2021-06-06</h2>
+                                <h2 class="ele_text">03:19</h2>
+                                <h2 class="ele_text">2000.00 TWD</h2>
+                                <h4 class="ele_text">已完成</h4>
+                            </div>
+                            <div class="table_ele">
+                                <h2 class="ele_text">2021-06-06</h2>
+                                <h2 class="ele_text">03:19</h2>
+                                <h2 class="ele_text">2000.00 TWD</h2>
+                                <h4 class="ele_text">已完成</h4>
+                            </div>
+                            <div class="table_ele">
+                                <h2 class="ele_text">2021-06-06</h2>
+                                <h2 class="ele_text">03:19</h2>
+                                <h2 class="ele_text">2000.00 TWD</h2>
+                                <h4 class="ele_text">已完成</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div  class = miscell>
+                    <a href="#" class='miscell-1'>
+                        <h2 class="loan_title">借款</h2>
+                        <h2 class='loan_sub'>透過收到的訂單以及應收帳款進行融資</h2>
+                    </a>
+                    <a href="#"class="miscell-1">
+                        <h2 class="loan_title">還款</h2>
+                        <h2 class="loan_sub">繳回每期應繳利息，或一併償還本金</h2>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+    <script>
+        function numberWithCommas(x) {
+            x = x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            return x;
+        }       
+        function calculate(){
+            var d1 = document.getElementById("coco").value;
+            var cha = parseInt(d1,10) * 10;
+            if (document.getElementById("coco").value == ""){
+                
+                document.getElementById("exchange_coco").value = ""
+            }
+            else{
+                cha = numberWithCommas(cha)
+                document.getElementById("exchange_coco").value = cha
+            }
+        } 
+        setInterval(calculate,10)
+    </script>
+
+</body>
+{% endif %}
+{% include 'footer.html' %} 
+<script> 
+    const send = document.getElementById('send');
+    const waiting = document.getElementById('waiting');
+    const pop = document.getElementById('pop_div');
+    const fade = document.getElementById('fade_out');
+    send.addEventListener('click',() =>{
+        waiting.style.display = 'flex';
+        pop.style.display='none';
+        fade.style.display='none';
+    })
+</script>
+<script type="text/javascript" src="{%static 'js/script.js' %}"></script>
+
+</html>

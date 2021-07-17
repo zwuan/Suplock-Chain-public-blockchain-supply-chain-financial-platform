@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <style>
+        #p {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>成功買幣</h1>
+    <p id="p">{{ res }} </p>
+    <p>{{ receipt }}</p>
+    <p>{{event}}</p>
+    <input id="back_btn" type="submit" value="回首頁">
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#back_btn').on("click", ()=>{
+                location.href = 'http://127.0.0.1:8000/';
+            })
+        });
+    </script>
+</body>
+
+</html>

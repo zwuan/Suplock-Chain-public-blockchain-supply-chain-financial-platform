@@ -1,0 +1,217 @@
+#figure1{
+    width: 45px;
+    animation:0ms;
+    -webkit-animation:rotateImg 3s linear infinite;
+    vertical-align: middle;
+    filter: invert(66%) sepia(96%) saturate(470%) hue-rotate(338deg) brightness(105%) contrast(101%);
+  }
+  @keyframes rotateImg {
+    0% {transform : rotate(0deg);}
+    100% {transform : rotate(360deg);}
+  }
+  @-webkit-keyframes rotateImg {
+      0%{-webkit-transform : rotate(0deg);}
+    100%{-webkit-transform : rotate(360deg);}
+  }
+#user{
+    filter: invert(84%) sepia(100%) saturate(5945%) hue-rotate(186deg) brightness(130%) contrast(96%);
+    width: 25px;
+    height: 25px;
+}
+#message{
+    filter: invert(84%) sepia(100%) saturate(5945%) hue-rotate(186deg) brightness(130%) contrast(96%);
+    width: 25px;
+    height: 25px;
+}
+#remain{
+    color:#FAFAFA;	
+}
+#plus{
+    filter: invert(66%) sepia(96%) saturate(470%) hue-rotate(338deg) brightness(105%) contrast(101%);
+}
+#navbar{
+  background-color: #212121;
+}
+
+html{
+  box-sizing: border-box;
+  /* border 會被包含進物件長寬 */
+  font-family: 'Open Sans', sans-serif;
+}
+body{
+  background-color: #14213d;
+  height: auto;
+}
+.panel{
+  display: flex;
+  flex-direction: row;
+  text-align: center;
+  justify-content: center;
+  width: 100%;
+}
+.introduction1{
+  color: #e9ecef;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background: linear-gradient( rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1) ), url('icon/investor_back.jpeg');
+  height:100vh;
+  background-position: center;
+  display: flex;
+  align-content: center;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  transition: all 1s ease-in-out;
+}
+.introduction2{
+  color: #e9ecef;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background: linear-gradient( rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2) ), url('icon/comapny_back.jpeg');
+  height:100vh;
+  background-position: center;
+  display: flex;
+  align-content: center;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  transition: all 1s ease-in-out;
+}
+.introduction3{
+  color: #e9ecef;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background: linear-gradient( rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3) ),  url('icon/platform_back.jpeg');
+  height:100vh;
+  background-position: center;
+  display: flex;
+  align-content: center;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  transition: all 1s ease-in-out;
+}
+.introHeader{
+  font-weight: 600;
+  letter-spacing: 1px;
+  font-size: 2.25em;
+}
+.features{
+  margin:15px 0 25px;
+}
+
+.introduction1:hover .detail{
+  opacity: 1;
+  transition:all 400ms ease-in-out;
+}
+.introduction2:hover .detail{
+  opacity: 1;
+  transition:all 400ms ease-in-out;
+}
+.introduction3:hover .detail{
+  opacity: 1;
+  transition:all 400ms ease-in-out;
+}
+.introduction1:hover{
+  background: linear-gradient( rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7) ), url('icon/investor_back.jpeg');
+  transition:all 0.6s ease-in-out;
+}
+.introduction2:hover{
+  background: linear-gradient( rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7) ), url('icon/comapny_back.jpeg');
+  transition:all 0.6s ease-in-out;
+}
+.introduction3:hover{
+  background: linear-gradient( rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7) ), url('icon/platform_back.jpeg');
+  transition:all 0.6s ease-in-out;
+}
+
+
+.detail{
+  opacity:0;
+  text-align: left;
+  width: 50%;
+  margin-left: 25%;
+  font-size: 18px;
+}
+
+.brief{
+  text-align: left;
+  width: 50%;
+  margin-left: 25%;
+}
+
+.enter_btn{
+  width: 35%;
+  height: 25%;
+  border: 2px solid rgb(255, 218, 52);
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  text-align: center;
+  align-items: center;
+  color: rgb(255, 218, 52);
+  border-radius: 1em;
+}
+.join_us{
+  font-size: 1.1em;
+  margin-top: .4em;
+  font-weight: 400;
+}
+.enter_btn:hover{
+  background-color: rgb(255, 218, 52);
+  color: white;
+}
+
+
+@media(max-width:1024px){
+  .panel{
+    flex-direction: column;
+  }
+  .footer{
+    height: 100vh;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+  .footerDetail{
+    max-width: 100%;
+    text-align: center;
+  }
+  .footerDetail:nth-of-type(2n){
+    max-width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+  }
+  .footerDetail:nth-of-type(3){
+    max-width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+  }
+  .footerHead{
+    max-width: 16px;
+    margin-right: 100px ;
+  }
+  .introduction1,.introduction2,.introduction3{
+    height: 50vh;
+  }
+  .detail{
+    display: none;
+  }
+  .introduction1:hover .detail{
+    display: block;
+    transition:all 400ms ease-in-out;
+  }
+  .introduction2:hover .detail{
+    display: block;
+    transition:all 400ms ease-in-out;
+  }
+  .introduction3:hover .detail{
+    display: block;
+    transition:all 400ms ease-in-out;
+  }
+  .introduction1:hover, .introduction2:hover,  .introduction3:hover{
+    height: 100vh;
+  }
+}
+

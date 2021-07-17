@@ -1,0 +1,175 @@
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section {
+	display: block;
+}
+body {
+	line-height: 1;
+}
+ol, ul {
+	list-style: none;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: '';
+	content: none;
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+html {
+    box-sizing: border-box;
+    font-family: 'Open Sans', sans-serif;
+  }
+
+body {
+    background-color: #14213d;
+    min-height: 100vh;
+}  
+
+.login_panel{
+    background-color: #141414;
+    border-radius: 10px;
+    margin:60px auto;
+    padding: 15px 25px;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    text-transform: uppercase;
+    justify-content: center;
+    color: white;
+}
+
+.zhuce{
+    text-align: center;
+    font-weight: 400;
+    font-size: 24px;
+    margin-bottom: 1em;
+}
+.welcome{
+    text-align: center;
+    font-size: 12px;
+    width: 100%;
+    padding-bottom: 2em;
+}
+.form_part{
+    font-size: 12px;
+    width: 100%;
+    margin-top: 2em;
+    height :15%;
+}
+.form_input{
+    width: 100%;
+    margin-top: .6rem;
+    border: 1px solid rgb(44, 47, 54);
+    height: 40px;
+    border-radius: .5rem;
+    padding-left: 10px;
+}
+.form_input-x{
+    width: 100%;
+    margin-top: .6rem;
+    border: none;
+    height: 40px;
+    border-radius: .5rem;
+    padding-left: 10px;
+    background-color: #141414;
+    cursor: default;
+    display: none;
+    color: white;
+}
+.form_input-x:focus{
+    outline: none;
+}
+.keep_in{
+    margin-top:2rem;
+    margin-right: .6rem;
+}
+.forget_password{
+    margin-top:1rem;
+}
+.register_btn{
+    width: 100%;
+    height: 40px;
+    border: none;
+    border-radius: .5rem;
+    background-color: #FFA629;
+    font-size: 18px;
+    transition:0.5s;
+    margin-top: .6rem;
+}
+.connect_wallet_btn{
+    width: 100%;
+    height: 40px;
+    border: none;
+    border-radius: .5rem;
+    background-color: #FFA629;
+    font-size: 18px;
+    transition:0.5s;
+    margin-top: .6rem;
+    text-align: center;
+    color: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.log_reg{
+    border-bottom: 1px solid rgb(44, 47, 54);
+    padding-bottom: 0.6em;
+}
+._switch{
+    display: inline;
+    border: none;
+    background-color: #141414;
+    color: rgb(133, 134, 136) ;
+    margin-right: 0.4rem;
+    cursor: pointer;
+}
+.plus{
+    color: white;
+}
+._switch:hover{
+    color: white;
+    text-decoration: none;
+}
+.register_btn:hover{
+    background-image: linear-gradient(rgba(0, 0, 0, 0.4) 0 0);
+}
+.connect_wallet_btn:hover{
+    background-image: linear-gradient(rgba(0, 0, 0, 0.4) 0 0);
+}
+._switch:focus{
+    outline: none;
+}
+.register_panel{
+    display: none;
+}
+.enter{
+    color: white;
+}
