@@ -7,28 +7,117 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>my wallet</title>
     {% include 'nav_login.html' %}
+     <link rel="stylesheet" href="{%static 'css/wallet.css' %}">
+     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <main class="main_content" id = "fade_out">
         {% include 'company_index_left.html' %}
-        <link rel="stylesheet" href="{%static 'css/wallet.css' %}">
         <div class="wallet_content"> 
             <div class="wallet_segement">
                 <section  class = "wallet_card">
-
+                    <h2 class="card_title">平台幣餘額</h2>
+                    <div class="inner_card">
+                        <h2>$</h2>
+                        <h2 id = "erc865">100,000</h2>
+                        <h2 class="currency">TWD</h2>
+                    </div>
                 </section>
                 <section class = "wallet_card">
-
+                    <h2 class="card_title">可發出憑證餘額</h2>
+                    <div class="inner_card">
+                        <h2>$</h2>
+                        <h2 id = "sendable">211,000</h2>
+                        <h2 class="currency">TWD</h2>
+                    </div>
+                </section>
+                <section class = "wallet_card">
+                    <h2 class="card_title">可借款憑證餘額</h2>
+                    <div class="inner_card">
+                        <h2>$</h2>
+                        <h2 id="receivable">100,322</h2>
+                        <h2 class="currency">TWD</h2>
+                    </div>
                 </section>
             </div>  
             <div class="wallet_segement-1">
-                <section class = "wallet_card">
-
+                <div class="ring_chart">
+                    <div class="label">
+                        <div class="inner_label">
+                            <div class="square orange"></div>
+                            <h4 class="label_text">平台幣餘額</h4>
+                        </div>
+                        <div class="inner_label ">
+                            <div class="square dark_blue"></div>
+                            <h4 class="label_text">可發出憑證餘額</h4>
+                        </div>
+                        <div class="inner_label">
+                            <div class="square red"></div>
+                            <h4 class="label_text">可借款憑證餘額</h4>
+                        </div>
+                        <div class="inner_label">
+                            <div class="square green"></div>
+                            <h4 class="label_text">投資收益</h4>
+                        </div>
+                    </div>
+                    <canvas id="myChart"></canvas>
+                </div>
+                <section class = "wallet_card_lower">
+                    <h2 class="card_title">投資收益</h2>
+                    <div class="inner_card">
+                        <h2>$</h2>
+                        <h2 id="invest">10,000</h2>
+                        <h2 class="currency">TWD</h2>
+                    </div>
                 </section>
-                <section class = "wallet_card">
             </div>
-            </section>
         </div>
     </main>
 </body>
+<script>
+const erc865 = $("#erc865").html();
+const sendable = $("#sendable").html();
+const receivale = $("#receivable").html();
+const invest = $("#invest").html();
+
+const intErc865 = 100000;
+const intSendable = 211000;
+const intReceivale =100322;
+const intInvest = 10000;
+
+
+
+let options = {
+  tooltips: {
+    enabled: false
+  }
+};
+let ctx = document.getElementById('myChart');
+const data = {
+//   labels: [
+//     'Red',
+//     'Blue',
+//     'Yellow'
+//   ],
+  datasets: [{
+    label: 'My First Dataset',
+    data: [intErc865, intSendable, intReceivale, intInvest],
+    backgroundColor: [
+      'rgb(255, 166, 0)',
+      'rgb(0, 53, 102)',
+      'rgb(238, 108, 77)',
+      'rgb(82, 183, 136)'
+    ],
+    hoverOffset: 4
+  }],
+  options: options
+
+};
+
+let myChart = new Chart(ctx, {
+  type: 'doughnut',
+  data: data,
+});
+</script>
+
 </html>

@@ -5,17 +5,7 @@ a:hover{
     color:black;
     text-decoration: none;
 }
-body{
-    background-color: rgb(245, 245, 245) ; 
-}
-.main_content{
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-    min-height: 100vh;
-    font-size: 1rem;
-}
+
 .introcard_button{
     width: 15%;
     height:100vh;
