@@ -7,7 +7,7 @@
         <h2 class="company_name">{{ request.user.username }}</h2>
         <h3 class="sub_ID">@177321</h3>
         <div class="account_link">
-            <a class="link_box">
+            <a class="link_box" href="{% url 'company_index' %}">
                 <div class= "icon_title">
                     <img id='align' src="{%static 'icon/bar-chart.svg' %}" alt="">
                 </div>

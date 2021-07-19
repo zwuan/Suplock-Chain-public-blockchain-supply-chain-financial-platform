@@ -16,5 +16,8 @@ urlpatterns = [
     path('frontend/return/', views.PaymentReturnView.as_view()),
     path('wallet/' ,views.wallet.as_view(), name='wallet'),
     path('company_info/', views.company_info.as_view(), name = 'company_info'),
-
+    
+    path('company_account_pay/', views.company_account_pay, name = 'company_account_pay'),
+    path('company_account_rec/', views.company_account_rec, name = 'company_account_rec'),
 ]
+'''commit前刪掉'''

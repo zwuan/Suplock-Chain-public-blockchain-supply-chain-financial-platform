@@ -291,6 +291,13 @@ class company_order_rec(generic.ListView):
                 pass
                 #(address _from, address _to, uint256 _amount, uint256 _interest, uint _id, uint16 _class, uint16 c_class, uint256 _date)
 
+'''要刪掉'''
+def company_account_pay(request):
+    return render(request,'company_account_pay.html')
+def company_account_rec(request):
+    return render(request,'company_account_rec.html')
+''''''
+
 class company_info(generic.View):
      def get(self, request, *args, **kwargs):
         return render(request, 'company_info.html')
