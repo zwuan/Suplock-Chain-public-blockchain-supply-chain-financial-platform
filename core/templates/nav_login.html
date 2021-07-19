@@ -8,6 +8,8 @@
     <title>Document</title>
     <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js/dist/web3.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" rel="stylesheet"/>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet"/>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
     integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:400,600,700">
@@ -45,6 +47,10 @@
                     <a class="" href = "{% url 'add_erc865' %}" ><img id = "plus"  src="{%static 'icon/plus-circle.svg' %}" ></a>
                     <label for = 'input_remain' class="ml-1 mr-1" id = "remain">餘額：</label>
                     <input id="input_remain" type="text" disabled>
+                    <a href = "{% url 'company_index' %}" class="icon-badge-container mx-3">
+                        <i style = "color:white;" class="far fa-envelope-open icon-badge-icon"></i>
+                        <div class="icon-badge">6</div>
+                    </a>
                     <a class=" mx-3 " href = "{% url 'company_index' %}" ><img id="message"  src="{%static 'icon/envelope.svg' %}" ></a>
                     <a class=" mx-3 " href = "{% url 'company_index' %}" ><img id="user" src="{%static 'icon/person-circle.svg' %}"></a>
                 </div>
