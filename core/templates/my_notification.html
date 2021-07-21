@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>通知</title>
+    {% include 'nav_login.html' %}
+    {% load static %}
+    <link rel="stylesheet" href="{%static 'css/my_notification.css' %}">
+</head>
+<body>
+    <main class="main_content" id = "fade_out">
+        {% include 'company_index_left.html' %}
+        <div class="notify_table">
+            <h2 class="table_title">訊息通知</h2>
+            <div class="notify_content">
+                {%for notify in request.user.notifications.all|slice:":9" %}
+                <div class="notify_tr {% if not  notify.unread %}read_gray{% endif %}" value ="{{notify.id}}"id = "notify-{{ forloop.counter}}">
+                    <div class="inner_text {% if not notify.unread %}read{% endif %}" id ="inner-{{ forloop.counter}}" >
+                        <h2 class="notify_title">{{ notify.actor }}向您{{ notify.verb }}</h2>
+                        <h3 class="notify_time">{{notify.timesince}}之前</h3>
+                    </div>
+                </div>
+                {% empty %}
+                <div>暫無消息</div>
+                {% endfor %}
+            </div>
+            
+        </div>
+    </main>
+</body>
+<script>
+    for (let i = 1; i<10 ; i++){
+        $('#notify-'+i).click(function () {
+            $('#notify-'+i).addClass('read_gray')
+            $('#inner-'+i).addClass('read')
+        event.preventDefault();
+        $.ajax({
+            url: '/my_notification/',
+            type: 'post',
+            data: {
+                notify_ID: $('#notify-'+i).attr('value')
+            },
+        })
+    })
+}
+</script>
+</html>

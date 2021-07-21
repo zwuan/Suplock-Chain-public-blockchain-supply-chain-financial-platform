@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     {% load static %}
+    {% load notifications_tags %} 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
@@ -26,7 +27,7 @@
             <span class="navbar-toggler-icon"></span>
         </button>
             <ul class="navbar-nav mr-auto">
-                {% if request.user.is_authenticated %}
+            {% if request.user.is_authenticated %}
                  <li class="nav-item" id = 'i1'>
                     <a class="nav-link" href= "{% url 'company_orders' %}" >訂單</a>
                 </li>
@@ -47,11 +48,15 @@
                     <a class="" href = "{% url 'add_erc865' %}" ><img id = "plus"  src="{%static 'icon/plus-circle.svg' %}" ></a>
                     <label for = 'input_remain' class="ml-1 mr-1" id = "remain">餘額：</label>
                     <input id="input_remain" type="text" disabled>
-                    <a href = "{% url 'company_index' %}" class="icon-badge-container mx-3">
+                    {% notifications_unread as unread_count %}
+                    {% if unread_count > 0 %}
+                    <a href = "{% url 'my_notification' %}" class="icon-badge-container mx-3">
                         <i style = "color:white;" class="far fa-envelope-open icon-badge-icon"></i>
-                        <div class="icon-badge">6</div>
+                        <div class="icon-badge">{% notifications_unread %}</div>
                     </a>
-                    <a class=" mx-3 " href = "{% url 'company_index' %}" ><img id="message"  src="{%static 'icon/envelope.svg' %}" ></a>
+                    {% else %}
+                    <a class=" mx-3 " href = "{% url 'my_notification' %}" ><img id="message"  src="{%static 'icon/envelope.svg' %}" ></a>
+                    {% endif %}
                     <a class=" mx-3 " href = "{% url 'company_index' %}" ><img id="user" src="{%static 'icon/person-circle.svg' %}"></a>
                 </div>
             {% else %}

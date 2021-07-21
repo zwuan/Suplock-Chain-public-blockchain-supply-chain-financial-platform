@@ -1,7 +1,7 @@
 from django.urls import path,include
 from django.contrib import admin
 from core import views
-
+import notifications.urls
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('login_company/' ,views.login_company.as_view(), name='login_company'),
@@ -17,5 +17,8 @@ urlpatterns = [
     path('checkUser/', views.checkUser),
     path('wallet/' ,views.wallet.as_view(), name='wallet'),
     path('company_info/', views.company_info.as_view(), name = 'company_info'),
-
+    path('company_account_pay/', views.company_account_pay, name = 'company_account_pay'),
+    path('company_account_rec/', views.company_account_rec, name = 'company_account_rec'),
+    path('notifications/', include(notifications.urls, namespace='notifications')),
+    path('my_notification/', views.my_notification.as_view(),name='my_notification'),
 ]

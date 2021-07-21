@@ -34,6 +34,9 @@ from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView, View
 from django.template import loader
 from django.db.models import Q
+from notifications.signals import notify ## 通知模組
+from notifications.models import Notification ##通知模組
+from django.db.models import Avg,Count,Max,Min,Sum
 #預留空位給其他testnet
 provider_rpc = {
     'development': 'https://ropsten.infura.io/v3/396094052a124676a222214bd8a3bab8',
@@ -97,6 +100,13 @@ class company_index(generic.View):
         if request.user.is_authenticated:
             if 'fallback' in request.session.keys():
                 del request.session['fallback']
+            all_notify = request.user.notifications.all()
+            redundant = all_notify.count() - 9
+            print(redundant)
+            if redundant > 0:
+                last_notify = all_notify.reverse()[:redundant]
+                for del_ele in last_notify:
+                    del_ele.delete()
             user = request.user
             company = Company.objects.filter(user = user)
             context = {'msg':company}
@@ -230,7 +240,9 @@ class company_order(generic.ListView):
             )
 
             context = {"log_amount":log_amount,"log_rate":log_rate,"log_receiver":log_receiver}
-
+            ###############消息模組
+            receiver = order.receive_compamy.user ## 找到訂單接收者
+            notify.send(user, recipient=receiver, verb='發送了訂單') ## 向訂單接收者發送消息
             ######################## 這裡要一個頁面説訂單已發出 ########################
             return render(request, 'company_orders.html', context)
         
@@ -398,14 +410,42 @@ class company_order_rec(generic.ListView):
                 tokenB_for_update.update(transfer_count = transfer_count)
                 return render(request, 'company_orders_rec.html')
 
+
+def company_account_pay(request):
+    return render(request,'company_account_pay.html')
+def company_account_rec(request):
+    return render(request,'company_account_rec.html')
+
+@method_decorator(csrf_exempt, name='dispatch')
+class my_notification(generic.View):
+    def get(self, request, *args, **kwargs):
+        ##大於9個通知刪除##
+        return render(request,'my_notification.html')
+    def post(self, request, *args, **kwargs):
+        notify_ID = request.POST.get("notify_ID")
+        unread_obj = Notification.objects.get(pk = notify_ID)
+        unread_obj.mark_as_read()        
+        context = {'notify_ID':notify_ID}
+        return HttpResponse(json.dumps(context),content_type="application/json")
+
 class company_info(generic.View):
      def get(self, request, *args, **kwargs):
         return render(request, 'company_info.html')
 
 class wallet(generic.View):
      def get(self, request, *args, **kwargs):
-        return render(request, 'wallet.html')
-
+        context = {}
+        company = Company.objects.get(user = request.user)
+        core_address = company.public_address ##公司錢包地址
+        core_address = Web3.toChecksumAddress(core_address) #轉換成checksum address
+        amount_865 = call_ERC865(core_address)  / DECIMALS ## 先 view 餘額
+        amount_a = int(company.amount_a)
+        all_receive_order = company.receive_comapny.filter(Q(state =2) | Q(state =3) |Q(state = 4)) ##之後要用tokenB資料表取代
+        sum_receive_order = all_receive_order.aggregate(order_sum = Sum('price'))
+        context['amount_865'] = json.dumps(amount_865)
+        context['amount_a'] = json.dumps(amount_a)
+        context['sum_receive_order'] = json.dumps(int(sum_receive_order['order_sum']))
+        return render(request, 'wallet.html',context)
 
 def temp(request):
     return render(request,'temp.html')
