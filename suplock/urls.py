@@ -14,6 +14,7 @@ urlpatterns = [
     path('getAbiBytecode/', views.getAbiBytecode),
     path('buyERC865/', views.buyERC865),
     path('frontend/return/', views.PaymentReturnView.as_view()),
+    path('checkUser/', views.checkUser),
     path('wallet/' ,views.wallet.as_view(), name='wallet'),
 
 ]
