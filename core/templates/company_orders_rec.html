@@ -11,8 +11,13 @@
     <link rel="stylesheet" href="{%static 'css/company_orders.css' %}">
 </head>
 <body>
-
-<main class="main_content">
+<div class="loader-wrapper" id='waiting'>
+    <div>
+        <span class="loader"><span class="loader-inner"></span></span>
+    </div>
+    <h2 style="color: white; margin-top: 20px;">Wait for the transaction complete</h2>
+</div>
+<main class="main_content" id="fade">
     <div class='content_title'> 
         <h2>訂單管理</h2>
     </div>
@@ -125,6 +130,8 @@
                         <th>開始時間</th>
                         <th>結束時間</th>
                         <th>狀態</th>
+                        <th>以融資</th>
+                        <th>以移轉</th>
                         <th>操作</th>
                         <th>操作</th>
                     </tr>
@@ -141,6 +148,8 @@
                         <td>{{order.start_date}}</td>
                         <td>{{order.end_date}}</td>
                         <td>{{order.get_state_display}}</td>
+                        <td>{{order.already_loan}}</td>
+                        <td>{{order.already_transfer}}</td>
                         <td><button type="button" class="pop_loan_btn">融資</button></td>
                         <td><button type="button" class="pop_bToC_btn">移轉</button></td>
                     </tr>
@@ -174,8 +183,10 @@
     }
 </style>
 </body>
+<script type="text/javascript" src="./static/js/check_user.js"></script>
 <script>
-    $(document).ready(function () {
+    $(document).ready(async function () {
+        var curr_accounts = await ethereum.request({ method: 'eth_requestAccounts' });
 
         overlay.addEventListener('click', function(){
             $('#pop_loan_div').removeClass('active');
@@ -187,10 +198,10 @@
         $('#rec_table tr').each((i, ele)=>{
             var str = '';
             $(ele).find('td').each(function (i, ele) {
-                if(i < 7) str += $(this).html()+'&';
+                if(i < 10) str += $(this).html()+'&';
             });
-            $(ele).find('td:eq(8)').children().attr("caption", str);
-            $(ele).find('td:eq(9)').children().attr("caption", str);
+            $(ele).find('td:eq(10)').children().attr("caption", str);
+            $(ele).find('td:eq(11)').children().attr("caption", str);
         });
         
         // on click, 取得訂單資訊以dynamic製造loan頁面
@@ -203,10 +214,12 @@
             var order_id = valArr[1];
             var from_com_name = valArr[2];
             var product = valArr[3];
-            var price = valArr[4];
+            var price = Number(valArr[4]);
+            var already_loan = Number(valArr[8]);
+            var already_transfer = Number(valArr[9]);
             $('#orders_id').val(order_id);
             $('#orders_from_company_name').val(from_com_name);
-            $('#orders_price').attr('placeholder', price);
+            $('#orders_price').attr('placeholder', price - already_loan - already_transfer);
             $('#orders_interest').val(interest);
         });
 
@@ -221,17 +234,41 @@
             var from_com_name = valArr[2];
             var product = valArr[3];
             var price = valArr[4];
+            var already_loan = Number(valArr[8]);
+            var already_transfer = Number(valArr[9]);
             $('#bToC_id').val(order_id);
             $('#bToC_from_company_name').val(from_com_name);
-            $('#bToC_price').attr('placeholder', price);
+            $('#bToC_price').attr('placeholder', price - already_loan - already_transfer);
             $('#bToC_interest').val(interest);
         });
 
 
+        $('.submit_btn').on('click',async  function (e) {
+            e.preventDefault();
+            var form = $(this).parents('form:first').serializeArray();
 
+            let check_addr = await checkUser(form, curr_accounts[0]);
+            $.ajax({
+                method: "POST",
+                url: "checkUser/",
+                data: { 'check_addr': check_addr },
+                dataType: "json"
+            }).done(async function (res) {
+                if (res['check'] == 'passed') {
+                    $('#waiting').css("display", "flex");
+                    $('#fade').css("display", "none");
+                } else {
+                    alert('wrong account');
+                }
+                
+            });
 
+            
+        });
 
     });
 
 </script>
+<!-- <script type="text/javascript" src="{%static 'js/script.js' %}"></script> -->
+
 </html>
