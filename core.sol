@@ -218,7 +218,6 @@ contract Core{
         uint256 loan_trac = _addTransaction(_loaner,4); //取得加上這次融資的tracsaction number
         token_B[_loaner][4][loan_trac] = loan_token;
         emit loan_event(_loaner ,loan_token.id, loan_token.amount, loan_token.interest, loan_token.date); //貸款人、loan_token id, 數量、 利息
-
     }
     
     //kill

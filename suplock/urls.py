@@ -21,4 +21,7 @@ urlpatterns = [
     path('company_account_rec/', views.company_account_rec, name = 'company_account_rec'),
     path('notifications/', include(notifications.urls, namespace='notifications')),
     path('my_notification/', views.my_notification.as_view(),name='my_notification'),
+    path('verification_ERP/', views.verification_ERP.as_view(),name='verification_ERP'),
+    path('verification_OK/', views.verification_OK.as_view(),name='verification_OK'),
+
 ]

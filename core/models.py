@@ -21,6 +21,8 @@ STATE_CHOICES = (
     (2, '訂單準備中'),
     (3, '訂單已完成'),
     (4, '違約'),
+    (5, '未驗證'),
+    (6, '已完成驗證')
 )
 CLASS_CHOICES = (
     (1, '應收'),
@@ -60,14 +62,11 @@ class Company_orders(models.Model):
     send_company = models.ForeignKey(Company,on_delete=models.CASCADE ,related_name='send_company') ## 一個發出Company 對多 orders
     receive_compamy = models.ForeignKey(Company,on_delete=models.CASCADE ,related_name='receive_comapny') ## 一個接收Company 對多 orders
     product  = models.CharField(max_length=40) ##訂單項目
-    price = models.DecimalField(max_digits=12, decimal_places=1) ##訂單價格
+    price = models.IntegerField(null=True, blank=True) ##訂單價格
     start_date = models.DateField(auto_now_add = True ,null=True) ## 發起時間
     end_date = models.DateField() ## 結束時間
     state = models.IntegerField(choices=STATE_CHOICES, default=1) ##狀態
     rate = models.FloatField(choices=RATE_CHOICES, null=True,  blank=True) ##利息
-    tokenB_balance = models.DecimalField(max_digits=12, decimal_places=0 , default=0, blank=True)##tokenB可使用餘額
-    already_transfer = models.DecimalField(max_digits=12, decimal_places=0,  default=0,  blank=True)## 已移轉amount
-    already_loan = models.DecimalField(max_digits=12, decimal_places=0 , default=0,   blank=True)## 已借款amount
     transactionHash = models.CharField(max_length=66, null=True, blank=True)
 
 
@@ -85,5 +84,9 @@ class TokenB(models.Model):
     pre_company = models.ForeignKey(Company,on_delete=models.CASCADE ,related_name='pre_company', null=True,  blank=True)
     curr_company = models.ForeignKey(Company,on_delete=models.CASCADE ,related_name='curr_company', null=True,  blank=True)
     transactionHash = models.CharField(max_length=66, null=True, blank=True)
+
+    tokenB_balance = models.DecimalField(max_digits=12, decimal_places=0 , default=0, blank=True)##tokenB可使用餘額
+    already_transfer = models.DecimalField(max_digits=12, decimal_places=0,  default=0,  blank=True)## 已移轉amount
+    already_loan = models.DecimalField(max_digits=12, decimal_places=0 , default=0,   blank=True)## 已借款amount
 
 

@@ -25,7 +25,7 @@
 </div>
 <main class="main_content" id="fade">
     <div class='content_title'> 
-        <h2>訂單管理</h2>
+        <h2>發起的驗證</h2>
     </div>
     <!-- 點擊變暗 -->
     <div id='overlay'></div>
@@ -117,11 +117,11 @@
     <div class="outer">
         <!-- <input class='btn_div-1' type = 'submit'  id = 'btn_1' value = '透過憑證借款'></input> -->
         <div class="table_above_tag">
-            <a class='send_btn' id='clicked_1' href="{% url 'company_orders' %}">
-                <h2 class="send_order" >發出</h2>
+            <a class='send_btn' id='clicked_1' href="{% url 'verification_ERP' %}">
+                <h2 class="send_order">驗證</h2>
             </a>
             <div class='recieve_btn' id= 'clicked_2'>
-                <h2 class="send_order" >收到</h2>
+                <h2 class="send_order">成功</h2>
             </div>
         </div>
         <div class="ordersTable" >
@@ -130,7 +130,6 @@
                     <tr>
                         <th>利息</th>
                         <th style="display: none;">訂單編號</th>
-                        <th>來源公司</th>
                         <th>項目</th>
                         <th>金額</th>
                         <th>結束時間</th>
@@ -147,7 +146,6 @@
                     <tr name='make_id' class="tr_height">
                             <td name = 'percent'>{{order.interest}}</td>
                             <td name = 'order_id' style="display: none;">{{order.initial_order.id}}</td>
-                            <td>{{order.pre_company}}</td>
                             <td>{{order.initial_order.product}}</td>
                             <td>{{order.amount}}</td>
                             <td style="display: none;">{{order.initial_order.start_date}}</td>

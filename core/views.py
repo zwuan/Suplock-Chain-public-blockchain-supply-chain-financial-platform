@@ -25,7 +25,7 @@ from django.http import JsonResponse
 from django.template.loader import get_template
 import urllib
 import hashlib
-import datetime
+from django.utils import timezone as datetime
 from collections import OrderedDict
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseRedirect
@@ -67,7 +67,6 @@ class login_company(generic.View):
                 auth.login(request, user)
                 return redirect(reverse_lazy('company_index'))
                 
-
         if 'register' in request.POST: ##註冊表單
             form = user_register(request.POST)
             if form.is_valid():
@@ -102,61 +101,63 @@ class company_index(generic.View):
                 del request.session['fallback']
             all_notify = request.user.notifications.all()
             redundant = all_notify.count() - 9
-            print(redundant)
             if redundant > 0:
                 last_notify = all_notify.reverse()[:redundant]
                 for del_ele in last_notify:
                     del_ele.delete()
             user = request.user
-            company = Company.objects.filter(user = user)
-            context = {'msg':company}
+            company = Company.objects.get(user = user)
+            tokenA = TokenA.objects.filter(tokenA_company = company).order_by('-tokenA_time')  ##從最新的開始 -tokenA_time 是decending
+            deposit = Deposit.objects.filter(deposit_company = company).order_by('-deposit_time')
+            context = {'msg':company,'tokenA':tokenA,'deposit':deposit}
             return render(request, 'company_index.html',context)
         else:
             return redirect(reverse_lazy('login_company'))
     ##存入保證金(平台幣)
     def post(self, request, *args, **kwargs):
-        if 'confirm' in request.POST:
-            form = deposit(request.POST)
-            company = Company.objects.filter(user = request.user)[0]
-            deploy_company = Company.objects.filter(id = company.id)
-            if form.is_valid():
-                core_address = company.public_address ##公司錢包地址
-                core_address = Web3.toChecksumAddress(core_address) #轉換成checksum address
-                check_enough_balalce = call_ERC865(core_address)## 先 view 餘額
-                content = {}
-                add_amount = int(form.cleaned_data['amount_a'] )
-                if check_enough_balalce < add_amount:
-                    request.session['fallback'] = '餘額不足請儲值'
-                    return redirect(reverse_lazy('add_erc865')) ##導回儲值頁
-                add_amount_a =  add_amount * 10 ## 儲值金額
-                transfer_event = transfer_865(core_address, add_amount*DECIMALS , fee*DECIMALS)
-                actual_payment_on_chain = transfer_event['value'] / DECIMALS
-                user_ERC865_balance = call_ERC865(core_address)  / DECIMALS## 查看廠商的865餘額
-                deploy_company.update(amount_865 = user_ERC865_balance) ##更新資料庫865金額
-                ##如果不是核心 deploy新合約
-                if  not company.core:
-                    contract_addr = deploy_contract(core_address, add_amount_a)['contractAddress'] ##取得部署的合約地址
-                    construct_amount = call_tokenA(contract_addr,core_address) ##查看首次部署的tokenA數量
-                    deploy_company.update(amount_a = construct_amount, core = True ,contract_address = contract_addr) ##修改資料庫
-                    content = {"address":contract_addr, "mintA": construct_amount, 'company':company} ##顯示到前端
-                #是核心 mint & 更新資料庫
-                else:
-                    tx_receipt = mint_tokenA(company.contract_address, add_amount_a)  ##交易資料
-                    txhash = tx_receipt['transactionHash'].hex()
-                    logs = get_tokenA_event(company.contract_address, tx_receipt)  ## log
-                    deposit_amount = logs[0]['args']['amount'] ##確認數量
+        # if 'confirm' in request.POST:
+        form = deposit(request.POST)
+        company = Company.objects.filter(user = request.user)[0]
+        deploy_company = Company.objects.filter(id = company.id)
+        if form.is_valid():
+            core_address = company.public_address ##公司錢包地址
+            core_address = Web3.toChecksumAddress(core_address) #轉換成checksum address
+            check_enough_balalce = call_ERC865(core_address) / DECIMALS ## 先 view 餘額
+            content = {}
+            add_amount = int(form.cleaned_data['amount_a'] )
+            if check_enough_balalce < add_amount:
+                request.session['fallback'] = '餘額不足請儲值'
+                return redirect(reverse_lazy('add_erc865')) ##導回儲值頁
+            add_amount_a =  add_amount * 10 ## 儲值金額
+            transfer_event = transfer_865(core_address, add_amount*DECIMALS , fee*DECIMALS)
+            print(transfer_event)
+            actual_payment_on_chain = transfer_event['value'] / DECIMALS
+            user_ERC865_balance = call_ERC865(core_address)  / DECIMALS## 查看廠商的865餘額
+            deploy_company.update(amount_865 = user_ERC865_balance) ##更新資料庫865金額
+            ##如果不是核心 deploy新合約
+            if  not company.core:
+                contract_addr = deploy_contract(core_address, add_amount_a)['contractAddress'] ##取得部署的合約地址
+                construct_amount = call_tokenA(contract_addr,core_address) ##查看首次部署的tokenA數量
+                deploy_company.update(amount_a = construct_amount, core = True ,contract_address = contract_addr) ##修改資料庫
+                content = {"address":contract_addr, "mintA": construct_amount, 'company':company} ##顯示到前端
+            #是核心 mint & 更新資料庫
+            else:
+                tx_receipt = mint_tokenA(company.contract_address, add_amount_a)  ##交易資料
+                txhash = tx_receipt['transactionHash'].hex()
+                logs = get_tokenA_event(company.contract_address, tx_receipt)  ## log
+                deposit_amount = logs[0]['args']['amount'] ##確認數量
 
-                    # 紀錄mintTokenA進資料庫
-                    new_tknA = TokenA.objects.create(
-                        tokenA_company=company,
-                        tokenA_amount=deposit_amount,
-                        transactionHash=str(logs[0]['transactionHash'].hex())
-                    )
+                # 紀錄mintTokenA進資料庫
+                new_tknA = TokenA.objects.create(
+                    tokenA_company=company,
+                    tokenA_amount=deposit_amount,
+                    transactionHash=str(logs[0]['transactionHash'].hex())
+                )
 
-                    all_deposit_amount = call_tokenA(company.contract_address,core_address) ## 去練上拿tokenA數量view mapping tokenA
-                    deploy_company.update(amount_a = all_deposit_amount) ##更新資料庫
-                    content = {"address":txhash, "mintA": deposit_amount, 'company':company,'payment':actual_payment_on_chain} ##顯示到前端
-                return render(request, 'temp.html', content)
+                all_deposit_amount = call_tokenA(company.contract_address,core_address) ## 去練上拿tokenA數量view mapping tokenA
+                deploy_company.update(amount_a = all_deposit_amount) ##更新資料庫
+                content = {"address":txhash, "mintA": deposit_amount, 'company':company,'payment':actual_payment_on_chain} ##顯示到前端
+            return render(request, 'temp.html', content)
 
 ## 公司訂單頁面
 @method_decorator(login_required, name='dispatch')
@@ -236,7 +237,9 @@ class company_order(generic.ListView):
                 transfer_count=0, 
                 initial_order=order,
                 curr_company = rec_company,
-                transactionHash = transactionHash
+                pre_company = company,
+                transactionHash = transactionHash,
+
             )
 
             context = {"log_amount":log_amount,"log_rate":log_rate,"log_receiver":log_receiver}
@@ -250,15 +253,16 @@ class company_order(generic.ListView):
    
 @method_decorator(login_required, name='dispatch')
 class company_order_rec(generic.ListView):
-    model = Company_orders
+    model = TokenB
     template_name = 'company_orders_rec.html'
     context_object_name = 'rec_orders'
     paginate_by = 6
     def get_queryset(self):
         user = self.request.user
-        company = Company.objects.filter(user = user)[0]
-            ######################## 要改為用tokenB的資料庫做filter ########################
-        return  company.receive_comapny.filter(Q(state =2) | Q(state =3) |Q(state = 4))   ##收到 顯示除了憑證未發出的所有訂單
+        company = Company.objects.get(user = user)
+        order_tokenB = TokenB.objects.filter(Q(curr_company = company) & (Q(class_type = 2) | Q(class_type =3))).order_by('date_span')   ## filter 該公司所擁有的tokenB
+            ######################## 已改為用tokenB的資料庫做filter ########################
+        return  order_tokenB   
 
     def get_context_data(self, **kwargs):
         _company_list = []
@@ -352,9 +356,9 @@ class company_order_rec(generic.ListView):
             elif form.cleaned_data['optype'] == 'bToC':
                 bToC_id = int(form.cleaned_data['bToC_id'])
                 order = Company_orders.objects.filter(id = bToC_id)[0] ##找到資料庫的這筆訂單
-                order_for_update = Company_orders.objects.filter(id = bToC_id)
-                tokenB = TokenB.objects.filter(initial_order=order, class_type=2)[0]
-                tokenB_for_update = TokenB.objects.filter(initial_order=order, class_type=2)
+                order_for_update = Company_orders.objects.get(id = bToC_id)  ##ERP要更新的訂單
+                tokenB = TokenB.objects.filter(initial_order=order, class_type=2)[0]  
+                tokenB_for_update = TokenB.objects.get(initial_order=order, class_type=2)
                 tokenB_transfer_count = int(tokenB.transfer_count)
                 tokenB_id = int(tokenB.token_id)
                 now = datetime.date.today() ## 透過平台融資日
@@ -410,12 +414,13 @@ class company_order_rec(generic.ListView):
                 tokenB_for_update.update(transfer_count = transfer_count)
                 return render(request, 'company_orders_rec.html')
 
-
+##應付
 def company_account_pay(request):
     return render(request,'company_account_pay.html')
+##應收
 def company_account_rec(request):
     return render(request,'company_account_rec.html')
-
+##通知
 @method_decorator(csrf_exempt, name='dispatch')
 class my_notification(generic.View):
     def get(self, request, *args, **kwargs):
@@ -427,11 +432,11 @@ class my_notification(generic.View):
         unread_obj.mark_as_read()        
         context = {'notify_ID':notify_ID}
         return HttpResponse(json.dumps(context),content_type="application/json")
-
+## 基本資料
 class company_info(generic.View):
      def get(self, request, *args, **kwargs):
         return render(request, 'company_info.html')
-
+##各項目餘額
 class wallet(generic.View):
      def get(self, request, *args, **kwargs):
         context = {}
@@ -439,13 +444,39 @@ class wallet(generic.View):
         core_address = company.public_address ##公司錢包地址
         core_address = Web3.toChecksumAddress(core_address) #轉換成checksum address
         amount_865 = call_ERC865(core_address)  / DECIMALS ## 先 view 餘額
-        amount_a = int(company.amount_a)
+        core_amount_a = float(call_tokenA(company.contract_address, core_address))
         all_receive_order = company.receive_comapny.filter(Q(state =2) | Q(state =3) |Q(state = 4)) ##之後要用tokenB資料表取代
         sum_receive_order = all_receive_order.aggregate(order_sum = Sum('price'))
         context['amount_865'] = json.dumps(amount_865)
-        context['amount_a'] = json.dumps(amount_a)
+        context['amount_a'] = json.dumps(core_amount_a)
         context['sum_receive_order'] = json.dumps(int(sum_receive_order['order_sum']))
         return render(request, 'wallet.html',context)
+
+
+##驗證
+@method_decorator(csrf_exempt, name='dispatch')
+class verification_ERP(generic.ListView):
+    model = Company_orders
+    template_name = 'verification_ERP.html'
+    context_object_name = 'orders'
+    paginate_by = 6
+    def get_queryset(self):
+        user = self.request.user
+        company = Company.objects.filter(user = user)[0]
+        return  company.send_company.filter(state = 5)
+
+
+##驗證成功
+@method_decorator(csrf_exempt, name='dispatch')
+class verification_OK(generic.ListView):
+    model = Company_orders
+    template_name = 'verification_OK.html'
+    context_object_name = 'orders'
+    paginate_by = 6
+
+
+
+
 
 def temp(request):
     return render(request,'temp.html')
@@ -456,7 +487,6 @@ def logout(request):
     return redirect(reverse_lazy('login_company'))
 
 '''ERC-865 contract manipulate'''
-
 
 @csrf_exempt
 def getAbiBytecode(request):

@@ -66,3 +66,6 @@ body{
 .read_gray{
     border-left: 4px solid rgb(136, 135, 135);
 }
+.clear{
+    font-size: 20px;
+}

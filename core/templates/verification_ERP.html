@@ -19,7 +19,7 @@
 </div>
 <main class="main_content" id = 'fade_out'>
     <div class='content_title'> 
-        <h2>應收/應付 管理</h2>
+        <h2>發起的驗證</h2>
     </div>
     <!-- 點擊變暗 -->
     <div id = 'overlay'></div> 
@@ -51,7 +51,7 @@
                 </select>
             </div>
             <div class='add_money_btn'>
-                <button class="submit_btn" type="submit" id='send' name="confirm">發出應付帳款</button>
+                <button class="submit_btn" type="submit" id='send' name="confirm">發出訂單</button>
             </div>
         </form>
     </div>
@@ -59,10 +59,10 @@
     <!-- <input class='btn_div'  id = 'btn_1' value = '透過憑證發出訂單'></input> -->
         <div class="table_above_tag">
             <div class='send_btn' id='clicked_1'>
-                <h2 class="send_order" >應付</h2>
+                <h2 class="send_order" >成功</h2>
             </div>
-            <a class='recieve_btn' id= 'clicked_2' href="{% url 'company_account_rec' %}">
-                <h2 class="send_order" >應收</h2>
+            <a class='recieve_btn' id= 'clicked_2' href="{% url 'verification_OK' %}">
+                <h2 class="send_order" >驗證</h2>
             </a>
         </div>
         <div class="ordersTable" id="sendOrder">
@@ -116,6 +116,7 @@
 </main>
 
 </body>
+<script type="text/javascript" src="./static/js/check_user.js"></script>
 
 <script>
     let optionArray = [];
@@ -133,7 +134,7 @@
     const make_id = document.getElementsByName('make_id');
     const order_id = document.getElementsByName('order_id');
     const rec_company_name = document.getElementById('rec_company_name');
-    // const company_addr_dict =  {{ company_addr_dict|safe }};   //django -> js (ignore the warning)
+    const company_addr_dict =  {{ company_addr_dict|safe }};   //django -> js (ignore the warning)
     function pop_set_rate(){
         pop_div.classList.add('active');
         overlay.classList.add('active');

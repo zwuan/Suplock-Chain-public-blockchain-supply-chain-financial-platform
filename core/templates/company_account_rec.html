@@ -122,7 +122,6 @@
                         <th>來源公司</th>
                         <th>項目</th>
                         <th>金額</th>
-                        <th>開始時間</th>
                         <th>結束時間</th>
                         <th>狀態</th>
                         <th>操作</th>
@@ -138,8 +137,8 @@
                         <td>{{order.send_company.user}}</td>
                         <td>{{order.product}}</td>
                         <td>{{order.price}}</td>
-                        <td>{{order.start_date}}</td>
-                        <td>{{order.end_date}}</td>
+                        <td style="display: none;">{{order.start_date}}</td>
+                        <td>{{order.end_date|date:'Y-m-d'}}</td>
                         <td>{{order.get_state_display}}</td>
                         <td><button type="button" class="pop_loan_btn">融資</button></td>
                         <td><button type="button" class="pop_bToC_btn">移轉</button></td>
