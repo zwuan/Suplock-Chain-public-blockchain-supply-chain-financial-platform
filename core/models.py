@@ -40,6 +40,15 @@ class Company(models.Model):
     amount_865 = models.DecimalField(max_digits=12, decimal_places=0, null=True) #核心企業平台幣數量
     create_time = models.DateTimeField(auto_now_add= True) #進入時間
     contract_address = models.CharField(max_length=42,null=True,blank=True) ##合約地址
+    company_type = models.CharField(max_length=42,null=True,blank=True) #行業別
+    capital = models.DecimalField(max_digits=12, decimal_places=0, null=True) #資本額
+    chairman = models.CharField(max_length=42,null=True,blank=True) #董事長
+    company_location =  models.CharField(max_length=42,null=True,blank=True) #公司地址
+    supervisor = models.CharField(max_length=42,null=True,blank=True) #登記機關
+    establish_date = models.CharField(max_length=42,null=True,blank=True) #成立日期
+    responsible_person = models.CharField(max_length=42,null=True,blank=True) #負責人
+    
+
 
 class Deposit(models.Model):
     deposit_company = models.ForeignKey(Company,on_delete=models.CASCADE ,related_name='deposit_company')
@@ -88,5 +97,7 @@ class TokenB(models.Model):
     tokenB_balance = models.DecimalField(max_digits=12, decimal_places=0 , default=0, blank=True)##tokenB可使用餘額
     already_transfer = models.DecimalField(max_digits=12, decimal_places=0,  default=0,  blank=True)## 已移轉amount
     already_loan = models.DecimalField(max_digits=12, decimal_places=0 , default=0,   blank=True)## 已借款amount
+
+
 
 
