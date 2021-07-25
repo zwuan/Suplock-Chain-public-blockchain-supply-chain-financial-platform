@@ -94,7 +94,6 @@ a:hover{
         height: 1em;
         font-size: 1em;
     }
-
 }
 @media(max-width:1600px){
     .card_title{
@@ -106,5 +105,4 @@ a:hover{
     .card_title-1{
         font-size: 1.4em;
     }
-
 }

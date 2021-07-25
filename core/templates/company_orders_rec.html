@@ -39,6 +39,7 @@
             <!-- hidden input -->
             <input type="text" style="display: none;" name="orders_interest" id="orders_interest" value="">
             <input type="text" style="display: none;" name="optype" value="loan">
+            <input type="text" style="display: none;" name="loan_TOKENB_id" id = "loan_TOKENB_id" value="">
             <!-- hidden input end -->
             <div class="money_input">
                 <h2 class="title_text">訂單編號：</h2>
@@ -61,7 +62,7 @@
                 </select>
             </div> -->
             <div class="add_money_btn">
-                <button class="submit_btn" type="submit" id='sendloan' name="confirm">融資</button>
+                <button class="submit_btn" type="button" id='sendloan' name="confirm">融資</button>
             </div>
         </form>
     </div>
@@ -77,6 +78,8 @@
             <!-- hidden input -->
             <input type="text" style="display: none;" name="bToC_interest" id="bToC_interest" value="">
             <input type="text" style="display: none;" name="optype" value="bToC">
+            <input type="text" style="display: none;" name="bToC_TOKENB_id" id = "bToC_TOKENB_id" value="">
+
             <!-- hidden input end -->
             <div class="money_input">
                 <h2 class="title_text">訂單編號：</h2>
@@ -107,7 +110,7 @@
                     </select>
                 </div> -->
             <div class='add_money_btn'>
-                <button class="submit_btn" type="submit" id='sendbToC' name="confirm">移轉</button>
+                <button class="submit_btn" type="button" id='sendbToC' name="confirm">移轉</button>
             </div>
         </form>
     </div>
@@ -145,9 +148,9 @@
                     {% for order in rec_orders %}
                     <!-- <tr name = 'make_id' onclick = pop_setIndex()> -->
                     <tr name='make_id' class="tr_height">
-                            <td name = 'percent'>{{order.interest}}</td>
+                            <td name = 'percent'>{{order.interest}}%</td>
                             <td name = 'order_id' style="display: none;">{{order.initial_order.id}}</td>
-                            <td>{{order.pre_company}}</td>
+                            <td>{{order.pre_company.user}}</td>
                             <td>{{order.initial_order.product}}</td>
                             <td>{{order.amount}}</td>
                             <td style="display: none;">{{order.initial_order.start_date}}</td>
@@ -155,6 +158,7 @@
                             <td>{{order.initial_order.get_state_display}}</td>
                             <td>{{order.already_loan}}</td>
                             <td>{{order.already_transfer}}</td>
+                            <td style="display: none;">{{order.id}}</td>
                             <td><button type="button" class="pop_loan_btn">融資</button></td>
                             <td><button type="button" class="pop_bToC_btn">移轉</button></td>
                     </tr>
@@ -188,7 +192,7 @@
     }
 </style>
 </body>
-<script type="text/javascript" src="./static/js/check_user.js"></script>
+<script type="text/javascript" src="{%static 'js/check_user.js' %}"></script>
 <script>
     $(document).ready(async function () {
         var curr_accounts = await ethereum.request({ method: 'eth_requestAccounts' });
@@ -203,10 +207,10 @@
         $('#rec_table tr').each((i, ele)=>{
             var str = '';
             $(ele).find('td').each(function (i, ele) {
-                if(i < 10) str += $(this).html()+'&';
+                if(i < 11) str += $(this).html()+'&';
             });
-            $(ele).find('td:eq(10)').children().attr("caption", str);
             $(ele).find('td:eq(11)').children().attr("caption", str);
+            $(ele).find('td:eq(12)').children().attr("caption", str);
         });
         
         // on click, 取得訂單資訊以dynamic製造loan頁面
@@ -222,6 +226,9 @@
             var price = Number(valArr[4]);
             var already_loan = Number(valArr[8]);
             var already_transfer = Number(valArr[9]);
+            var TOKENB_id = valArr[10];
+            console.log(TOKENB_id)
+            $('#loan_TOKENB_id').val(TOKENB_id);
             $('#orders_id').val(order_id);
             $('#orders_from_company_name').val(from_com_name);
             $('#orders_price').attr('placeholder', price - already_loan - already_transfer);
@@ -241,6 +248,8 @@
             var price = valArr[4];
             var already_loan = Number(valArr[8]);
             var already_transfer = Number(valArr[9]);
+            var TOKENB_id = valArr[10];
+            $('#bToC_TOKENB_id').val(TOKENB_id);
             $('#bToC_id').val(order_id);
             $('#bToC_from_company_name').val(from_com_name);
             $('#bToC_price').attr('placeholder', price - already_loan - already_transfer);
@@ -262,7 +271,7 @@
                 if (res['check'] == 'passed') {
                     $('#waiting').css("display", "flex");
                     $('#fade').css("display", "none");
-                    // form.submit(); 好像有問題
+                    form.submit(); 
                 } else {
                     alert('wrong account');
                     location.href = '/company_orders_rec';

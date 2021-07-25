@@ -31,16 +31,16 @@
                 <h2 class="title_text">設定接收廠商可借貸利率</h2>
             </div>
             <div class="money_input">
-                <h2 class="title_text">訂單編號：</h2>
-                <input type="text" class = "rec_comp" readonly='readonly' id = 'orders_id' name = 'orders_id'value=''>
+                <h2 class="title_text">存貨編號：</h2>
+                <input type="text" class = "rec_comp" readonly='readonly' disabled="disabled"id = 'orders_id' name = 'orders_id'value=''>
             </div>
             <div class="money_input">
-                <h2 class="title_text">廠商名稱：</h2>
-                <input type="text" class = "rec_comp" readonly='readonly' id = 'rec_company_name'name = 'rec_company_name' value=''>
+                <h2 class="title_text">物品名稱：</h2>
+                <input type="text" class = "rec_comp" readonly='readonly'disabled="disabled" id = 'product_name'name = 'rec_company_name' value=''>
             </div>
             <div class="money_input">
-                <h2 class="title_text">廠商地址：</h2>
-                <input type="text" class = "address_" readonly='readonly' id = 'addr' name = 'rec_com_address' value=''>
+                <h2 class="title_text">物品數量：</h2>
+                <input type="text" class = "rec_comp" readonly='readonly'disabled="disabled" id = 'quantities' name = 'rec_com_address' value=''>
             </div>
             <div class="money_input">
                 <h2 class="title_text">設定利率:</h2>
@@ -59,10 +59,10 @@
     <!-- <input class='btn_div'  id = 'btn_1' value = '透過憑證發出訂單'></input> -->
         <div class="table_above_tag">
             <div class='send_btn' id='clicked_1'>
-                <h2 class="send_order" >成功</h2>
+                <h2 class="send_order" >存貨</h2>
             </div>
             <a class='recieve_btn' id= 'clicked_2' href="{% url 'verification_OK' %}">
-                <h2 class="send_order" >驗證</h2>
+                <h2 class="send_order" >驗證成功</h2>
             </a>
         </div>
         <div class="ordersTable" id="sendOrder">
@@ -71,9 +71,9 @@
                     <tr>
                         <th>利息</th>
                         <th style="display: none;">訂單編號</th>
-                        <th>接收公司</th>
                         <th>項目</th>
                         <th>金額</th>
+                        <th>數量</th>
                         <th>開始時間</th>
                         <th>結束時間</th>
                         <th>狀態</th>
@@ -81,19 +81,19 @@
                 </thead>
                 <tbody>
                     {% for order in orders %}
-                    <tr name = 'make_id' onclick=" pop_set_rate()" >
-                        {% if not order.state == 1  %}
+                    <tr name ="make_id" onclick="{% if order.state == 5 %}  pop_set_rate() {% endif %}"  id ="option-{{ forloop.counter}}">
+                        {% if not order.state == 5  %}
                         <td name = 'percent'>{{ order.get_rate_display }}</td>
                         {% else %}
                         <td name = 'percent'>未設定</td>
                         {% endif %}
-                        <td name = 'order_id' style="display: none;">{{order.id}}</td>
-                        <td name= 'to_id' >{{order.receive_compamy.user}}</td>
-                        <td >{{order.product}}</td>
+                        <td name = 'order_id' style="display: none;" id = "order_id-{{ forloop.counter}}">{{order.id}}</td>
+                        <td id = "product_id-{{ forloop.counter}}">{{order.product}}</td>
                         <td>{{order.price}}</td>
+                        <td id = "quantity_id-{{ forloop.counter}}">{{order.quantity}}</td>
                         <td>{{order.start_date|date:'Y-m-d'}}</td>
                         <td>{{order.end_date|date:'Y-m-d'}}</td>
-                        <td name = 'state' >{{ order.get_state_display }}</td>
+                        <td name = 'state' class="{% if order.state == 6 %}greenText{% endif %}">{{ order.get_state_display }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -116,8 +116,7 @@
 </main>
 
 </body>
-<script type="text/javascript" src="./static/js/check_user.js"></script>
-
+<script type="text/javascript" src="{%static 'js/check_user.js' %}"></script>
 <script>
     let optionArray = [];
     let reciverArray = [];
@@ -127,14 +126,12 @@
     const fade = document.getElementById('fade_out'); //等待
     const overlay = document.getElementById('overlay');
     const pop_div = document.getElementById('pop_div');
-    const addr = document.getElementById('addr');
     const orders_id = document.getElementById('orders_id');
-    const state = document.getElementsByName('state');
-    const to_id = document.getElementsByName('to_id');
-    const make_id = document.getElementsByName('make_id');
     const order_id = document.getElementsByName('order_id');
-    const rec_company_name = document.getElementById('rec_company_name');
-    const company_addr_dict =  {{ company_addr_dict|safe }};   //django -> js (ignore the warning)
+    const quantities = document.getElementById('quantities')
+    const product_name = document.getElementById('product_name')
+
+    //const company_addr_dict =  {{ company_addr_dict|safe }};   //django -> js (ignore the warning)
     function pop_set_rate(){
         pop_div.classList.add('active');
         overlay.classList.add('active');
@@ -143,46 +140,15 @@
         pop_div.classList.remove('active');
         overlay.classList.remove('active');
     });
-    for (let i = 0; i < to_id.length; i++){
-        // set unique id for every order
-        to_id[i].setAttribute("id","receiver-"+i); 
-        make_id[i].setAttribute('id','option-'+i);
-        order_id[i].setAttribute('id','orderID-'+i);
-        state[i].setAttribute('id','state-'+i);
+    for (let i = 1; i <= order_id.length; i++){
         optionArray[i] = document.getElementById('option-'+i);
-        reciverArray[i] = document.getElementById('receiver-'+i);
-        orderIDArray[i] =  document.getElementById('orderID-'+i);
-        stateArray[i] =  document.getElementById('state-'+i);
-        // 客製化每個訂單彈出的小卡
-        optionArray[i].addEventListener('click',()=>{
-            for (let ele in company_addr_dict){
-                if (reciverArray[i].innerHTML == ele){
-                    addr.value = company_addr_dict[ele];
-                    rec_company_name.value = reciverArray[i].innerHTML;
-                    orders_id.value = orderIDArray[i].innerHTML;
-                };
-            };
-        });
     };
-    //只有憑證未發出才會彈出小卡
-    for (let ele in stateArray){
-        if (stateArray[ele].innerHTML != '憑證未發出'){
-            optionArray[ele].onclick = function(){
-                return false;
-            }
-        }
-    }
-    for (let ele in state){
-        if (state[ele].innerHTML == '訂單準備中'){
-            state[ele].style.color = 'green'
-        }
-        else if (state[ele].innerHTML == '訂單已完成'){
-            state[ele].style.color = 'blue'
-        }
-        else if (state[ele].innerHTML == '違約'){
-            state[ele].style.color = 'red'
-        }
-        
+    for (let i = 1 ;i < optionArray.length; i++ ){
+        optionArray[i].addEventListener('click',()=>{
+            orders_id.value = document.getElementById('order_id-'+i).innerHTML;
+            quantities.value = document.getElementById('quantity_id-'+i).innerHTML;
+            product_name.value = document.getElementById('product_id-'+i).innerHTML;
+        });
     }
     $('#send').on('click', function(e){
         waiting.style.display = 'flex';
