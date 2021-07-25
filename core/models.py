@@ -25,8 +25,7 @@ STATE_CHOICES = (
     (6, '完成驗證'),## for verification
     (7, '尚未付款'), ## for account payable/receivable
     (8, '發出應付'), ## for account payable/receivable
-    (9, '收到應收'), ## for account payable/receivable
-    (10, '帳款已結清') ## for account payable/receivable
+    (9, '帳款已結清') ## for account payable/receivable
 
 )
 CLASS_CHOICES = (

@@ -262,7 +262,7 @@ class company_order_rec(generic.ListView):
     def get_queryset(self):
         user = self.request.user
         company = Company.objects.get(user = user)
-        order_tokenB = TokenB.objects.filter(Q(curr_company = company) & (Q(class_type = 1) | Q(class_type =3))).order_by('date_span')   ## filter 該公司所擁有的tokenB
+        order_tokenB = TokenB.objects.filter(Q(curr_company = company) & (Q(class_type = 2) | Q(class_type =3))).order_by('date_span')   ## filter 該公司所擁有的tokenB
             ######################## 已改為用tokenB的資料庫做filter ########################
         return  order_tokenB   
 
@@ -442,11 +442,79 @@ class company_account_pay(generic.ListView):
         context['company_addr_dict'] = json.dumps(company_addr_dict)
         context['form'] = form
         return context
+    
+    def post(self, request, *args, **kwargs):
+        allUser = auth.get_user_model() # return all user
+        form = set_order_rate(request.POST)
+        if form.is_valid():
+            orders_id = form.cleaned_data['orders_id'] ##訂單編號
+            rec_com_address = form.cleaned_data['rec_com_address'] ##接收的公司的地址 
+            rec_company = Company.objects.filter(public_address = rec_com_address)[0] ##接收的公司object
+            rec_com_address = Web3.toChecksumAddress(rec_com_address) 
 
+            rate = float(form.cleaned_data['rate']) ## 訂單發出可貸款利率
+            user = self.request.user ##請求的使用者
+            order = Company_orders.objects.filter(id = orders_id)[0] ##找到資料庫的這筆訂單
+            order_for_update = Company_orders.objects.filter(id = orders_id) ## update 只支援queryset
+            amount = int(order.price) ##訂單價值
+            end = order.end_date ## 結束日
+            now = datetime.date.today() ## 透過平台的發訂單日
+            date_span = end - now ## 時間段
+            date_span = date_span.days 
+            company = Company.objects.filter(user = user)[0] ##發出的公司
+            company_for_update = Company.objects.filter(user = user)
+            contract_address = company.contract_address ##發出的公司合約地址
+            core_address = Web3.toChecksumAddress(company.public_address) ## 核心 公鑰 checksumaddresss
+
+            # 先上鏈再操縱資料庫
+            # (address _to, uint256 _amount, uint256 _interest, uint256 _date, uint16 _class)
+            logs = token_A_to_B(contract_address, rec_com_address, amount, int(rate), date_span, 1) ##訂單 class = 1 應收上鏈
+            # tokenAtoB的 event
+            event = logs[0]['args']
+
+            print(logs)
+            
+            log_amount, log_rate, log_receiver, log_id=  event['amount'], event['interest'], event['receiver'], event['id']
+            transactionHash = str(logs[0]['transactionHash'].hex())
+
+            # db manipulation
+            order_for_update.update(rate = rate , start_date = datetime.date.today(), state = 8) ##更新設定利率 起始時間 狀態變為發出應付 
+            core_amount_a = float(call_tokenA(contract_address, core_address)) ## 拿到最新的tokenA數量
+            company_for_update.update(amount_a = core_amount_a) ##更新資料庫
+
+            new_tknB = TokenB.objects.create(
+                amount=log_amount, 
+                class_type=1, 
+                token_id=log_id, 
+                interest=log_rate, 
+                date_span=date_span, 
+                transfer_count=0, 
+                initial_order=order,
+                curr_company = rec_company,
+                pre_company = company,
+                transactionHash = transactionHash,
+                tokenB_balance = log_amount,   ## 原本在Company_orders資料表下
+            )
+
+            context = {"log_amount":log_amount,"log_rate":log_rate,"log_receiver":log_receiver}
+            ###############消息模組
+            receiver = order.receive_compamy.user ## 找到訂單接收者
+            notify.send(user, recipient=receiver, verb='發送了訂單') ## 向訂單接收者發送消息
+            ######################## 這裡要一個頁面説訂單已發出 ########################
+            return render(request, 'company_index.html')
 
 ##應收
-def company_account_rec(request):
-    return render(request,'company_account_rec.html')
+class company_account_rec(generic.ListView):
+    model = TokenB
+    template_name = 'company_account_rec.html'
+    context_object_name = 'rec_orders'
+    paginate_by = 6
+    def get_queryset(self):
+        user = self.request.user
+        company = Company.objects.get(user = user)
+        order_tokenB = TokenB.objects.filter(Q(curr_company = company) & (Q(class_type = 1) | Q(class_type =3))).order_by('date_span')   ## filter 該公司所擁有的tokenB
+        return  order_tokenB   
+
 ##通知
 @method_decorator(csrf_exempt, name='dispatch')
 class my_notification(generic.View):
