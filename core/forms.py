@@ -4,17 +4,17 @@ from django.contrib.auth.models import User
 from .fields import ListTextWidget
 
 RATE_CHOICES = (
-    (0.03, '3%'),
-    (0.04, '4%'),
-    (0.05, '5%'),
-    (0.06, '6%'),
-    (0.07, '7%'),
-    (0.08, '8%'),
-    (0.09, '9%'),
-    (0.10,'10%'),
-    (0.11,'11%'),
-    (0.12,'12%'),
-    (0.13,'13%'),
+    (3, '3%'),
+    (4, '4%'),
+    (5, '5%'),
+    (6, '6%'),
+    (7, '7%'),
+    (8, '8%'),
+    (9, '9%'),
+    (10,'10%'),
+    (11,'11%'),
+    (12,'12%'),
+    (13,'13%'),
 )
 ##註冊表單  
 class user_register(forms.Form):
@@ -47,6 +47,7 @@ class set_order_rate(forms.Form):
 class set_loan(forms.Form):
     optype = forms.CharField() # use operation type to decide which view to pass this form 
     orders_interest = forms.CharField()
+    loan_TOKENB_id = forms.CharField(required=True)
     orders_id = forms.CharField()
     orders_from_company_name = forms.CharField()
     orders_price = forms.CharField()
@@ -54,6 +55,7 @@ class set_loan(forms.Form):
 # 移轉表單
 class companyListForm(forms.Form):
     optype = forms.CharField(required=True)
+    bToC_TOKENB_id = forms.CharField(required=True)
     bToC_interest = forms.CharField(required=True)
     bToC_id = forms.CharField(required=True)
     bToC_from_company_name = forms.CharField(required=True)

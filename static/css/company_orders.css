@@ -334,6 +334,9 @@ tbody tr:hover{
 .pop_bToC_btn:hover{
     background-image: linear-gradient(rgba(0, 0, 0, 0.4) 0 0);
 }
+.greenText{
+    color: green !important;
+}
 @keyframes loader {
     0% { transform: rotate(0deg);}
     25% { transform: rotate(180deg);}

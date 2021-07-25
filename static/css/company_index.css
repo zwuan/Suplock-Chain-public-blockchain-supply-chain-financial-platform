@@ -401,5 +401,7 @@ animation: loader-inner 2s infinite ease-in;
     .card_title-1{
         font-size: 1.4em;
     }
-
+    .ele_text{
+        font-size: 0.6em;
+    } 
 }

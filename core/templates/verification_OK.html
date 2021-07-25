@@ -118,10 +118,10 @@
         <!-- <input class='btn_div-1' type = 'submit'  id = 'btn_1' value = '透過憑證借款'></input> -->
         <div class="table_above_tag">
             <a class='send_btn' id='clicked_1' href="{% url 'verification_ERP' %}">
-                <h2 class="send_order">驗證</h2>
+                <h2 class="send_order">存貨</h2>
             </a>
             <div class='recieve_btn' id= 'clicked_2'>
-                <h2 class="send_order">成功</h2>
+                <h2 class="send_order">驗證成功</h2>
             </div>
         </div>
         <div class="ordersTable" >
@@ -186,7 +186,7 @@
     }
 </style>
 </body>
-<script type="text/javascript" src="./static/js/check_user.js"></script>
+<script type="text/javascript" src="{%static 'js/check_user.js' %}"></script>
 <script>
     $(document).ready(async function () {
         var curr_accounts = await ethereum.request({ method: 'eth_requestAccounts' });
