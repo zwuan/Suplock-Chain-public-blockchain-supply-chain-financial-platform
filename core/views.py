@@ -111,7 +111,9 @@ class company_index(generic.View):
             deposit = Deposit.objects.filter(deposit_company = company).order_by('-deposit_time')
             order_send_count = company.send_company.filter(Q(state = 1)|Q(state = 2)|Q(state = 3)).count()
             order_receive_count = TokenB.objects.filter(Q(curr_company = company) & (Q(class_type = 2) | Q(class_type =3))).count()
-            context = {'msg':company,'tokenA':tokenA,'deposit':deposit,'order_send_count':order_send_count,"order_receive_count":order_receive_count}
+            account_payable_count = company.send_company.filter(Q(state = 7)|Q(state = 8)|Q(state = 10)).count()
+            account_receivable_count = TokenB.objects.filter(Q(curr_company = company) & (Q(class_type = 1) | Q(class_type =3))).count()
+            context = {'msg':company,'tokenA':tokenA,'deposit':deposit,'order_send_count':order_send_count,"order_receive_count":order_receive_count,'account_payable_count':account_payable_count,'account_receivable_count':account_receivable_count}
             return render(request, 'company_index.html',context)
         else:
             return redirect(reverse_lazy('login_company'))
@@ -260,7 +262,7 @@ class company_order_rec(generic.ListView):
     def get_queryset(self):
         user = self.request.user
         company = Company.objects.get(user = user)
-        order_tokenB = TokenB.objects.filter(Q(curr_company = company) & (Q(class_type = 2) | Q(class_type =3))).order_by('date_span')   ## filter 該公司所擁有的tokenB
+        order_tokenB = TokenB.objects.filter(Q(curr_company = company) & (Q(class_type = 1) | Q(class_type =3))).order_by('date_span')   ## filter 該公司所擁有的tokenB
             ######################## 已改為用tokenB的資料庫做filter ########################
         return  order_tokenB   
 
@@ -415,8 +417,33 @@ class company_order_rec(generic.ListView):
                 return render(request, 'company_index.html')
 
 ##應付
-def company_account_pay(request):
-    return render(request,'company_account_pay.html')
+class company_account_pay(generic.ListView):
+    model = Company_orders
+    template_name = 'company_account_pay.html'
+    context_object_name = 'orders'
+    paginate_by = 6
+    ##回傳每筆訂單
+    def get_queryset(self):
+        user = self.request.user
+        company = Company.objects.filter(user = user)[0]
+        return  company.send_company.filter(Q(state = 7)|Q(state = 8)|Q(state = 10))
+    def get_context_data(self, **kwargs) :
+        form = set_order_rate()
+        company_addr_dict = {}
+        rec_com_list = []
+        context =  super(company_account_pay,self).get_context_data(**kwargs)
+        user = self.request.user
+        company = Company.objects.filter(user = user)[0]
+        all_company = company.send_company.all()
+        for rec_com in all_company:
+            rec_com_list.append(rec_com.receive_compamy)
+        for c in rec_com_list:
+            company_addr_dict[c.user.username] = c.public_address
+        context['company_addr_dict'] = json.dumps(company_addr_dict)
+        context['form'] = form
+        return context
+
+
 ##應收
 def company_account_rec(request):
     return render(request,'company_account_rec.html')

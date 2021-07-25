@@ -19,7 +19,7 @@
 </div>
 <main class="main_content" id = 'fade_out'>
     <div class='content_title'> 
-        <h2>應收/應付 管理</h2>
+        <h2>應收/應付管理</h2>
     </div>
     <!-- 點擊變暗 -->
     <div id = 'overlay'></div> 
@@ -51,7 +51,7 @@
                 </select>
             </div>
             <div class='add_money_btn'>
-                <button class="submit_btn" type="submit" id='send' name="confirm">發出應付帳款</button>
+                <button class="submit_btn" type="button" id='send' name="confirm">發出應收</button>
             </div>
         </form>
     </div>
@@ -81,8 +81,8 @@
                 </thead>
                 <tbody>
                     {% for order in orders %}
-                    <tr name = 'make_id' onclick=" pop_set_rate()" >
-                        {% if not order.state == 1  %}
+                    <tr name = 'make_id' onclick="{% if order.state == 7 %}  pop_set_rate() {% endif %}" >
+                        {% if not order.state == 7  %}
                         <td name = 'percent'>{{ order.get_rate_display }}</td>
                         {% else %}
                         <td name = 'percent'>未設定</td>
@@ -116,6 +116,7 @@
 </main>
 
 </body>
+<script type="text/javascript" src="{%static 'js/check_user.js' %}"></script>
 
 <script>
     let optionArray = [];
@@ -133,7 +134,7 @@
     const make_id = document.getElementsByName('make_id');
     const order_id = document.getElementsByName('order_id');
     const rec_company_name = document.getElementById('rec_company_name');
-    // const company_addr_dict =  {{ company_addr_dict|safe }};   //django -> js (ignore the warning)
+    const company_addr_dict =  {{ company_addr_dict|safe }};   //django -> js (ignore the warning)
     function pop_set_rate(){
         pop_div.classList.add('active');
         overlay.classList.add('active');
@@ -164,13 +165,6 @@
         });
     };
     //只有憑證未發出才會彈出小卡
-    for (let ele in stateArray){
-        if (stateArray[ele].innerHTML != '憑證未發出'){
-            optionArray[ele].onclick = function(){
-                return false;
-            }
-        }
-    }
     for (let ele in state){
         if (state[ele].innerHTML == '訂單準備中'){
             state[ele].style.color = 'green'
@@ -183,9 +177,29 @@
         }
         
     }
-    $('#send').on('click', function(e){
-        waiting.style.display = 'flex';
-        fade.style.display = 'none';
+    $(document).ready(async function () {
+        $('#send').on('click',async  function (e) {
+            var curr_accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+            e.preventDefault();
+            var form = $(this).parents('form:first');
+            let check_addr = await checkUser(form.serializeArray(), curr_accounts[0]);
+            $.ajax({
+                method: "POST",
+                url: "/checkUser/",
+                data: { 'check_addr': check_addr },
+                dataType: "json"
+            }).done(async function (res) {
+                if (res['check'] == 'passed') {
+                    form.submit();
+                    $('#waiting').css("display", "flex");
+                    $('#fade').css("display", "none");
+                    $('#pop_div').css("display", "none");
+                } else {
+                    alert('wrong account');
+                }
+            });
+        });
+
     });
 
 </script>

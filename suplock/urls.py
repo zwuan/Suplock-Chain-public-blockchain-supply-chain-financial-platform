@@ -17,7 +17,7 @@ urlpatterns = [
     path('checkUser/', views.checkUser),
     path('wallet/' ,views.wallet.as_view(), name='wallet'),
     path('company_info/', views.company_info.as_view(), name = 'company_info'),
-    path('company_account_pay/', views.company_account_pay, name = 'company_account_pay'),
+    path('company_account_pay/', views.company_account_pay.as_view(), name = 'company_account_pay'),
     path('company_account_rec/', views.company_account_rec, name = 'company_account_rec'),
     path('notifications/', include(notifications.urls, namespace='notifications')),
     path('my_notification/', views.my_notification.as_view(),name='my_notification'),

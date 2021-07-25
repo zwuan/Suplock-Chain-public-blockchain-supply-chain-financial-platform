@@ -17,12 +17,17 @@ RATE_CHOICES = (
     (13,'13%'),
 )
 STATE_CHOICES = (
-    (1, '憑證未發出'),
-    (2, '訂單準備中'),
-    (3, '訂單已完成'),
-    (4, '違約'),
-    (5, '未驗證'),
-    (6, '完成驗證')
+    (1, '憑證未發出'), ## for orders
+    (2, '訂單準備中'),## for orders
+    (3, '訂單已完成'),## for orders
+    (4, '違約'),  ## for all type
+    (5, '未驗證'), ## for verification
+    (6, '完成驗證'),## for verification
+    (7, '尚未付款'), ## for account payable/receivable
+    (8, '發出應付'), ## for account payable/receivable
+    (9, '收到應收'), ## for account payable/receivable
+    (10, '帳款已結清') ## for account payable/receivable
+
 )
 CLASS_CHOICES = (
     (1, '應收'),
