@@ -32,13 +32,13 @@
                     <a class="nav-link" href= "{% url 'company_orders' %}" >訂單</a>
                 </li>
                 <li class="nav-item" id = 'i2'>
-                    <a class="nav-link" href="#">應收<span class="sr-only">(current)</span></a>
+                    <a class="nav-link" href="{% url 'company_account_pay' %}">應收<span class="sr-only">(current)</span></a>
                 </li>
                 <li class="nav-item" id = 'i3'>
-                    <a class="nav-link" href="#">驗證</a>
+                    <a class="nav-link" href="{% url 'verification_ERP' %}">驗證</a>
                 </li>
                 <li class="nav-item" id = 'i4'>
-                    <a class="nav-link" href="#">投資</a>
+                    <a class="nav-link" href="{% url 'invest_index' %}">投資</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'logout' %}">登出</a>
@@ -46,7 +46,7 @@
             </ul>
                 <div class="rightbar" >
                     <a class="" href = "{% url 'add_erc865' %}" ><img id = "plus"  src="{%static 'icon/plus-circle.svg' %}" ></a>
-                    <label for = 'input_remain' class="ml-1 mr-1" id = "remain">餘額：</label>
+                    <label for = 'input_remain' class="ml-1 mr-1" id = "remain">平台幣餘額：</label>
                     <input id="input_remain" type="text" disabled>
                     {% notifications_unread as unread_count %}
                     {% if unread_count > 0 %}

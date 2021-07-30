@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>投資</title>
+    {% load static %}
+    {% include 'nav_login.html' %} 
+    <link rel="stylesheet" href="{%static 'css/invest_index.css' %}">
+</head>
+<body>
+   
+    <main class = 'main_content'>
+        <div class = "top_back_ground" style="background: linear-gradient( rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1) ), url(/static/icon/investor_back_rotate.jpeg);">
+            <h1 class ='invest_title'>供應鏈融資平台</h1>
+            <article class ='intro_article'>
+                Lorem ipsum dolor sit amet consectetur adipisicing elit. Iure quae exercitationem maiores doloribus quaerat fuga quas sed vero expedita? Quod corrupti a voluptas. 
+                A dignissimos molestias, 
+            </article>
+        </div>
+        <div class = 'intro_card'>
+            <div class = card_detail>
+                <div class = "inline_money">
+                    <h1 class='card_number'>$</h1>
+                    <h2 class="card_number slowNumber" >1,234,567</h2>
+                </div>
+                <h2 class="card_title" >總交易量</h2>
+            </div>
+            <div class = card_detail>
+                <div class = "inline_money">
+                    <h1 class='card_number'>$</h1>
+                    <h2 class="card_number slowNumber" >222,567</h2>
+                </div>
+                <h2 class="card_title" >總鎖倉量</h2>
+            </div>
+            <div class = card_detail>
+                <h2 class="card_number slowNumber">643</h2>
+                <h2 class="card_title" >可申購數</h2>
+            </div>
+            <div class = card_detail>
+                <div class = "inline_money">
+                    
+                    <h2 class="card_number slowNumber" >9.8</h2>
+                    <h1 class='card_number'>%</h1>
+                </div>
+                <h2 class="card_title" >平均年化</h2>
+            </div>
+        </div>
+        <div class="direction"></div>
+        <div class="subject">投資標的</div>
+        <div class="investment_table">
+            <div class="invest_intro">
+                <h2 class="intro_title">企業</h2>
+                <h2 class="intro_title1">利率</h2>
+                <h2 class="intro_title1">每月還款</h2>
+                <h2 class="intro_title1">期數</h2>
+            </div>
+            <a class="invest_element" href="#">
+                <h2 class="company_title">Subaru<img id = "exchange_svg"src = "{%static 'icon/currency-exchange.svg' %}"></h2>
+                <h2 class="intro_title2">10%</h2>
+                <h2 class="intro_title2">10,000</h2>
+                <h2 class="intro_title2">12期</h2>
+            </a>
+            <a class="invest_element" href="#">
+                <h2 class="company_title">Subaru<img id = "exchange_svg"src = "{%static 'icon/currency-exchange.svg' %}"></h2>
+                <h2 class="intro_title2">10%</h2>
+                <h2 class="intro_title2">10,000</h2>
+                <h2 class="intro_title2">12期</h2>
+            </a>
+            <a class="invest_element" href="#">
+                <h2 class="company_title">Subaru<img id = "exchange_svg"src = "{%static 'icon/currency-exchange.svg' %}"></h2>
+                <h2 class="intro_title2">10%</h2>
+                <h2 class="intro_title2">10,000</h2>
+                <h2 class="intro_title2">12期</h2>
+            </a>
+            <a class="invest_element" href="#">
+                <h2 class="company_title">Subaru<img id = "exchange_svg"src = "{%static 'icon/currency-exchange.svg' %}"></h2>
+                <h2 class="intro_title2">10%</h2>
+                <h2 class="intro_title2">10,000</h2>
+                <h2 class="intro_title2">12期</h2>
+            </a>
+            <a class="invest_element" href="#">
+                <h2 class="company_title">Subaru<img id = "exchange_svg"src = "{%static 'icon/currency-exchange.svg' %}"></h2>
+                <h2 class="intro_title2">10%</h2>
+                <h2 class="intro_title2">10,000</h2>
+                <h2 class="intro_title2">12期</h2>
+            </a>
+            <a class="invest_element" href="#">
+                <h2 class="company_title">Subaru<img id = "exchange_svg"src = "{%static 'icon/currency-exchange.svg' %}"></h2>
+                <h2 class="intro_title2">10%</h2>
+                <h2 class="intro_title2">10,000</h2>
+                <h2 class="intro_title2">12期</h2>
+            </a>
+            <div class="invest_info" >
+                <a class="more_info" href = "{% url 'invest_option'%}">更多投資選項</a>
+                <img id = caret_svg src="{%static 'icon/caret-right.svg' %}" >
+            </div>
+        </div>
+        <div class="direction"></div>
+        <section class="text_on_border"> 
+            <div class="title_wrapper">
+                <h2 class="text_above">存入代幣，享受收益</h2>
+            </div>
+            <div class="inside_intro">
+                <h2 class="text_inside">1</h2>
+                <h3 class='subtex_inside'>選擇喜歡的公司</h3>
+                <p class="sub_p">我們為您列出每家公司的債權利率，點選並成為投資者。</p>
+            </div>
+            <div class="inside_intro">
+                <h2 class="text_inside">2</h2>
+                <h3 class='subtex_inside'>存入代幣到Suplock</h3>
+                <p class="sub_p">再一步就能擁有穩定收益，只需將您的代幣存入指定地址。</p>
+            </div>
+            <div class="inside_intro">
+                <h2 class="text_inside">3</h2>
+                <h3 class='subtex_inside'>獲取每期固定收益</h3>
+                <p class="sub_p">Suplock會根據債權利率，每期自動將收益轉入您的地址。</p>
+            </div>
+        </section>
+    </main>
+    
+</body>
+<script type="text/javascript" src="{%static 'js/slowNumber.js' %}"></script>
+</html>

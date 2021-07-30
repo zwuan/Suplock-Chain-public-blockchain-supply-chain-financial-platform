@@ -51,7 +51,7 @@
                 </select>
             </div>
             <div class='add_money_btn'>
-                <button class="submit_btn" type="submit" id='send' name="confirm">發出訂單</button>
+                <button class="submit_btn" type="button" id='send' name="confirm">發出訂單</button>
             </div>
         </form>
     </div>
@@ -91,8 +91,8 @@
                         <td name= 'to_id' >{{order.receive_compamy.user}}</td>
                         <td >{{order.product}}</td>
                         <td>{{order.price}}</td>
-                        <td>{{order.start_date}}</td>
-                        <td>{{order.end_date}}</td>
+                        <td>{{order.start_date|date:'Y-m-d'}}</td>
+                        <td>{{order.end_date|date:'Y-m-d'}}</td>
                         <td name = 'state' >{{ order.get_state_display }}</td>
                     </tr>
                     {% endfor %}
@@ -116,7 +116,7 @@
 </main>
 
 </body>
-<script type="text/javascript" src="./static/js/check_user.js"></script>
+<script type="text/javascript" src="{%static 'js/check_user.js' %}"></script>
 
 <script>
     let optionArray = [];
@@ -184,9 +184,29 @@
         }
         
     }
-    $('#send').on('click', function(e){
-        waiting.style.display = 'flex';
-        fade.style.display = 'none';
+    $(document).ready(async function () {
+        $('#send').on('click',async  function (e) {
+            var curr_accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+            e.preventDefault();
+            var form = $(this).parents('form:first');
+            let check_addr = await checkUser(form.serializeArray(), curr_accounts[0]);
+            $.ajax({
+                method: "POST",
+                url: "/checkUser/",
+                data: { 'check_addr': check_addr },
+                dataType: "json"
+            }).done(async function (res) {
+                if (res['check'] == 'passed') {
+                    form.submit();
+                    $('#waiting').css("display", "flex");
+                    $('#fade').css("display", "none");
+                    $('#pop_div').css("display", "none");
+                } else {
+                    alert('wrong account');
+                }
+            });
+        });
+
     });
 
 </script>

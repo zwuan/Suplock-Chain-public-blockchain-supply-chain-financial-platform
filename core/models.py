@@ -4,29 +4,36 @@ from django.contrib.auth.models import User
 import datetime
 
 RATE_CHOICES = (
-    (0.03, '3%'),
-    (0.04, '4%'),
-    (0.05, '5%'),
-    (0.06, '6%'),
-    (0.07, '7%'),
-    (0.08, '8%'),
-    (0.09, '9%'),
-    (0.10,'10%'),
-    (0.11,'11%'),
-    (0.12,'12%'),
-    (0.13,'13%'),
+    (3, '3%'),
+    (4, '4%'),
+    (5, '5%'),
+    (6, '6%'),
+    (7, '7%'),
+    (8, '8%'),
+    (9, '9%'),
+    (10,'10%'),
+    (11,'11%'),
+    (12,'12%'),
+    (13,'13%'),
 )
 STATE_CHOICES = (
-    (1, '憑證未發出'),
-    (2, '訂單準備中'),
-    (3, '訂單已完成'),
-    (4, '違約'),
+    (1, '憑證未發出'), ## for orders
+    (2, '訂單準備中'),## for orders
+    (3, '訂單已完成'),## for orders
+    (4, '違約'),  ## for all type
+    (5, '未驗證'), ## for verification
+    (6, '完成驗證'),## for verification
+    (7, '尚未付款'), ## for account payable/receivable
+    (8, '發出應付'), ## for account payable/receivable
+    (9, '帳款已結清') ## for account payable/receivable
+
 )
 CLASS_CHOICES = (
     (1, '應收'),
     (2, '訂單'),
     (3, '移轉'),
-    (4, '貸款')
+    (4, '貸款'),
+    (5, '驗證抵押')
 )
 
 class Company(models.Model):
@@ -38,6 +45,15 @@ class Company(models.Model):
     amount_865 = models.DecimalField(max_digits=12, decimal_places=0, null=True) #核心企業平台幣數量
     create_time = models.DateTimeField(auto_now_add= True) #進入時間
     contract_address = models.CharField(max_length=42,null=True,blank=True) ##合約地址
+    company_type = models.CharField(max_length=42,null=True,blank=True) #行業別
+    capital = models.DecimalField(max_digits=12, decimal_places=0, null=True) #資本額
+    chairman = models.CharField(max_length=42,null=True,blank=True) #董事長
+    company_location =  models.CharField(max_length=42,null=True,blank=True) #公司地址
+    supervisor = models.CharField(max_length=42,null=True,blank=True) #登記機關
+    establish_date = models.CharField(max_length=42,null=True,blank=True) #成立日期
+    responsible_person = models.CharField(max_length=42,null=True,blank=True) #負責人
+    
+
 
 class Deposit(models.Model):
     deposit_company = models.ForeignKey(Company,on_delete=models.CASCADE ,related_name='deposit_company')
@@ -60,15 +76,13 @@ class Company_orders(models.Model):
     send_company = models.ForeignKey(Company,on_delete=models.CASCADE ,related_name='send_company') ## 一個發出Company 對多 orders
     receive_compamy = models.ForeignKey(Company,on_delete=models.CASCADE ,related_name='receive_comapny') ## 一個接收Company 對多 orders
     product  = models.CharField(max_length=40) ##訂單項目
-    price = models.DecimalField(max_digits=12, decimal_places=1) ##訂單價格
+    price = models.IntegerField(null=True, blank=True) ##訂單價格
     start_date = models.DateField(auto_now_add = True ,null=True) ## 發起時間
     end_date = models.DateField() ## 結束時間
     state = models.IntegerField(choices=STATE_CHOICES, default=1) ##狀態
-    rate = models.FloatField(choices=RATE_CHOICES, null=True,  blank=True) ##利息
-    tokenB_balance = models.DecimalField(max_digits=12, decimal_places=0 , default=0, blank=True)##tokenB可使用餘額
-    already_transfer = models.DecimalField(max_digits=12, decimal_places=0,  default=0,  blank=True)## 已移轉amount
-    already_loan = models.DecimalField(max_digits=12, decimal_places=0 , default=0,   blank=True)## 已借款amount
+    rate = models.IntegerField(choices=RATE_CHOICES, null=True,  blank=True) ##利息
     transactionHash = models.CharField(max_length=66, null=True, blank=True)
+    quantity = models.IntegerField(null=True, blank = True) ##數量 onlyfor 驗證
 
 
 # loan (address _loaner, uint256 _amount, uint16 _class, uint _id, uint256 _interest, uint256 _date)
@@ -77,7 +91,7 @@ class TokenB(models.Model):
     amount = models.CharField(max_length=100, null=True, blank=True) ##tokenB金額
     class_type = models.IntegerField(choices=CLASS_CHOICES, null=True, blank=True) ##tokenB (應收, 訂單, 移轉, 貸款)
     token_id = models.CharField(max_length=100, null=True, blank=True) ## tokenB的id, 因為太長所以用charfield
-    interest = models.FloatField(null=True, blank=True)
+    interest = models.IntegerField(null=True, blank=True)
     date_span = models.IntegerField(null=True, blank=True)
     transfer_count = models.IntegerField(null=True, blank=True) ##移轉次數
 
@@ -85,5 +99,11 @@ class TokenB(models.Model):
     pre_company = models.ForeignKey(Company,on_delete=models.CASCADE ,related_name='pre_company', null=True,  blank=True)
     curr_company = models.ForeignKey(Company,on_delete=models.CASCADE ,related_name='curr_company', null=True,  blank=True)
     transactionHash = models.CharField(max_length=66, null=True, blank=True)
+
+    tokenB_balance = models.DecimalField(max_digits=12, decimal_places=0 , default=0, blank=True)##tokenB可使用餘額
+    already_transfer = models.DecimalField(max_digits=12, decimal_places=0,  default=0,  blank=True)## 已移轉amount
+    already_loan = models.DecimalField(max_digits=12, decimal_places=0 , default=0,   blank=True)## 已借款amount
+
+
 
 

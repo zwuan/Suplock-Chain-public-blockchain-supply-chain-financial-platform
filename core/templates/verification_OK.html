@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的訂單</title>
+    {% include 'nav_login.html' %}
+    {% load static %}
+    <link rel="stylesheet" href="{%static 'css/company_orders.css' %}">
+</head>
+<body>
+    <style>
+        tbody tr:hover{
+            color: black;
+            cursor: default;
+        }
+    </style>
+<div class="loader-wrapper" id='waiting'>
+    <div>
+        <span class="loader"><span class="loader-inner"></span></span>
+    </div>
+    <h2 style="color: white; margin-top: 20px;">Wait for the transaction complete</h2>
+</div>
+<main class="main_content" id="fade">
+    <div class='content_title'> 
+        <h2>發起的驗證</h2>
+    </div>
+    <!-- 點擊變暗 -->
+    <div id='overlay'></div>
+    <!-- 融資小卡 -->
+    <div id='pop_loan_div' class="add_rate">
+        <form action="" method="POST">
+            {% csrf_token %}
+            <div class="add_title">
+                <h2 class="title_text">設定融資金額及投資人分券利率</h2>
+            </div>
+            <!-- hidden input -->
+            <input type="text" style="display: none;" name="orders_interest" id="orders_interest" value="">
+            <input type="text" style="display: none;" name="optype" value="loan">
+            <!-- hidden input end -->
+            <div class="money_input">
+                <h2 class="title_text">訂單編號：</h2>
+                <input type="text" class="rec_comp" readonly="readonly" id="orders_id" name="orders_id" value="">
+            </div>
+            <div class="money_input">
+                <h2 class="title_text">廠商名稱：</h2>
+                <input type="text" class="rec_comp" readonly="readonly" id="orders_from_company_name" name="orders_from_company_name" value="">
+            </div>
+            <div class="money_input">
+                <h2 class="title_text">訂單金額：</h2>
+                <input type="text" class="rec_comp" id="orders_price" name="orders_price" placeholder="" value="">
+            </div>
+            <!-- <div class="money_input">
+                <h2 class="title_text">設定利率:</h2>
+                <select class="money_amount" name="rate">
+                    {% for value, label in form.fields.rate.choices %}
+                    　<option value="{{value}}">{{label}}</option>
+                    {% endfor %}
+                </select>
+            </div> -->
+            <div class="add_money_btn">
+                <button class="submit_btn" type="submit" id='sendloan' name="confirm">融資</button>
+            </div>
+        </form>
+    </div>
+    <!-- 融資小卡 end -->
+
+    <!-- 移轉小卡 -->
+    <div id='pop_bToC_div' class="add_rate">
+        <form action="" method="POST">
+            {% csrf_token %}
+            <div class="add_title">
+                <h2 class="title_text">設定融資金額及投資人分券利率</h2>
+            </div>
+            <!-- hidden input -->
+            <input type="text" style="display: none;" name="bToC_interest" id="bToC_interest" value="">
+            <input type="text" style="display: none;" name="optype" value="bToC">
+            <!-- hidden input end -->
+            <div class="money_input">
+                <h2 class="title_text">訂單編號：</h2>
+                <input type="text" class="rec_comp" readonly="readonly" id="bToC_id" name="bToC_id" value="">
+            </div>
+            <div class="money_input">
+                <h2 class="title_text">發出廠商名稱：</h2>
+                <input type="text" class="rec_comp" readonly="readonly" id="bToC_from_company_name"
+                    name="bToC_from_company_name" value="">
+            </div>
+            <!-- 下拉選單dropdown -->
+            <div class="money_input">
+                 <h2 class="title_text">移轉廠商名稱：</h2>
+                    {{form.bToC_to_company_name}}
+                <!-- <input type="text" class="rec_comp" for readonly='readonly' id='bToC_to_company_name'
+                    name='bToC_to_company_name' value=''> -->
+            </div>
+            <div class="money_input">
+                <h2 class="title_text">移轉數量：</h2>
+                <input type="text" class="rec_comp" id="bToC_price" name="bToC_price" placeholder="" value="">
+            </div>
+            <!-- <div class="money_input">
+                    <h2 class="title_text">設定利率:</h2>
+                    <select class="money_amount" name="rate">
+                        {% for value, label in form.fields.rate.choices %}
+                        　<option value="{{value}}">{{label}}</option>
+                        {% endfor %}
+                    </select>
+                </div> -->
+            <div class='add_money_btn'>
+                <button class="submit_btn" type="submit" id='sendbToC' name="confirm">移轉</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 移轉小卡  end -->
+
+    <div class="outer">
+        <!-- <input class='btn_div-1' type = 'submit'  id = 'btn_1' value = '透過憑證借款'></input> -->
+        <div class="table_above_tag">
+            <a class='send_btn' id='clicked_1' href="{% url 'verification_ERP' %}">
+                <h2 class="send_order">存貨</h2>
+            </a>
+            <div class='recieve_btn' id= 'clicked_2'>
+                <h2 class="send_order">驗證成功</h2>
+            </div>
+        </div>
+        <div class="ordersTable" >
+            <table class="table table-striped" id="rec_table">
+                <thead>
+                    <tr>
+                        <th>利息</th>
+                        <th style="display: none;">訂單編號</th>
+                        <th>項目</th>
+                        <th>金額</th>
+                        <th>結束時間</th>
+                        <th>狀態</th>
+                        <th>已融資</th>
+                        <th>已移轉</th>
+                        <th>操作</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in rec_orders %}
+                    <!-- <tr name = 'make_id' onclick = pop_setIndex()> -->
+                    <tr name='make_id' class="tr_height">
+                            <td name = 'percent'>{{order.interest}}</td>
+                            <td name = 'order_id' style="display: none;">{{order.initial_order.id}}</td>
+                            <td>{{order.initial_order.product}}</td>
+                            <td>{{order.amount}}</td>
+                            <td style="display: none;">{{order.initial_order.start_date}}</td>
+                            <td>{{order.initial_order.end_date|date:'Y-m-d'}}</td>
+                            <td>{{order.initial_order.get_state_display}}</td>
+                            <td>{{order.already_loan}}</td>
+                            <td>{{order.already_transfer}}</td>
+                            <td><button type="button" class="pop_loan_btn">融資</button></td>
+                            <td><button type="button" class="pop_bToC_btn">移轉</button></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div class='paginator'>
+                {% if page_obj.has_previous %}
+                <a  href="?page={{ page_obj.previous_page_number }}">上一頁</a>
+                &emsp;
+                {% endif %}
+                {% if page_obj.has_next %}
+                <a  href="?page={{ page_obj.next_page_number }}">下一頁</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+  
+</main>
+<style>
+    .send_btn{
+        width: 50%;
+        background-color: white;
+        color: black;
+    }
+    .recieve_btn{
+        width: 60%;
+        color: white;
+        background-color:#ffc300;;
+    }
+</style>
+</body>
+<script type="text/javascript" src="{%static 'js/check_user.js' %}"></script>
+<script>
+    $(document).ready(async function () {
+        var curr_accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+
+        overlay.addEventListener('click', function(){
+            $('#pop_loan_div').removeClass('active');
+            $('#pop_bToC_div').removeClass('active');
+            $('#overlay').removeClass('active');
+        });
+
+        // 在每個button上設定訂單資訊
+        $('#rec_table tr').each((i, ele)=>{
+            var str = '';
+            $(ele).find('td').each(function (i, ele) {
+                if(i < 10) str += $(this).html()+'&';
+            });
+            $(ele).find('td:eq(10)').children().attr("caption", str);
+            $(ele).find('td:eq(11)').children().attr("caption", str);
+        });
+        
+        // on click, 取得訂單資訊以dynamic製造loan頁面
+        $('.pop_loan_btn').on('click', function (e){
+            e.preventDefault();
+            $('#pop_loan_div').addClass('active');
+            $('#overlay').addClass('active');
+            var valArr = $(this).attr("caption").split('&');
+            var interest = valArr[0];
+            var order_id = valArr[1];
+            var from_com_name = valArr[2];
+            var product = valArr[3];
+            var price = Number(valArr[4]);
+            var already_loan = Number(valArr[8]);
+            var already_transfer = Number(valArr[9]);
+            $('#orders_id').val(order_id);
+            $('#orders_from_company_name').val(from_com_name);
+            $('#orders_price').attr('placeholder', price - already_loan - already_transfer);
+            $('#orders_interest').val(interest);
+        });
+
+
+        $('.pop_bToC_btn').on('click', function(e){
+            e.preventDefault();
+            $('#pop_bToC_div').addClass('active');
+            $('#overlay').addClass('active');
+            var valArr = $(this).attr("caption").split('&');
+            var interest = valArr[0];
+            var order_id = valArr[1];
+            var from_com_name = valArr[2];
+            var product = valArr[3];
+            var price = valArr[4];
+            var already_loan = Number(valArr[8]);
+            var already_transfer = Number(valArr[9]);
+            $('#bToC_id').val(order_id);
+            $('#bToC_from_company_name').val(from_com_name);
+            $('#bToC_price').attr('placeholder', price - already_loan - already_transfer);
+            $('#bToC_interest').val(interest);
+        });
+
+
+        $('.submit_btn').on('click',async  function (e) {
+            e.preventDefault();
+            var form = $(this).parents('form:first');
+
+            let check_addr = await checkUser(form.serializeArray(), curr_accounts[0]);
+            $.ajax({
+                method: "POST",
+                url: "checkUser/",
+                data: { 'check_addr': check_addr },
+                dataType: "json"
+            }).done(async function (res) {
+                if (res['check'] == 'passed') {
+                    $('#waiting').css("display", "flex");
+                    $('#fade').css("display", "none");
+                    // form.submit(); 好像有問題
+                } else {
+                    alert('wrong account');
+                    location.href = '/company_orders_rec';
+                }
+                
+            });
+
+            
+        });
+
+    });
+
+</script>
+<!-- <script type="text/javascript" src="{%static 'js/script.js' %}"></script> -->
+
+</html>

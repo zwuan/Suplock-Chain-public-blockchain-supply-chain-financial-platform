@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>投資標的</title>
+    {% load static %}
+    {% include 'nav_login.html' %} 
+    <link rel="stylesheet" href="{%static 'css/invest_option.css' %}">
+</head>
+<body>
+    <div id='overlay'></div>
+    <div id='pop_loan_div' class="pop_detail ">
+        <form action="{% url 'invest_loan' %}" method="GET">
+            <div class="title_info">
+                <h2 class="info_text wh">合約資料</h2>
+            </div>
+            <div class="input_detail">
+                <div class="company_input"> 
+                    <label class="detail_text wh" for="input-1">合約編號:</label>
+                    <input type="text" class="input_in_card wh "  disabled = 'disabled'id = 'input-1' value="DE-123" >
+                </div>
+               <div class="company_input">
+                    <label class="detail_text wh" for="input-2">融資金額:</label>
+                    <input type="text" class="input_in_card wh " disabled = 'disabled'id = 'input-2' value="20,000" >
+               </div>
+                <div class="company_input">
+                    <label class="detail_text wh" for="input-3">年化利率:</label>
+                    <input type="text" class="input_in_card wh " disabled = 'disabled'id = 'input-3' value="9%" >
+                </div>
+                <div class="company_input"> 
+                    <label class="detail_text wh" for="input-4">融資期間:</label>
+                    <input type="text" class="input_in_card wh " disabled = 'disabled'id = 'input-4' value="2021-07-22 ~ 2021-12-05" >
+                </div>
+                <div class="company_input"> 
+                    <label class="detail_text wh" for="input-5">每月還款:</label>
+                    <input type="text" class="input_in_card wh " disabled = 'disabled'id = 'input-5' value="2,000" >
+                </div>
+                <div class="company_input">
+                    <label class="detail_text wh" for="input-6">最低借款門檻:</label>
+                    <input type="text" class="input_in_card wh " disabled = 'disabled'id = 'input-6' value="5,000" >
+                </div>
+                <div class="company_input"> 
+                    <label class="detail_text wh" for="input-7">區塊鏈證明:</label>
+                    <input type="text" class="input_in_card  wh" style="width: 140px;" disabled = 'disabled'id = 'input-7' value="0xabcfed61728ef32190cde231122" >
+                    <a href="#"><img class="svg_18" src="{% static 'icon/arrow-right-circle.svg' %}" alt=""></a>
+                    <label style="color: #05418f;" class="detail_text">Etherscan</label>
+                </div>
+            </div>
+            <div class="title_info mu">
+                <h2 class="info_text wh">公司資料</h2>
+            </div>
+            <div class="input_detail">
+                <div class="company_input"> 
+                    <label class="detail_text wh" for="input-1">債權公司:</label>
+                    <input type="text" class="input_in_card wh" disabled = 'disabled'id = 'input-1' value="長春化工" >
+                </div>
+               <div class="company_input">
+                    <label class="detail_text wh" for="input-2">核心企業:</label>
+                    <input type="text" class="input_in_card wh" disabled = 'disabled'id = 'input-2' style="color: rgb(255, 255, 255);" value="騰輝電子" >
+               </div>
+               <div class="company_input">
+                    <label class="detail_text wh" for="input-2">供應鏈:</label>
+                    <input type="text"class="input_in_card wh"  disabled = 'disabled'id = 'input-2' value="銅箔基板" >
+               </div>
+               <div class="company_input">
+                    <label class="detail_text wh wh" for="input-2">借貸紀錄:</label>
+                    <a  href="#"><img class="svg_18" src="{% static 'icon/arrow-right-circle.svg' %}" alt=""></a>
+               </div>
+                <button class="press">我要投資</button>
+            </div>
+        </form>
+    </div>
+    <div class="page_title"><h2 style="font-size: 36px;">供應鏈投資</h2></div>
+    <main class="main_content">
+        
+        <div class="search">
+            <form action="" method="POST">
+                <img  class = 'front_icon'src="{% static 'icon/search.svg' %}" alt="">
+                <input class="searching" type="text" placeholder="搜尋熱門公司">
+                <button class="search_button">Search</button>
+            </form>
+        </div>
+        <div class="inv_option">
+            <div class="fast_option">
+                <a class="opt_type">
+                    <h2 class="type_text">訂單類債權</h2>
+                </a>
+                <a class="opt_type">
+                    <h2 class="type_text">應收類債權</h2>
+                </a>
+                <a class="opt_type">
+                    <h2 class="type_text">存貨類債權</h2>
+                </a>
+            </div>
+            <div class="whole_table">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>債權編號</th>
+                        <th>擔保公司</th>
+                        <th>最高年化</th>
+                        <th>標的種類</th>
+                        <th>每月還款</th>
+                        <th>期數</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr >
+                        <td>DE-123</td>
+                        <td>騰輝電子</td>
+                        <td>9%</td>
+                        <td>訂單</td>
+                        <td>20,000</td>
+                        <td>30天</td>
+                        <td><button id="show"class="detail_btn">詳細</button></td>
+                    </tr>
+                    <tr>
+                        <td>DE-123</td>
+                        <td>騰輝電子</td>
+                        <td>9%</td>
+                        <td>訂單</td>
+                        <td>20,000</td>
+                        <td>30天</td>
+                        <td><button  class="detail_btn">詳細</button></td>
+                    </tr>
+                    <tr>
+                        <td>DE-123</td>
+                        <td>騰輝電子</td>
+                        <td>9%</td>
+                        <td>訂單</td>
+                        <td>20,000</td>
+                        <td>30天</td>
+                        <td><button class="detail_btn">詳細</button></td>
+                    </tr>
+                    <tr>
+                        <td>DE-123</td>
+                        <td>騰輝電子</td>
+                        <td>9%</td>
+                        <td>訂單</td>
+                        <td>20,000</td>
+                        <td>30天</td>
+                        <td><button class="detail_btn">詳細</button></td>
+                    </tr>
+                    <tr>
+                        <td>DE-123</td>
+                        <td>騰輝電子</td>
+                        <td>9%</td>
+                        <td>訂單</td>
+                        <td>20,000</td>
+                        <td>30天</td>
+                        <td><button class="detail_btn">詳細</button></td>
+                    </tr>
+                    <tr>
+                        <td>DE-123</td>
+                        <td>騰輝電子</td>
+                        <td>9%</td>
+                        <td>訂單</td>
+                        <td>20,000</td>
+                        <td>30天</td>
+                        <td><button class="detail_btn">詳細</button></td>
+                    </tr>
+                </tbody>
+            </table>
+            </div>
+            <div class="nothing"></div>
+        </div>
+        <div class="paginator">
+            <a class="page_text" href="?page={{ page_obj.next_page_number }}">下一頁</a>
+        </div>
+    </main>
+
+<script>
+    const show = document.getElementById('show')
+    const overlay = document.getElementById('overlay')
+    const pop_loan_div = document.getElementById('pop_loan_div')
+    show.addEventListener('click',()=>{
+        overlay.classList.add('active');
+        pop_loan_div.classList.add('active');
+    });
+    overlay.addEventListener('click',()=>{
+        overlay.classList.remove('active');
+        pop_loan_div.classList.remove('active');
+    });
+
+    
+</script>
+
+</body>
+</html>

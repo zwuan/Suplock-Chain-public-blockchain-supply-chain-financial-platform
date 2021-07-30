@@ -27,9 +27,7 @@
         </div>
         <div class="money_input">
             <h2 class="title_text">我的地址：</h2>
-            {%for addr in msg%}
-            <input type="text" class = "address_"readonly='readonly' value='{{addr.public_address}}'>
-            {% endfor %}
+            <input type="text" class = "address_"readonly='readonly' value='{{msg.public_address}}'>
         </div>
         
         <div class="money_input">
@@ -41,9 +39,9 @@
             <input type="text" id='exchange_coco' value='' readonly='readonly' >
         </div>
         <div class='add_money_btn'>
-            <button class="submit_btn" type="submit" id='send' name="confirm">確認</button>
+            <button class="submit_btn" type="button" id='send' name="confirm">確認</button>
         </div>
-    </form>
+        </form>
     </div>
     <main class="main_content" id = 'fade_out'>
         {% include 'company_index_left.html' %} 
@@ -58,11 +56,11 @@
                     <h2 class="sub_card_text">點擊以查看所有訂單</h2>
                     <div class="send_receive">
                         <div class="send">
-                            <h3 class="send_title" >25</h3>
+                            <h3 class="send_title" >{{order_send_count}}</h3>
                             <h4 class="already_">已發出</h4>
                         </div>
                         <div class="receive">
-                            <h3 class="receive_title">13</h3>
+                            <h3 class="receive_title">{{order_receive_count}}</h3>
                             <h4 class="already_">已接收</h4>
                         </div>
                     </div>
@@ -72,105 +70,55 @@
                     <h2 class="sub_card_text">點擊以查看所有應收帳款</h2>
                     <div class="send_receive">
                         <div class="send">
-                            <h3 class="send_title">9</h3>
+                            <h3 class="send_title">{{account_payable_count}}</h3>
                             <h4 class="already_">已發出</h4>
                         </div>
                         <div class="receive">
-                            <h3 class="receive_title">11</h3>
+                            <h3 class="receive_title">{{account_receivable_count}}</h3>
                             <h4 class="already_">已接收</h4>
                         </div>
                     </div>
                 </a>
                 <button id = 'add_coco' class='button_inside'>
-                    <h2  class = "card_title">申請驗證</h2>
-                    <h2 class="sub_card_text-1">點擊以透過保證金或存貨提高憑證額度，並成為核心企業。</h2>
+                    <h2  class = "card_title">申請合約代幣</h2>
+                    <h2 class="sub_card_text-1">點擊以透過保證金提高憑證額度，並成為核心企業。</h2>
                     <h3 class='credit_amount'>保證金比例</h3>
                     <h2 class='credit_num'>1:10</h2>
                 </button>
             </div>
             <div class="lower_content">
                 <div class="money_table">
-                    <div class="deposit">
+                    <div class="withdraw">
                         <h2 class = 'card_title-1'>入金紀錄</h2>
                         <div class='deposit_table'>
+                            {% for dep in deposit|slice:":7"%}
                             <div class="table_ele">
-                                <h2 class="ele_text">2021-06-06</h2>
-                                <h2 class="ele_text">03:19</h2>
-                                <h2 class="ele_text">2000.00 TWD</h2>
+                                <h2 class="ele_text">{{ dep.deposit_time|date:'Y-m-d' }}</h2>
+                                <h2 class="ele_text">{{ dep.deposit_time|date:'H:i' }}</h2>
+                                <h2 class="ele_text">{{ dep.deposit_amount }}TWD</h2>
                                 <h4 class="ele_text">已完成</h4>
                             </div>
-                            <div class="table_ele">
-                                <h2 class="ele_text">2021-06-06</h2>
-                                <h2 class="ele_text">03:19</h2>
-                                <h2 class="ele_text">2000.00 TWD</h2>
-                                <h4 class="ele_text">已完成</h4>
-                            </div>
-                            <div class="table_ele">
-                                <h2 class="ele_text">2021-06-06</h2>
-                                <h2 class="ele_text">03:19</h2>
-                                <h2 class="ele_text">2000.00 TWD</h2>
-                                <h4 class="ele_text">已完成</h4>
-                            </div>
-                            <div class="table_ele">
-                                <h2 class="ele_text">2021-06-06</h2>
-                                <h2 class="ele_text">03:19</h2>
-                                <h2 class="ele_text">2000.00 TWD</h2>
-                                <h4 class="ele_text">已完成</h4>
-                            </div>
+                            {% endfor %}
                         </div>
                     </div>
-                    <div class="withdraw">
-                        <h2 class = 'card_title-1'>出金紀錄</h2>
+                    <div class="deposit">
+                        <h2 class = 'card_title-1'>合約代幣紀錄</h2>
                         <div class='deposit_table'>
+                            {% for tkA in tokenA|slice:":7"%}
                             <div class="table_ele">
-                                <h2 class="ele_text">2021-06-06</h2>
-                                <h2 class="ele_text">03:19</h2>
-                                <h2 class="ele_text">2000.00 TWD</h2>
+                                <h2 class="ele_text">{{ tkA.tokenA_time|date:'Y-m-d' }}</h2>
+                                <h2 class="ele_text">{{ tkA.tokenA_time|date:'H:i' }}</h2>
+                                <h2 class="ele_text">{{ tkA.tokenA_amount }}</h2>
                                 <h4 class="ele_text">已完成</h4>
                             </div>
-                            <div class="table_ele">
-                                <h2 class="ele_text">2021-06-06</h2>
-                                <h2 class="ele_text">03:19</h2>
-                                <h2 class="ele_text">2000.00 TWD</h2>
-                                <h4 class="ele_text">已完成</h4>
-                            </div>
-                            <div class="table_ele">
-                                <h2 class="ele_text">2021-06-06</h2>
-                                <h2 class="ele_text">03:19</h2>
-                                <h2 class="ele_text">2000.00 TWD</h2>
-                                <h4 class="ele_text">已完成</h4>
-                            </div>
-                            <div class="table_ele">
-                                <h2 class="ele_text">2021-06-06</h2>
-                                <h2 class="ele_text">03:19</h2>
-                                <h2 class="ele_text">2000.00 TWD</h2>
-                                <h4 class="ele_text">已完成</h4>
-                            </div>
-                            <div class="table_ele">
-                                <h2 class="ele_text">2021-06-06</h2>
-                                <h2 class="ele_text">03:19</h2>
-                                <h2 class="ele_text">2000.00 TWD</h2>
-                                <h4 class="ele_text">已完成</h4>
-                            </div>
-                            <div class="table_ele">
-                                <h2 class="ele_text">2021-06-06</h2>
-                                <h2 class="ele_text">03:19</h2>
-                                <h2 class="ele_text">2000.00 TWD</h2>
-                                <h4 class="ele_text">已完成</h4>
-                            </div>
-                            <div class="table_ele">
-                                <h2 class="ele_text">2021-06-06</h2>
-                                <h2 class="ele_text">03:19</h2>
-                                <h2 class="ele_text">2000.00 TWD</h2>
-                                <h4 class="ele_text">已完成</h4>
-                            </div>
+                            {% endfor %}
                         </div>
                     </div>
                 </div>
                 <div  class = miscell>
-                    <a href="#" class='miscell-1'>
-                        <h2 class="loan_title">借款</h2>
-                        <h2 class='loan_sub'>透過收到的訂單以及應收帳款進行融資</h2>
+                    <a href="{% url 'verification_ERP' %}" class='miscell-1'>
+                        <h2 class="loan_title">存貨驗證</h2>
+                        <h2 class='loan_sub'>透過存貨或實體商品抵押借款</h2>
                     </a>
                     <a href="#"class="miscell-1">
                         <h2 class="loan_title">還款</h2>
@@ -203,17 +151,37 @@
 </body>
 {% endif %}
 {% include 'footer.html' %} 
+<script type="text/javascript" src="{%static 'js/check_user.js' %}"></script>
 <script> 
-    const send = document.getElementById('send');
-    const waiting = document.getElementById('waiting');
-    const pop = document.getElementById('pop_div');
-    const fade = document.getElementById('fade_out');
-    send.addEventListener('click',() =>{
-        waiting.style.display = 'flex';
-        pop.style.display='none';
-        fade.style.display='none';
-    })
+    $(document).ready(async function () {
+
+        $('#send').on('click',async  function (e) {
+            var curr_accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+            e.preventDefault();
+            var form = $(this).parents('form:first');
+            let check_addr = await checkUser(form.serializeArray(), curr_accounts[0]);
+            $.ajax({
+                method: "POST",
+                url: "/checkUser/",
+                data: { 'check_addr': check_addr },
+                dataType: "json"
+            }).done(async function (res) {
+                if (res['check'] == 'passed') {
+                    form.submit();
+                    $('#waiting').css("display", "flex");
+                    $('#fade').css("display", "none");
+                    $('#pop_div').css("display", "none");
+                } else {
+                    alert('wrong account');
+                }
+            });
+        });
+
+    });
+
 </script>
 <script type="text/javascript" src="{%static 'js/script.js' %}"></script>
 
 </html>
+
+

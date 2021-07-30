@@ -85,23 +85,23 @@
             <div class="col-md-12">
                 <div class="card">
                     <div class="card-header">
-                        Buy ERC865
+                        購買平台幣
                     </div>
                     <div class="card-body">
                         <div class="col-md-12">
-                            <label for="inv_acc" class="form-label">Investor Account</label>
+                            <label for="inv_acc" class="form-label">帳號地址</label>
                             <input type="text" class="form-control" id="inv_acc" placeholder="address" readonly>
                         </div>
                         <div class="col-md-12">
-                            <label for="inv_bal" class="form-label">Investor Balance</label>
+                            <label for="inv_bal" class="form-label">帳號平台幣餘額</label>
                             <input type="text" class="form-control" id="inv_bal" placeholder="balance" readonly>
                         </div>
                         <div class="col-md-12">
-                            <label for="inv_ERC865Buy" class="form-label">Buy ERC865 </label>
+                            <label for="inv_ERC865Buy" class="form-label">購買數量 </label>
                             <input type="text" class="form-control" id="inv_ERC865Buy" placeholder="how much">
                         </div>
                         <br>
-                        <button type="button" class="btn btn-primary" id="buyERC865_btn">get ERC865</button>
+                        <button type="button" class="btn btn-primary" id="buyERC865_btn">確定購買</button>
                     </div>
                     <form id="form1" method="POST" action="{{ ECPAY_API_URL }}">
                         {% for k, v in formData.items %}
@@ -218,36 +218,23 @@
                 'address': address
             }
             // 加上這段來驗證使用者
-            check_addr = await checkUser(data, curr_accounts[0]);
-
+            // check_addr = await checkUser(data, curr_accounts[0]);
             $.ajax({
                 method: "POST",
-                url: "checkUser/",
-                data: { 'check_addr': check_addr },
+                url: "buyERC865/",
+                data: data,
                 dataType: "json"
-            }).done(async function (res) {
-                console.log(res);
-                if (res['check'] == 'passed') {
-                    $.ajax({
-                        method: "POST",
-                        url: "buyERC865/",
-                        data: data,
-                        dataType: "json"
-                    }).done(function (res) {
-                        // 組成form將資料送去綠界
-                        $('#form1').attr('action', res['ECPAY_API_URL']);
-                        $.each(res['formData'], function (k, v) {
-                            $('#form1').append('<input type="hidden" name="' + k + '" value="' + v + '">');
-                        })
-                        $('#form1').submit();
-                        // loadContractDetail(ercAddress);
-                    });
-                } else if (res['check'] == 'reject') {
-                    location.href = "/";
-                }
-
+            }).done(function (res) {
+                // 組成form將資料送去綠界
+                $('#form1').attr('action', res['ECPAY_API_URL']);
+                $.each(res['formData'], function (k, v) {
+                    $('#form1').append('<input type="hidden" name="' + k + '" value="' + v + '">');
+                })
+                $('#form1').submit();
+                // loadContractDetail(ercAddress);
             });
-        });
+            });
+      
 
         async function loadContractDetail(ercAddress) {
             const tokenInst = new web3.eth.Contract(ercABI, ercAddress);

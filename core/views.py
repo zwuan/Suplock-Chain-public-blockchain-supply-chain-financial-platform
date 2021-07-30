@@ -13,7 +13,7 @@ import json
 from django.views import generic
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
-from .forms import user_login, user_register, deposit, set_order_rate, companyListForm, set_loan
+from .forms import user_login, user_register, deposit, set_order_rate, companyListForm, set_loan,send_account_pay
 from django.contrib import auth
 from django.shortcuts import render ,redirect
 from django.urls import reverse_lazy
@@ -52,6 +52,18 @@ DECIMALS = 10**18
 erc865_contract_address = '0xcb8565c6eeb98fc8c441b5e07c1d6e7cb200b277'
 erc865_contract_address = w3.toChecksumAddress(erc865_contract_address)
 # 廠商登入/註冊（template有兩個form，而且user&company分開，需要兩個modelForm，因此用formView太複雜）
+class index(generic.View):
+    def get(self, request, *args, **kwargs):
+        return render(request, 'index.html')
+class invest_index(generic.View):
+    def get(self, request, *args, **kwargs):
+        return render(request, 'invest_index.html')
+class invest_option(generic.View):
+     def get(self, request, *args, **kwargs):
+        return render(request, 'invest_option.html')
+class invest_loan(generic.View):
+    def get(self, request, *args, **kwargs):
+        return render(request, 'invest_loan.html')
 class login_company(generic.View):
     def get(self, request, *args, **kwargs):
         return render(request, 'login_company.html')
@@ -67,7 +79,6 @@ class login_company(generic.View):
                 auth.login(request, user)
                 return redirect(reverse_lazy('company_index'))
                 
-
         if 'register' in request.POST: ##註冊表單
             form = user_register(request.POST)
             if form.is_valid():
@@ -92,6 +103,7 @@ class login_company(generic.View):
             return render(request, 'login_company.html') 
         return render(request, 'login_company.html') 
 
+
 ##廠商首頁
 class company_index(generic.View):
     ## get頁面 
@@ -102,61 +114,66 @@ class company_index(generic.View):
                 del request.session['fallback']
             all_notify = request.user.notifications.all()
             redundant = all_notify.count() - 9
-            print(redundant)
             if redundant > 0:
                 last_notify = all_notify.reverse()[:redundant]
                 for del_ele in last_notify:
                     del_ele.delete()
             user = request.user
-            company = Company.objects.filter(user = user)
-            context = {'msg':company}
+            company = Company.objects.get(user = user)
+            tokenA = TokenA.objects.filter(tokenA_company = company).order_by('-tokenA_time')  ##從最新的開始 -tokenA_time 是decending
+            deposit = Deposit.objects.filter(deposit_company = company).order_by('-deposit_time')
+            order_send_count = company.send_company.filter(Q(state = 1)|Q(state = 2)|Q(state = 3)).count()
+            order_receive_count = TokenB.objects.filter(Q(curr_company = company) & (Q(class_type = 2) | Q(class_type =3))).count()
+            account_payable_count = company.send_company.filter(Q(state = 7)|Q(state = 8)|Q(state = 10)).count()
+            account_receivable_count = TokenB.objects.filter(Q(curr_company = company) & (Q(class_type = 1) | Q(class_type =3))).count()
+            context = {'msg':company,'tokenA':tokenA,'deposit':deposit,'order_send_count':order_send_count,"order_receive_count":order_receive_count,'account_payable_count':account_payable_count,'account_receivable_count':account_receivable_count}
             return render(request, 'company_index.html',context)
         else:
             return redirect(reverse_lazy('login_company'))
     ##存入保證金(平台幣)
     def post(self, request, *args, **kwargs):
-        if 'confirm' in request.POST:
-            form = deposit(request.POST)
-            company = Company.objects.filter(user = request.user)[0]
-            deploy_company = Company.objects.filter(id = company.id)
-            if form.is_valid():
-                core_address = company.public_address ##公司錢包地址
-                core_address = Web3.toChecksumAddress(core_address) #轉換成checksum address
-                check_enough_balalce = call_ERC865(core_address)## 先 view 餘額
-                content = {}
-                add_amount = int(form.cleaned_data['amount_a'] )
-                if check_enough_balalce < add_amount:
-                    request.session['fallback'] = '餘額不足請儲值'
-                    return redirect(reverse_lazy('add_erc865')) ##導回儲值頁
-                add_amount_a =  add_amount * 10 ## 儲值金額
-                transfer_event = transfer_865(core_address, add_amount*DECIMALS , fee*DECIMALS)
-                actual_payment_on_chain = transfer_event['value'] / DECIMALS
-                user_ERC865_balance = call_ERC865(core_address)  / DECIMALS## 查看廠商的865餘額
-                deploy_company.update(amount_865 = user_ERC865_balance) ##更新資料庫865金額
-                ##如果不是核心 deploy新合約
-                if  not company.core:
-                    contract_addr = deploy_contract(core_address, add_amount_a)['contractAddress'] ##取得部署的合約地址
-                    construct_amount = call_tokenA(contract_addr,core_address) ##查看首次部署的tokenA數量
-                    deploy_company.update(amount_a = construct_amount, core = True ,contract_address = contract_addr) ##修改資料庫
-                    content = {"address":contract_addr, "mintA": construct_amount, 'company':company} ##顯示到前端
-                #是核心 mint & 更新資料庫
-                else:
-                    tx_receipt = mint_tokenA(company.contract_address, add_amount_a)  ##交易資料
-                    txhash = tx_receipt['transactionHash'].hex()
-                    logs = get_tokenA_event(company.contract_address, tx_receipt)  ## log
-                    deposit_amount = logs[0]['args']['amount'] ##確認數量
+        # if 'confirm' in request.POST:
+        form = deposit(request.POST)
+        company = Company.objects.filter(user = request.user)[0]
+        deploy_company = Company.objects.filter(id = company.id)
+        if form.is_valid():
+            core_address = company.public_address ##公司錢包地址
+            core_address = Web3.toChecksumAddress(core_address) #轉換成checksum address
+            check_enough_balalce = call_ERC865(core_address) / DECIMALS ## 先 view 餘額
+            content = {}
+            add_amount = int(form.cleaned_data['amount_a'] )
+            if check_enough_balalce < add_amount:
+                request.session['fallback'] = '餘額不足請儲值'
+                return redirect(reverse_lazy('add_erc865')) ##導回儲值頁
+            add_amount_a =  add_amount * 10 ## 儲值金額
+            transfer_event = transfer_865(core_address, add_amount*DECIMALS , fee*DECIMALS)
+            actual_payment_on_chain = transfer_event['value'] / DECIMALS
+            user_ERC865_balance = call_ERC865(core_address)  / DECIMALS## 查看廠商的865餘額
+            deploy_company.update(amount_865 = user_ERC865_balance) ##更新資料庫865金額
+            ##如果不是核心 deploy新合約
+            if  not company.core:
+                contract_addr = deploy_contract(core_address, add_amount_a)['contractAddress'] ##取得部署的合約地址
+                construct_amount = call_tokenA(contract_addr,core_address) ##查看首次部署的tokenA數量
+                deploy_company.update(amount_a = construct_amount, core = True ,contract_address = contract_addr) ##修改資料庫
+                content = {"address":contract_addr, "mintA": construct_amount, 'company':company} ##顯示到前端
+            #是核心 mint & 更新資料庫
+            else:
+                tx_receipt = mint_tokenA(company.contract_address, add_amount_a)  ##交易資料
+                txhash = tx_receipt['transactionHash'].hex()
+                logs = get_tokenA_event(company.contract_address, tx_receipt)  ## log
+                deposit_amount = logs[0]['args']['amount'] ##確認數量
 
-                    # 紀錄mintTokenA進資料庫
-                    new_tknA = TokenA.objects.create(
-                        tokenA_company=company,
-                        tokenA_amount=deposit_amount,
-                        transactionHash=str(logs[0]['transactionHash'].hex())
-                    )
+                # 紀錄mintTokenA進資料庫
+                new_tknA = TokenA.objects.create(
+                    tokenA_company=company,
+                    tokenA_amount=deposit_amount,
+                    transactionHash=str(logs[0]['transactionHash'].hex())
+                )
 
-                    all_deposit_amount = call_tokenA(company.contract_address,core_address) ## 去練上拿tokenA數量view mapping tokenA
-                    deploy_company.update(amount_a = all_deposit_amount) ##更新資料庫
-                    content = {"address":txhash, "mintA": deposit_amount, 'company':company,'payment':actual_payment_on_chain} ##顯示到前端
-                return render(request, 'temp.html', content)
+                all_deposit_amount = call_tokenA(company.contract_address,core_address) ## 去鏈上拿tokenA數量view mapping tokenA
+                deploy_company.update(amount_a = all_deposit_amount) ##更新資料庫
+                content = {"address":txhash, "mintA": deposit_amount, 'company':company,'payment':actual_payment_on_chain} ##顯示到前端
+            return render(request, 'temp.html', content)
 
 ## 公司訂單頁面
 @method_decorator(login_required, name='dispatch')
@@ -169,7 +186,7 @@ class company_order(generic.ListView):
     def get_queryset(self):
         user = self.request.user
         company = Company.objects.filter(user = user)[0]
-        return  company.send_company.all()
+        return  company.send_company.filter(Q(state = 1)|Q(state = 2)|Q(state = 3))
     ## 回傳Comoany 
     def get_context_data(self, **kwargs) :
         form = set_order_rate()
@@ -210,20 +227,19 @@ class company_order(generic.ListView):
             contract_address = company.contract_address ##發出的公司合約地址
             core_address = Web3.toChecksumAddress(company.public_address) ## 核心 公鑰 checksumaddresss
 
-
-            # 先上鏈在操縱資料庫
+            # 先上鏈再操縱資料庫
             # (address _to, uint256 _amount, uint256 _interest, uint256 _date, uint16 _class)
-            logs = token_A_to_B(contract_address, rec_com_address, amount, int(rate*DECIMALS), date_span, 2) ##訂單 class = 2 上鏈
+            logs = token_A_to_B(contract_address, rec_com_address, amount, int(rate), date_span, 2) ##訂單 class = 2 上鏈
             # tokenAtoB的 event
             event = logs[0]['args']
 
             print(logs)
             
-            log_amount, log_rate, log_receiver, log_id=  event['amount'], event['interest']/DECIMALS, event['receiver'], event['id']
+            log_amount, log_rate, log_receiver, log_id=  event['amount'], event['interest'], event['receiver'], event['id']
             transactionHash = str(logs[0]['transactionHash'].hex())
 
             # db manipulation
-            order_for_update.update(rate = rate , start_date = datetime.date.today(), state = 2, tokenB_balance = amount) ##更新設定利率 起始時間 狀態變為準備中 新增可使用tokenB
+            order_for_update.update(rate = rate , start_date = datetime.date.today(), state = 2) ##更新設定利率 起始時間 狀態變為準備中 tokenB_balance = amount 移到TokenB紀錄
             core_amount_a = float(call_tokenA(contract_address, core_address)) ## 拿到最新的tokenA數量
             company_for_update.update(amount_a = core_amount_a) ##更新資料庫
 
@@ -236,7 +252,9 @@ class company_order(generic.ListView):
                 transfer_count=0, 
                 initial_order=order,
                 curr_company = rec_company,
-                transactionHash = transactionHash
+                pre_company = company,
+                transactionHash = transactionHash,
+                tokenB_balance = log_amount,   ## 原本在Company_orders資料表下
             )
 
             context = {"log_amount":log_amount,"log_rate":log_rate,"log_receiver":log_receiver}
@@ -244,27 +262,28 @@ class company_order(generic.ListView):
             receiver = order.receive_compamy.user ## 找到訂單接收者
             notify.send(user, recipient=receiver, verb='發送了訂單') ## 向訂單接收者發送消息
             ######################## 這裡要一個頁面説訂單已發出 ########################
-            return render(request, 'company_orders.html', context)
+            return redirect(reverse_lazy('company_index'))
         
     
    
 @method_decorator(login_required, name='dispatch')
 class company_order_rec(generic.ListView):
-    model = Company_orders
+    model = TokenB
     template_name = 'company_orders_rec.html'
     context_object_name = 'rec_orders'
     paginate_by = 6
     def get_queryset(self):
         user = self.request.user
-        company = Company.objects.filter(user = user)[0]
-            ######################## 要改為用tokenB的資料庫做filter ########################
-        return  company.receive_comapny.filter(Q(state =2) | Q(state =3) |Q(state = 4))   ##收到 顯示除了憑證未發出的所有訂單
+        company = Company.objects.get(user = user)
+        order_tokenB = TokenB.objects.filter(Q(curr_company = company) & (Q(class_type = 2) | Q(class_type =3))).order_by('date_span')   ## filter 該公司所擁有的tokenB
+            ######################## 已改為用tokenB的資料庫做filter ########################
+        return  order_tokenB   
 
     def get_context_data(self, **kwargs):
         _company_list = []
         context =  super(company_order_rec,self).get_context_data(**kwargs)
         user = self.request.user
-        company_list = list(Company.objects.filter(~Q(user = user)))
+        company_list = list(Company.objects.all())
         for com in company_list:
             _company_list.append(com.user.username)
         form = companyListForm(data_list = _company_list)
@@ -281,36 +300,32 @@ class company_order_rec(generic.ListView):
             form = set_loan(request.POST)
         elif optype =='bToC':
             form = companyListForm(request.POST)
-
+        print(form.errors)
         if form.is_valid():
             if form.cleaned_data['optype'] == 'loan':
                 ## tokenb會有相同的initial order, 但會有不同的tokenid
                 orders_id = int(form.cleaned_data['orders_id'])
-                order = Company_orders.objects.filter(id = orders_id)[0] ##找到資料庫的這筆訂單
-                order_for_update = Company_orders.objects.filter(id = orders_id)
-                tokenB = TokenB.objects.filter(initial_order=order, class_type=2)[0]   ##取得訂單tokenB
-                from_company = form.cleaned_data['orders_from_company_name']
-                from_company = allUser.objects.filter(username = from_company)[0]
-                from_company = Company.objects.filter(user = from_company)[0]
+                TOKENB_id = int(form.cleaned_data['loan_TOKENB_id'])
+                order = Company_orders.objects.get(id = orders_id) ##找到資料庫的這筆訂單
+                order_for_update = Company_orders.objects.get(id = orders_id)
+                tokenB = TokenB.objects.get(id = TOKENB_id)   ##取得訂單tokenB
+                initial_company_contract_address = tokenB.initial_order.send_company.contract_address
                 now = datetime.date.today() ## 透過平台融資日
                 end = order.end_date ## 結束日
                 date_span = end - now ## 時間段
                 date_span = date_span.days
-                
-                '''這裡之後可能有問題，不能確定發出是不是核心，或是之後移轉的人'''
-                contract_address = from_company.contract_address
+                '''沒問題了'''
+                contract_address = initial_company_contract_address
                 ''''''
-
                 ### contract manipulation
                 _loaner = Web3.toChecksumAddress(company.public_address)
                 _amount = int(form.cleaned_data['orders_price'])
-                _class = 2 #代表為訂單
+                _class =  tokenB.class_type
                 _id = int(tokenB.token_id)
                 _interest = int(form.cleaned_data['orders_interest'][:-1])
                 _date = date_span
 
-                print(contract_address, _loaner, _amount ,_class, _id, _interest, _date)
-
+                print("---------",contract_address, _loaner, _amount ,_class, _id, _interest, _date,'--------')
                 try: 
                     tx_receipt = loan(contract_address, _loaner, _amount ,_class, _id, _interest, _date)
                 except exceptions.SolidityError as error:
@@ -341,20 +356,24 @@ class company_order_rec(generic.ListView):
                     date_span=date_span, 
                     transfer_count=0, 
                     initial_order=order,
-                    transactionHash=transactionHash
+                    transactionHash=transactionHash,
+                    tokenB_balance = amount
                 ) 
-                already_loan = order.already_loan+amount
-                order_for_update.update(already_loan = already_loan) # update company_orders already loan
+                ## update tokenB
+                tokenB_balance = tokenB.tokenB_balance - amount
+                already_loan = tokenB.already_loan+amount
+                tokenB.already_loan = already_loan # update tokenB already loan
+                tokenB.tokenB_balance =  tokenB_balance
+                tokenB.save()
 
-                return render(request, 'company_orders_rec.html')
+                return render(request, 'company_index.html')
 
             # return HttpResponse('good')
             elif form.cleaned_data['optype'] == 'bToC':
                 bToC_id = int(form.cleaned_data['bToC_id'])
+                TOKENB_id = int(form.cleaned_data['bToC_TOKENB_id']) 
                 order = Company_orders.objects.filter(id = bToC_id)[0] ##找到資料庫的這筆訂單
-                order_for_update = Company_orders.objects.filter(id = bToC_id)
-                tokenB = TokenB.objects.filter(initial_order=order, class_type=2)[0]
-                tokenB_for_update = TokenB.objects.filter(initial_order=order, class_type=2)
+                tokenB = TokenB.objects.filter(id = TOKENB_id)[0]  
                 tokenB_transfer_count = int(tokenB.transfer_count)
                 tokenB_id = int(tokenB.token_id)
                 now = datetime.date.today() ## 透過平台融資日
@@ -372,12 +391,9 @@ class company_order_rec(generic.ListView):
                 _interest = int(form.cleaned_data['bToC_interest'][:-1])
                 _amount = int(form.cleaned_data['bToC_price'])
                 _id = tokenB_id
-                _class = 2
+                _class = tokenB.class_type
                 c_class = 3
                 _date = date_span
-
-                print(contract_address, _from, _to ,_amount, _interest, _id, _class, c_class,  _date)
-
                 try:
                     tx_receipt = bToC(contract_address, _from, _to ,_amount, _interest, _id, _class, c_class,  _date)
                 except exceptions.SolidityError as error:
@@ -387,7 +403,7 @@ class company_order_rec(generic.ListView):
                 Core = w3.eth.contract(contract_address, abi=abi)
                 logs = Core.events.tokenB_event().processReceipt(tx_receipt) #拿log
                 event = logs[0]['args']
-                print(logs)
+                log_amount = event['amount']
 
                 # db manipulation
                 token_id = event['id']
@@ -402,20 +418,266 @@ class company_order_rec(generic.ListView):
                     initial_order=order,
                     curr_company = to_company,
                     pre_company = company,
-                    transactionHash = str(logs[0]['transactionHash'].hex())
+                    transactionHash = str(logs[0]['transactionHash'].hex()),
+                    tokenB_balance = log_amount
                 ) 
-                already_transfer = order.already_transfer+_amount
-                order_for_update.update(already_transfer = already_transfer)
+                already_transfer = tokenB.already_transfer + log_amount
+                tokenB.already_transfer = already_transfer
                 transfer_count = tokenB_transfer_count+1
-                tokenB_for_update.update(transfer_count = transfer_count)
-                return render(request, 'company_orders_rec.html')
+                tokenB.transfer_count = transfer_count
+                tokenB.save()
+                return render(request, 'company_index.html')
 
+##應付
+class company_account_pay(generic.ListView):
+    model = Company_orders
+    template_name = 'company_account_pay.html'
+    context_object_name = 'orders'
+    paginate_by = 6
+    ##回傳每筆訂單
+    def get_queryset(self):
+        user = self.request.user
+        company = Company.objects.filter(user = user)[0]
+        return  company.send_company.filter(Q(state = 7)|Q(state = 8)|Q(state = 10))
+    def get_context_data(self, **kwargs) :
+        form = set_order_rate()
+        company_addr_dict = {}
+        rec_com_list = []
+        context =  super(company_account_pay,self).get_context_data(**kwargs)
+        user = self.request.user
+        company = Company.objects.filter(user = user)[0]
+        all_company = company.send_company.all()
+        for rec_com in all_company:
+            rec_com_list.append(rec_com.receive_compamy)
+        for c in rec_com_list:
+            company_addr_dict[c.user.username] = c.public_address
+        context['company_addr_dict'] = json.dumps(company_addr_dict)
+        context['form'] = form
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        allUser = auth.get_user_model() # return all user
+        form = send_account_pay(request.POST)
+        if form.is_valid():
+            orders_id = form.cleaned_data['orders_id'] ##訂單編號
+            rec_com_address = form.cleaned_data['rec_com_address'] ##接收的公司的地址 
+            rec_company = Company.objects.filter(public_address = rec_com_address)[0] ##接收的公司object
+            rec_com_address = Web3.toChecksumAddress(rec_com_address) 
+            ##rate = float(form.cleaned_data['rate']) ## 票貼利率  
+            ##rate_to_percent = (100 - rate) / 100    #票貼後實拿百分比
+            user = self.request.user ##請求的使用者
+            order = Company_orders.objects.filter(id = orders_id)[0] ##找到資料庫的這筆訂單
+            order_for_update = Company_orders.objects.filter(id = orders_id) ## update 只支援queryset
+            amount = int(order.price)  ##訂單價值 票貼等loan或
+            print(amount,'--------')
+            end = order.end_date ## 結束日
+            now = datetime.date.today() ## 透過平台的發訂單日
+            date_span = end - now ## 時間段
+            date_span = date_span.days 
+            company = Company.objects.filter(user = user)[0] ##發出的公司
+            company_for_update = Company.objects.filter(user = user)
+            contract_address = company.contract_address ##發出的公司合約地址
+            core_address = Web3.toChecksumAddress(company.public_address) ## 核心 公鑰 checksumaddresss
 
-def company_account_pay(request):
-    return render(request,'company_account_pay.html')
-def company_account_rec(request):
-    return render(request,'company_account_rec.html')
+            # 先上鏈再操縱資料庫
+            # (address _to, uint256 _amount, uint256 _interest, uint256 _date, uint16 _class)
+            logs = token_A_to_B(contract_address, rec_com_address, amount, 0, date_span, 1) ##應收 class = 1 應收上鏈
+            # tokenAtoB的 event
+            event = logs[0]['args']
 
+            print(logs)
+            
+            log_amount, log_rate, log_receiver, log_id=  event['amount'], event['interest'], event['receiver'], event['id']
+            transactionHash = str(logs[0]['transactionHash'].hex())
+
+            # db manipulation
+            order_for_update.update( start_date = datetime.date.today(), state = 8) ##更新 起始時間 狀態變為發出應付 
+            core_amount_a = float(call_tokenA(contract_address, core_address)) ## 拿到最新的tokenA數量
+            company_for_update.update(amount_a = core_amount_a) ##更新資料庫
+
+            new_tknB = TokenB.objects.create(
+                amount=log_amount, 
+                class_type=1, 
+                token_id=log_id, 
+                interest=log_rate, 
+                date_span=date_span, 
+                transfer_count=0, 
+                initial_order=order,
+                curr_company = rec_company,
+                pre_company = company,
+                transactionHash = transactionHash,
+                tokenB_balance = log_amount,   ## 原本在Company_orders資料表下
+            )
+
+            context = {"log_amount":log_amount,"log_rate":log_rate,"log_receiver":log_receiver}
+            ###############消息模組
+            receiver = order.receive_compamy.user ## 找到訂單接收者
+            notify.send(user, recipient=receiver, verb='發送了應收帳款') ## 向訂單接收者發送消息
+            ######################## 這裡要一個頁面説訂單已發出 ########################
+            return render(request, 'invest_option.html')
+
+##應收
+class company_account_rec(generic.ListView):
+    model = TokenB
+    template_name = 'company_account_rec.html'
+    context_object_name = 'rec_orders'
+    paginate_by = 6
+    def get_queryset(self):
+        user = self.request.user
+        company = Company.objects.get(user = user)
+        account_rec_orders = Company_orders.objects.filter(state = 8) ##找出應收
+        ## initial_order__in 用於filte 集合
+        tokenB_is_account_rec = TokenB.objects.filter(Q(initial_order__in = account_rec_orders) & Q(curr_company = company) & (Q(class_type = 1) | Q(class_type =3))).order_by('date_span')
+
+        return  tokenB_is_account_rec 
+    def get_context_data(self, **kwargs):
+        _company_list = []
+        context =  super(company_account_rec,self).get_context_data(**kwargs)
+        company_list = list(Company.objects.all())
+        for com in company_list:
+            _company_list.append(com.user.username)
+        form = companyListForm(data_list = _company_list)
+        form_loan = set_loan()
+        context['form'] = form
+        context['form_loan'] = form_loan
+        return context
+    def post(self, request, *args, **kwargs):
+        allUser = auth.get_user_model() # return all user
+        user = self.request.user
+        company = Company.objects.filter(user = user)[0]
+        optype = request.POST['optype'] # optype decides which form to catch
+
+        if optype == 'loan':
+            form = set_loan(request.POST)
+        elif optype =='bToC':
+            form = companyListForm(request.POST)
+        print(form.errors)
+        if form.is_valid():
+            if form.cleaned_data['optype'] == 'loan':
+                ## tokenb會有相同的initial order, 但會有不同的tokenid
+                orders_id = int(form.cleaned_data['orders_id'])
+                TOKENB_id = int(form.cleaned_data['loan_TOKENB_id'])
+                _rate = int(form.cleaned_data['rate']) ##借貸自行設定比例
+                order = Company_orders.objects.get(id = orders_id) ##找到資料庫的這筆訂單
+                tokenB = TokenB.objects.get(id = TOKENB_id)   ##取得訂單tokenB
+                initial_company_contract_address = tokenB.initial_order.send_company.contract_address
+                now = datetime.date.today() ## 透過平台融資日
+                end = order.end_date ## 結束日
+                date_span = end - now ## 時間段
+                date_span = date_span.days
+                contract_address = initial_company_contract_address
+                ### contract manipulation
+                _loaner = Web3.toChecksumAddress(company.public_address)
+                _amount = int(form.cleaned_data['orders_price'])
+                _class =  tokenB.class_type
+                _id = int(tokenB.token_id)
+                _date = date_span
+                print("---------",contract_address, _loaner, _amount ,_class, _id, _rate, _date,'--------')
+                try: 
+                    tx_receipt = loan(contract_address, _loaner, _amount ,_class, _id, _rate, _date)
+                except exceptions.SolidityError as error:
+                    print(error)
+                
+                # 解析event
+                Core = w3.eth.contract(contract_address, abi=abi)
+                logs = Core.events.loan_event().processReceipt(tx_receipt) #拿log
+                event = logs[0]['args']
+                
+                print(logs)
+
+                ### db manipulation
+                loan_company = company
+                token_id = event['id']
+                amount = int(event['amount'])
+                interest = int(event['interest'])/100
+                date_span = int(event['date'])
+                transactionHash = str(logs[0]['transactionHash'].hex())
+                
+                # 新增一個tokenB物件
+                new_tknB = TokenB.objects.create(
+                    curr_company = loan_company,
+                    amount=amount, 
+                    class_type=4, 
+                    token_id=token_id, 
+                    interest=interest, 
+                    date_span=date_span, 
+                    transfer_count=0, 
+                    initial_order=order,
+                    transactionHash=transactionHash,
+                    tokenB_balance = amount
+                ) 
+                ## update tokenB
+                tokenB_balance = tokenB.tokenB_balance - amount
+                already_loan = tokenB.already_loan+amount
+                tokenB.already_loan = already_loan # update tokenB already loan
+                tokenB.tokenB_balance =  tokenB_balance
+                tokenB.save()
+
+                return render(request, 'company_index.html')
+
+            # return HttpResponse('good')
+            elif form.cleaned_data['optype'] == 'bToC':
+                bToC_id = int(form.cleaned_data['bToC_id'])
+                TOKENB_id = int(form.cleaned_data['bToC_TOKENB_id'])
+                _rate = int(form.cleaned_data['rate']) ##票貼
+                notes_rate = (100 - _rate) ## 實拿比例
+                order = Company_orders.objects.filter(id = bToC_id)[0] ##找到資料庫的這筆訂單
+                tokenB = TokenB.objects.filter(id = TOKENB_id)[0]  
+                tokenB_transfer_count = int(tokenB.transfer_count)
+                tokenB_id = int(tokenB.token_id)
+                now = datetime.date.today() ## 透過平台融資日
+                end = order.end_date ## 結束日
+                date_span = end - now ## 時間段
+                date_span = date_span.days
+                to_company = form.cleaned_data['bToC_to_company_name'] # 被移轉的公司
+                to_company = allUser.objects.filter(username = to_company)[0]
+                to_company = Company.objects.filter(user = to_company)[0]
+                contract_address = order.send_company.contract_address
+                
+                ### contract manipulation
+                _from = Web3.toChecksumAddress(company.public_address)
+                _to = Web3.toChecksumAddress(to_company.public_address)
+                _interest = int(form.cleaned_data['bToC_interest'][:-1])
+                _amount = int(form.cleaned_data['bToC_price'])
+                _id = tokenB_id
+                _class = tokenB.class_type
+                c_class = 3
+                _date = date_span
+                try:
+                    tx_receipt = bToC(contract_address, _from, _to ,_amount, notes_rate, _id, _class, c_class,  _date)
+                except exceptions.SolidityError as error:
+                    print(error)
+
+                # 解析event
+                Core = w3.eth.contract(contract_address, abi=abi)
+                logs = Core.events.tokenB_event().processReceipt(tx_receipt) #拿log
+                event = logs[0]['args']
+                log_amount = event['amount']
+
+                # db manipulation
+                token_id = event['id']
+
+                new_tknB = TokenB.objects.create(
+                    amount=_amount, 
+                    class_type=3, 
+                    token_id=token_id, 
+                    interest=notes_rate,  ##票貼比例 賣給下一家企業的價錢 ＝ amount * notes_rate
+                    date_span=date_span, 
+                    transfer_count=tokenB_transfer_count+1, 
+                    initial_order=order,
+                    curr_company = to_company,
+                    pre_company = company,
+                    transactionHash = str(logs[0]['transactionHash'].hex()),
+                    tokenB_balance = log_amount
+                ) 
+                already_transfer = tokenB.already_transfer + log_amount
+                tokenB.already_transfer = already_transfer
+                transfer_count = tokenB_transfer_count+1
+                tokenB.transfer_count = transfer_count
+                tokenB.save()
+                return render(request, 'company_index.html')
+
+##通知
 @method_decorator(csrf_exempt, name='dispatch')
 class my_notification(generic.View):
     def get(self, request, *args, **kwargs):
@@ -427,11 +689,11 @@ class my_notification(generic.View):
         unread_obj.mark_as_read()        
         context = {'notify_ID':notify_ID}
         return HttpResponse(json.dumps(context),content_type="application/json")
-
+## 基本資料
 class company_info(generic.View):
      def get(self, request, *args, **kwargs):
         return render(request, 'company_info.html')
-
+##各項目餘額
 class wallet(generic.View):
      def get(self, request, *args, **kwargs):
         context = {}
@@ -439,13 +701,43 @@ class wallet(generic.View):
         core_address = company.public_address ##公司錢包地址
         core_address = Web3.toChecksumAddress(core_address) #轉換成checksum address
         amount_865 = call_ERC865(core_address)  / DECIMALS ## 先 view 餘額
-        amount_a = int(company.amount_a)
-        all_receive_order = company.receive_comapny.filter(Q(state =2) | Q(state =3) |Q(state = 4)) ##之後要用tokenB資料表取代
-        sum_receive_order = all_receive_order.aggregate(order_sum = Sum('price'))
+        core_amount_a = float(call_tokenA(company.contract_address, core_address))
+        company_all_tokenB = TokenB.objects.filter(Q(curr_company = company) & (Q(class_type = 1)|Q(class_type = 2)| Q(class_type = 3)|Q(class_type = 5)))
+        sum_receive_order = company_all_tokenB.aggregate(tokenB_sum = Sum('tokenB_balance'))
         context['amount_865'] = json.dumps(amount_865)
-        context['amount_a'] = json.dumps(amount_a)
-        context['sum_receive_order'] = json.dumps(int(sum_receive_order['order_sum']))
+        context['amount_a'] = json.dumps(core_amount_a)
+        context['sum_receive_order'] = json.dumps(int(sum_receive_order['tokenB_sum']))
         return render(request, 'wallet.html',context)
+
+
+##驗證
+@method_decorator(csrf_exempt, name='dispatch')
+class verification_ERP(generic.ListView):
+    model = Company_orders
+    template_name = 'verification_ERP.html'
+    context_object_name = 'orders'
+    paginate_by = 6
+    def get_queryset(self):
+        user = self.request.user
+        company = Company.objects.filter(user = user)[0]
+        return  company.send_company.filter(Q(state = 5)|Q(state = 6))
+    def get_context_data(self, **kwargs) :
+        form = set_order_rate()
+        context =  super(verification_ERP,self).get_context_data(**kwargs)
+        context['form'] = form
+        return context
+
+##驗證成功
+@method_decorator(csrf_exempt, name='dispatch')
+class verification_OK(generic.ListView):
+    model = Company_orders
+    template_name = 'verification_OK.html'
+    context_object_name = 'orders'
+    paginate_by = 6
+
+
+
+
 
 def temp(request):
     return render(request,'temp.html')
@@ -456,7 +748,6 @@ def logout(request):
     return redirect(reverse_lazy('login_company'))
 
 '''ERC-865 contract manipulate'''
-
 
 @csrf_exempt
 def getAbiBytecode(request):
@@ -569,7 +860,7 @@ class PaymentReturnView(View):
 
         new_deposit = Deposit.objects.create(
             deposit_company = company,
-            deposit_amount = int(event['value'])/DECIMALS ,
+            deposit_amount = int(int(event['value'])/DECIMALS),
             transactionHash = transactionHash
         )
 
@@ -660,6 +951,7 @@ def token_A_to_B(_contract_addr, _receive_addr ,_amount, _interest, _date, _clas
     construct_txn = Core.functions.AToB(_receive_addr, _amount, _interest, _date, _class).buildTransaction(
         {
             'from': account_from['address'],
+            'gas':300000,
             'nonce': w3.eth.getTransactionCount(account_from['address']),
         }
     )
