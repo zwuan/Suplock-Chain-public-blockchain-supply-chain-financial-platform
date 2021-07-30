@@ -53,14 +53,10 @@
                 <h2 class="title_text">訂單金額：</h2>
                 <input type="text" class="rec_comp" id="orders_price" name="orders_price" placeholder="" value="">
             </div>
-            <!-- <div class="money_input">
+            <div class="money_input" style="display: none;">
                 <h2 class="title_text">設定利率:</h2>
-                <select class="money_amount" name="rate">
-                    {% for value, label in form.fields.rate.choices %}
-                    　<option value="{{value}}">{{label}}</option>
-                    {% endfor %}
-                </select>
-            </div> -->
+                <input type="text" name="rate" id="" value="3">
+            </div>
             <div class="add_money_btn">
                 <button class="submit_btn" type="button" id='sendloan' name="confirm">融資</button>
             </div>
@@ -101,14 +97,10 @@
                 <h2 class="title_text">移轉數量：</h2>
                 <input type="text" class="rec_comp" id="bToC_price" name="bToC_price" placeholder="" value="">
             </div>
-            <!-- <div class="money_input">
-                    <h2 class="title_text">設定利率:</h2>
-                    <select class="money_amount" name="rate">
-                        {% for value, label in form.fields.rate.choices %}
-                        　<option value="{{value}}">{{label}}</option>
-                        {% endfor %}
-                    </select>
-                </div> -->
+            <div class="money_input" style="display: none;">
+                <h2 class="title_text">設定利率:</h2>
+                <input type="text" name="rate" id="" value="3">
+            </div>
             <div class='add_money_btn'>
                 <button class="submit_btn" type="button" id='sendbToC' name="confirm">移轉</button>
             </div>
@@ -264,7 +256,7 @@
             let check_addr = await checkUser(form.serializeArray(), curr_accounts[0]);
             $.ajax({
                 method: "POST",
-                url: "checkUser/",
+                url: "/checkUser/",
                 data: { 'check_addr': check_addr },
                 dataType: "json"
             }).done(async function (res) {

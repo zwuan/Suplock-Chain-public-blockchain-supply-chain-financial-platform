@@ -25,7 +25,7 @@
 </div>
 <main class="main_content" id="fade">
     <div class='content_title'> 
-        <h2>訂單管理</h2>
+        <h2>應收/應付管理</h2>
     </div>
     <!-- 點擊變暗 -->
     <div id='overlay'></div>
@@ -37,7 +37,7 @@
                 <h2 class="title_text">設定融資金額及投資人分券利率</h2>
             </div>
             <!-- hidden input -->
-            <input type="text" style="display: none;" name="orders_interest" id="orders_interest" value="">
+            <input type="text" style="display: none;" name="orders_interest" id="orders_interest" value="not important">
             <input type="text" style="display: none;" name="optype" value="loan">
             <input type="text" style="display: none;" name="loan_TOKENB_id" id = "loan_TOKENB_id" value="">
             <!-- hidden input end -->
@@ -50,8 +50,16 @@
                 <input type="text" class="rec_comp" readonly="readonly" id="orders_from_company_name" name="orders_from_company_name" value="">
             </div>
             <div class="money_input">
-                <h2 class="title_text">應收金額：</h2>
+                <h2 class="title_text">融資金額：</h2>
                 <input type="text" class="rec_comp" id="orders_price" name="orders_price" placeholder="" value="">
+            </div>
+            <div class="money_input">
+                <h2 class="title_text">設定利率:</h2>
+                <select class="money_amount"  name="rate">
+                    {% for value, label in form_loan.fields.rate.choices %}
+                    　<option value="{{value}}" >{{label}}</option>
+                    {% endfor %}
+                </select>
             </div>
             <div class="add_money_btn">
                 <button class="submit_btn" type="button" id='sendloan' name="confirm">融資</button>
@@ -93,14 +101,14 @@
                 <h2 class="title_text">移轉數量：</h2>
                 <input type="text" class="rec_comp" id="bToC_price" name="bToC_price" placeholder="" value="">
             </div>
-            <!-- <div class="money_input">
-                    <h2 class="title_text">設定利率:</h2>
-                    <select class="money_amount" name="rate">
-                        {% for value, label in form.fields.rate.choices %}
-                        　<option value="{{value}}">{{label}}</option>
-                        {% endfor %}
-                    </select>
-                </div> -->
+            <div class="money_input">
+                <h2 class="title_text">設定票貼比例:</h2>
+                <select class="money_amount"  name="rate">
+                    {% for value, label in form_loan.fields.rate.choices %}
+                    　<option value="{{value}}" >{{label}}</option>
+                    {% endfor %}
+                </select>
+            </div>
             <div class='add_money_btn'>
                 <button class="submit_btn" type="button" id='sendbToC' name="confirm">移轉</button>
             </div>
@@ -112,18 +120,18 @@
     <div class="outer">
         <!-- <input class='btn_div-1' type = 'submit'  id = 'btn_1' value = '透過憑證借款'></input> -->
         <div class="table_above_tag">
-            <a class='send_btn' id='clicked_1' href="{% url 'company_orders' %}">
-                <h2 class="send_order" >發出</h2>
+            <a class='send_btn' id='clicked_1' href="{% url 'company_account_pay' %}">
+                <h2 class="send_order" >應付</h2>
             </a>
             <div class='recieve_btn' id= 'clicked_2'>
-                <h2 class="send_order" >收到</h2>
+                <h2 class="send_order" >應收</h2>
             </div>
         </div>
         <div class="ordersTable" >
             <table class="table table-striped" id="rec_table">
                 <thead>
                     <tr>
-                        <th>利息</th>
+                       
                         <th style="display: none;">訂單編號</th>
                         <th>來源公司</th>
                         <th>項目</th>
@@ -140,19 +148,19 @@
                     {% for order in rec_orders %}
                     <!-- <tr name = 'make_id' onclick = pop_setIndex()> -->
                     <tr name='make_id' class="tr_height">
-                            <td name = 'percent'>{{order.interest}}%</td>
+                            <td name = 'percent' style="display: none;">{{order.interest}}%</td>
                             <td name = 'order_id' style="display: none;">{{order.initial_order.id}}</td>
                             <td>{{order.pre_company.user}}</td>
                             <td>{{order.initial_order.product}}</td>
                             <td>{{order.amount}}</td>
                             <td style="display: none;">{{order.initial_order.start_date}}</td>
                             <td>{{order.initial_order.end_date|date:'Y-m-d'}}</td>
-                            <td>{{order.initial_order.get_state_display}}</td>
+                            <td>{{order.get_class_type_display}}</td>
                             <td>{{order.already_loan}}</td>
                             <td>{{order.already_transfer}}</td>
                             <td style="display: none;">{{order.id}}</td>
                             <td><button type="button" class="pop_loan_btn">融資</button></td>
-                            <td><button type="button" class="pop_bToC_btn">移轉</button></td>
+                            <td><button type="button" class="pop_bToC_btn">轉貼現</button></td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -224,7 +232,6 @@
             $('#orders_id').val(order_id);
             $('#orders_from_company_name').val(from_com_name);
             $('#orders_price').attr('placeholder', price - already_loan - already_transfer);
-            $('#orders_interest').val(interest);
         });
 
 
@@ -256,7 +263,7 @@
             let check_addr = await checkUser(form.serializeArray(), curr_accounts[0]);
             $.ajax({
                 method: "POST",
-                url: "checkUser/",
+                url: "/checkUser/",
                 data: { 'check_addr': check_addr },
                 dataType: "json"
             }).done(async function (res) {

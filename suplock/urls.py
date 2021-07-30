@@ -4,12 +4,16 @@ from core import views
 import notifications.urls
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('welcome/',views.index.as_view(),name = 'welcome'),
+    path('invest_index/',views.invest_index.as_view(),name = 'invest_index'),
+    path('invest_option/',views.invest_option.as_view(),name = 'invest_option'),
+    path('invest_loan/',views.invest_loan.as_view(),name = 'invest_loan'),
     path('login_company/' ,views.login_company.as_view(), name='login_company'),
     path('company_index/', views.company_index.as_view(), name = 'company_index'),
     path('logout/', views.logout, name="logout"),
     path('temp/', views.temp, name="temp"),
-    path('company_orders',views.company_order.as_view(), name='company_orders'),
-    path('company_orders_rec',views.company_order_rec.as_view(), name='company_orders_rec'),
+    path('company_orders/',views.company_order.as_view(), name='company_orders'),
+    path('company_orders_rec/',views.company_order_rec.as_view(), name='company_orders_rec'),
     path('', views.hello_world,name='add_erc865'),
     path('getAbiBytecode/', views.getAbiBytecode),
     path('buyERC865/', views.buyERC865),

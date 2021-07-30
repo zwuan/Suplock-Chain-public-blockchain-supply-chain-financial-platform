@@ -41,6 +41,11 @@ class set_order_rate(forms.Form):
     rec_com_address = forms.CharField()
     rate = forms.ChoiceField(choices = RATE_CHOICES ,widget = forms.Select ,required=True)
 
+## 發應收表單
+class send_account_pay(forms.Form):
+    orders_id = forms.CharField()
+    rec_company_name = forms.CharField()
+    rec_com_address = forms.CharField()
 
 ## loan表單
 #(address _loaner, uint256 _amount, uint16 _class, uint _id, uint256 _interest, uint256 _date)
@@ -51,6 +56,7 @@ class set_loan(forms.Form):
     orders_id = forms.CharField()
     orders_from_company_name = forms.CharField()
     orders_price = forms.CharField()
+    rate = forms.ChoiceField(choices = RATE_CHOICES ,widget = forms.Select) ##only for 應收移轉
     
 # 移轉表單
 class companyListForm(forms.Form):
@@ -61,6 +67,7 @@ class companyListForm(forms.Form):
     bToC_from_company_name = forms.CharField(required=True)
     bToC_to_company_name = forms.CharField(required=True)
     bToC_price = forms.CharField(required=True)
+    rate = forms.ChoiceField(choices = RATE_CHOICES ,widget = forms.Select) ##only for 應收移轉
 
     def __init__(self, *args, **kwargs):
         _company_list = kwargs.pop('data_list', None)
@@ -69,8 +76,5 @@ class companyListForm(forms.Form):
         # form, not setting this parameter differently will cuse all inputs display the
         # same list.
         self.fields['bToC_to_company_name'].widget = ListTextWidget(data_list=_company_list, name='bToC_to_company_name')
-
-
-
 
 

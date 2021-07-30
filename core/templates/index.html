@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>首頁</title>
+    {% load static %}
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:400,600,700">
+    {% include 'nav_login.html' %} 
+    <link rel="stylesheet" href="{%static 'css/index.css' %}">
+</head>
+<body>
+    <div class = "panel">
+        <div class = "introduction1">   
+            <article class="brief">
+            <h2 class="introHeader">投資供應鏈</h2>
+            <a  href = "{% url 'invest_index' %}"class="enter_btn">
+                <h2 class="join_us">立即加入</h2>
+            </a>
+            <p class="features">Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
+            </article>
+            <article class = "detail">
+                <h5>自由投資</h5>
+                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati esse ad placeat tempore!</p>
+                <h5>清楚透平</h5>
+                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati esse ad placeat tempore!</p>
+                <h5>風險分級</h5>
+                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati esse ad placeat tempore!</p>
+            </article>
+        </div>
+
+        <div class = "introduction2">
+            <article class="brief">
+            <h2 class="introHeader">供應鏈融資</h2>
+            <a href = "{% url 'login_company' %}" class="enter_btn">
+                <h2 class="join_us">立即加入</h2>
+            </a>
+            <p class="features">Lorem ipsum dolor sit amet consectetur adipisicing elit.</p> 
+            </article>
+            <article class = "detail">
+                <h5>自由投資</h5>
+                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati esse ad placeat tempore!</p>
+                <h5>清楚透平</h5>
+                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati esse ad placeat tempore!</p>
+                <h5>風險分級</h5>
+                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati esse ad placeat tempore!</p>
+            </article>
+        </div>
+
+        <div class = "introduction3" >
+            <article class="brief">
+            <h2 class="introHeader">供應鏈結合區塊鏈</h2> 
+          
+            <p class="features">Lorem ipsum dolor sit amet consectetur adipisicing elit.</p> 
+            </article>
+            <article class = "detail">
+                <h5>自由投資</h5>
+                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati esse ad placeat tempore!</p>
+                <h5>清楚透平</h5>
+                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati esse ad placeat tempore!</p>
+                <h5>風險分級</h5>
+                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Obcaecati esse ad placeat tempore!</p>
+            </article>
+        </div>
+    </div>
+    
+</body>
+{% include 'footer.html' %} 
+</html>

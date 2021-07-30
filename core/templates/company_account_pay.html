@@ -42,14 +42,6 @@
                 <h2 class="title_text">廠商地址：</h2>
                 <input type="text" class = "address_" readonly='readonly' id = 'addr' name = 'rec_com_address' value=''>
             </div>
-            <div class="money_input">
-                <h2 class="title_text">設定利率:</h2>
-                <select class="money_amount"  name="rate">
-                    {% for value, label in form.fields.rate.choices %}
-                    　<option value="{{value}}" >{{label}}</option>
-                    {% endfor %}
-                </select>
-            </div>
             <div class='add_money_btn'>
                 <button class="submit_btn" type="button" id='send' name="confirm">發出應收</button>
             </div>
