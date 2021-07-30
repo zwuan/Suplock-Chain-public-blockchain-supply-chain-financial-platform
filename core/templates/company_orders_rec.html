@@ -245,9 +245,9 @@
 
         $('.submit_btn').on('click',async  function (e) {
             e.preventDefault();
-            var form = $(this).parents('form:first').serializeArray();
+            var form = $(this).parents('form:first');
 
-            let check_addr = await checkUser(form, curr_accounts[0]);
+            let check_addr = await checkUser(form.serializeArray(), curr_accounts[0]);
             $.ajax({
                 method: "POST",
                 url: "checkUser/",
@@ -257,8 +257,10 @@
                 if (res['check'] == 'passed') {
                     $('#waiting').css("display", "flex");
                     $('#fade').css("display", "none");
+                    form.submit();
                 } else {
                     alert('wrong account');
+                    
                 }
                 
             });
