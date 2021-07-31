@@ -11,43 +11,44 @@
 </head>
 <body>
     <div id='overlay'></div>
+    {% for card in unique_card_arr %}
     <div id='pop_loan_div' class="pop_detail ">
-        <form action="{% url 'invest_loan' %}" method="GET">
             <div class="title_info">
                 <h2 class="info_text wh">合約資料</h2>
             </div>
             <div class="input_detail">
                 <div class="company_input"> 
-                    <label class="detail_text wh" for="input-1">合約編號:</label>
-                    <input type="text" class="input_in_card wh "  disabled = 'disabled'id = 'input-1' value="DE-123" >
+                    <label class="detail_text wh" for="input-1">合約編號: DE-{{ card.id }}</label>
+                    <input type="text" class="input_in_card wh "  disabled = 'disabled'id = 'input-1' value="" >
                 </div>
                <div class="company_input">
-                    <label class="detail_text wh" for="input-2">融資金額:</label>
-                    <input type="text" class="input_in_card wh " disabled = 'disabled'id = 'input-2' value="20,000" >
+                    <label class="detail_text wh" for="input-2">融資金額: {{ card.principle }}</label>
+                    <input type="text" class="input_in_card wh " disabled = 'disabled'id = 'input-2' value="" >
                </div>
                 <div class="company_input">
-                    <label class="detail_text wh" for="input-3">年化利率:</label>
-                    <input type="text" class="input_in_card wh " disabled = 'disabled'id = 'input-3' value="9%" >
+                    <label class="detail_text wh" for="input-3">年化利率: {{ card.interest }}</label>
+                    <input type="text" class="input_in_card wh " disabled = 'disabled'id = 'input-3' value="" >
                 </div>
                 <div class="company_input"> 
-                    <label class="detail_text wh" for="input-4">融資期間:</label>
-                    <input type="text" class="input_in_card wh " disabled = 'disabled'id = 'input-4' value="2021-07-22 ~ 2021-12-05" >
+                    <label class="detail_text wh" for="input-4">融資期間: {{ card.start_date|date:'Y-m-d' }} ～ {{ card.end_date|date:'Y-m-d' }}</label>
+                    <input type="text" class="input_in_card wh " disabled = 'disabled'id = 'input-4' value="" >
                 </div>
                 <div class="company_input"> 
-                    <label class="detail_text wh" for="input-5">每月還款:</label>
-                    <input type="text" class="input_in_card wh " disabled = 'disabled'id = 'input-5' value="2,000" >
+                    <label class="detail_text wh" for="input-5">每月還款: {{ card.term_pri }}</label>
+                    <input type="text" class="input_in_card wh " disabled = 'disabled'id = 'input-5' value="" >
                 </div>
                 <div class="company_input">
-                    <label class="detail_text wh" for="input-6">最低借款門檻:</label>
-                    <input type="text" class="input_in_card wh " disabled = 'disabled'id = 'input-6' value="5,000" >
+                    <label class="detail_text wh" for="input-6">最低借款門檻: 雞雞</label>
+                    <input type="text" class="input_in_card wh " disabled = 'disabled'id = 'input-6' value="" >
                 </div>
                 <div class="company_input"> 
-                    <label class="detail_text wh" for="input-7">區塊鏈證明:</label>
-                    <input type="text" class="input_in_card  wh" style="width: 140px;" disabled = 'disabled'id = 'input-7' value="0xabcfed61728ef32190cde231122" >
+                    <label class="detail_text wh" for="input-7">區塊鏈證明: {{ card.tx_hash }}</label>
+                    <input type="text" class="input_in_card  wh" style="width: 140px;" disabled = 'disabled'id = 'input-7' value="" >
                     <a href="#"><img class="svg_18" src="{% static 'icon/arrow-right-circle.svg' %}" alt=""></a>
                     <label style="color: #05418f;" class="detail_text">Etherscan</label>
                 </div>
             </div>
+
             <div class="title_info mu">
                 <h2 class="info_text wh">公司資料</h2>
             </div>
@@ -68,10 +69,10 @@
                     <label class="detail_text wh wh" for="input-2">借貸紀錄:</label>
                     <a  href="#"><img class="svg_18" src="{% static 'icon/arrow-right-circle.svg' %}" alt=""></a>
                </div>
-                <button class="press">我要投資</button>
+                <a class="press" href="{% url 'invest_loan' pk=card.id %}">我要投資</a>
             </div>
-        </form>
     </div>
+    {% endfor %}
     <div class="page_title"><h2 style="font-size: 36px;">供應鏈投資</h2></div>
     <main class="main_content">
         
@@ -95,19 +96,33 @@
                 </a>
             </div>
             <div class="whole_table">
-            <table class="table">
+            <table class="table" id="loan_table">
                 <thead>
                     <tr>
                         <th>債權編號</th>
                         <th>擔保公司</th>
                         <th>最高年化</th>
-                        <th>標的種類</th>
-                        <th>每月還款</th>
+                        <th>標的種類</th> 
+                        <th>融資金額</th>
                         <th>期數</th>
                         <th></th>
                     </tr>
                 </thead>
                 <tbody>
+                    {% for option in invest_option %}
+                    <!-- <tr name = 'make_id' onclick = pop_setIndex()> -->
+                    <tr name='make_id' class="tr_height">
+                        <td name="token_id">DE-{{option.id}}</td>
+                        <td name="pre_company">{{option.initial_order.send_company.user}}</td>
+                        <td name="interest">{{option.interest}}%</td>
+                        <td>{{option.get_class_type_display}}</td>
+                        <td>{{option.amount}}</td>
+                        <td>{{ option.date_span }}</td>
+                        <td><button id="show" class="detail_btn">詳細</button></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <!-- <tbody>
                     <tr >
                         <td>DE-123</td>
                         <td>騰輝電子</td>
@@ -162,29 +177,35 @@
                         <td>30天</td>
                         <td><button class="detail_btn">詳細</button></td>
                     </tr>
-                </tbody>
+                </tbody> -->
             </table>
             </div>
             <div class="nothing"></div>
         </div>
-        <div class="paginator">
-            <a class="page_text" href="?page={{ page_obj.next_page_number }}">下一頁</a>
-        </div>
+
     </main>
 
 <script>
-    const show = document.getElementById('show')
-    const overlay = document.getElementById('overlay')
-    const pop_loan_div = document.getElementById('pop_loan_div')
-    show.addEventListener('click',()=>{
-        overlay.classList.add('active');
-        pop_loan_div.classList.add('active');
-    });
-    overlay.addEventListener('click',()=>{
-        overlay.classList.remove('active');
-        pop_loan_div.classList.remove('active');
-    });
+    $(document).ready(async function () {
 
+        const show = document.getElementById('show')
+        const overlay = document.getElementById('overlay')
+        const pop_loan_div = document.getElementById('pop_loan_div')
+        show.addEventListener('click',()=>{
+            overlay.classList.add('active');
+            pop_loan_div.classList.add('active');
+        });
+        overlay.addEventListener('click',()=>{
+            overlay.classList.remove('active');
+            pop_loan_div.classList.remove('active');
+        });
+
+        $('#loan_table tr').each((i, ele) => {
+            var target = $(ele).find('td:eq(5)');
+            var num = target.text()
+            target.text(parseInt(num / 30)+1);
+        });
+    });
     
 </script>
 

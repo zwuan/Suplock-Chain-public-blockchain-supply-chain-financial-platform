@@ -12,14 +12,17 @@
 <body>
     <main class="main_content">
         <form action="" method="POST">
+        {% csrf_token %}
+
         <div class="invest_form">
             <div class="card_title">
-                <h2 class="title_text wh">投資:DE-123</h2>
+                <h2 class="title_text wh">投資: DE-{{ id }}</h2>
+                <input type="text" style="display: none" name="_loan_id" value="{{ token_id }}">
                 <h2 class="title_text wh">轉入代幣</h2>
             </div>
             <h2 class="buy_label wh">申購金額:</h2>
             <div class="buy_input">
-                <input type="text" name="buy_amount" id="amount" class="buy_amount" placeholder = "請輸入金額">
+                <input type="text" name="_amount" id="amount" class="buy_amount" placeholder = "請輸入金額">
                 <h3 class="wh">|</h3>
                 <h6 class="wh buy_all" id = "click_all">全部</h6>
             </div>
@@ -31,18 +34,18 @@
                 </div>
             </div>
             <div class="confirm_loan">
-                <select name="pets" class="select-1" id="select-1">
-                    <option value="">選擇風險等級</option>
-                    <option  value="4">A: 年化利率4%</option>
-                    <option  value="6" >B: 年化利率6%</option>
-                    <option  value="9" >C: 年化利率9%</option>
+                <select name="_class" class="select-1" id="select-1">
+                    <option value="" >選擇風險等級</option>
+                    <option type="1" value="1">A: 年化利率{{ a_interest }}%</option>
+                    <option type="2" value="2">B: 年化利率{{ b_interest }}%</option>
+                    <option type="3" value="3">C: 年化利率{{ c_interest }}%</option>
                 </select>
             </div>
             <div class="loan_detail">
                 <h2 class="wh sixte mabt5" id="ref_income">參考收益: </h2>
-                <h2 class="wh sixte mabt5">申購門檻:  5,000</h2>
-                <h2 class="wh sixte mabt5">生效日期:  2021-07-22</h2>
-                <h2 class="wh sixte mabt5">截止日期:  2021-10-22</h2>
+                <h2 class="wh sixte mabt5" id="limit" value="">申購上限: </h2>
+                <h2 class="wh sixte mabt5">生效日期: {{ start_date|date:'Y-m-d' }}</h2>
+                <h2 class="wh sixte mabt5">截止日期: {{ end_date|date:'Y-m-d' }}</h2>
             </div>
             <button class="confirm_btn" disabled = "disabled" id = 'btn'>確認投資</button>
             <button class="confirm_btn" disabled = "disabled" id = 'btn-real' style="display: none;">確認投資</button>
@@ -54,9 +57,9 @@
 </body>
 <script>
     function numberWithCommas(x) {
-            x = x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-            return x;
-        }       
+        x = x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        return x;
+    }       
     $('#amount').on('input',function(){
         if ($('#amount').val().length){
             $('#btn-real').prop('disabled', false);
@@ -71,7 +74,7 @@
         }
     });
     $('#click_all').on('click', function(){
-        $('#amount').val($('#balance').attr('value'));
+        $('#amount').val($('#limit').val());
         $('#btn').css("display","none");
         $('#btn-real').css('display', "block");
         $('#btn-real').prop('disabled', false);
@@ -89,6 +92,27 @@
         $('#ref_income').html(str_ref_income);
         return str_ref_income
     }
+
+    var avail_arr = {{ avail_arr|safe }}
+    $('#select-1').on('change', function(e){
+        var optionSelected = $("option:selected", this).attr('type');
+        switch (optionSelected) {
+            case '1':
+                $('#limit').val(avail_arr[0]);
+                $('#limit').text('申購上限: '+ avail_arr[0]);
+                break;
+            case '2':
+                $('#limit').val(avail_arr[1]);
+                $('#limit').text('申購上限: ' + avail_arr[1]);
+                break;
+            case '3':
+                $('#limit').val(avail_arr[2]);
+                $('#limit').text('申購上限: ' + avail_arr[2]);
+                break;
+            default:
+                alert('沒有符合的條件');
+        }    });
+
   
 </script>
 </html>

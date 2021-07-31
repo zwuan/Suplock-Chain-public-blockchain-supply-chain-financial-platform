@@ -4,18 +4,13 @@ from django.contrib.auth.models import User
 from .fields import ListTextWidget
 
 RATE_CHOICES = (
-    (3, '3%'),
-    (4, '4%'),
-    (5, '5%'),
     (6, '6%'),
-    (7, '7%'),
     (8, '8%'),
-    (9, '9%'),
     (10,'10%'),
-    (11,'11%'),
     (12,'12%'),
-    (13,'13%'),
 )
+
+
 ##註冊表單  
 class user_register(forms.Form):
     username = forms.CharField()
@@ -77,4 +72,10 @@ class companyListForm(forms.Form):
         # same list.
         self.fields['bToC_to_company_name'].widget = ListTextWidget(data_list=_company_list, name='bToC_to_company_name')
 
+## 發應收表單
+# (address _investor, uint _loan_id, uint _class, uint _amount)
+class buyTranche(forms.Form):
+    _loan_id = forms.CharField()
+    _amount = forms.CharField()
+    _class = forms.CharField() ##only for 應收移轉
 

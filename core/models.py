@@ -4,17 +4,10 @@ from django.contrib.auth.models import User
 import datetime
 
 RATE_CHOICES = (
-    (3, '3%'),
-    (4, '4%'),
-    (5, '5%'),
     (6, '6%'),
-    (7, '7%'),
     (8, '8%'),
-    (9, '9%'),
     (10,'10%'),
-    (11,'11%'),
     (12,'12%'),
-    (13,'13%'),
 )
 STATE_CHOICES = (
     (1, '憑證未發出'), ## for orders
@@ -26,14 +19,34 @@ STATE_CHOICES = (
     (7, '尚未付款'), ## for account payable/receivable
     (8, '發出應付'), ## for account payable/receivable
     (9, '帳款已結清') ## for account payable/receivable
-
 )
+
+LOAN_STATE = (
+    (1, '融資中'),
+    (2, '融資成功'),
+    (3, '融資失敗'),
+    (4, '融資結束'),
+    (5, '違約')
+)
+
 CLASS_CHOICES = (
     (1, '應收'),
     (2, '訂單'),
     (3, '移轉'),
     (4, '貸款'),
     (5, '驗證抵押')
+)
+CLASS_CHOICES_2000 = (
+    (1, '應收'),
+    (2, '訂單'),
+    (3, '存貨'),
+)
+
+
+TRANCHE_CHOICES =(
+    (1, 'A'),
+    (2, 'B'),
+    (3, 'C')
 )
 
 class Company(models.Model):
@@ -83,6 +96,8 @@ class Company_orders(models.Model):
     rate = models.IntegerField(choices=RATE_CHOICES, null=True,  blank=True) ##利息
     transactionHash = models.CharField(max_length=66, null=True, blank=True)
     quantity = models.IntegerField(null=True, blank = True) ##數量 onlyfor 驗證
+    class_type = models.IntegerField(choices=CLASS_CHOICES_2000, null=True, blank=True) ##tokenB (應收, 訂單, 移轉, 貸款)
+
 
 
 # loan (address _loaner, uint256 _amount, uint16 _class, uint _id, uint256 _interest, uint256 _date)
@@ -104,6 +119,31 @@ class TokenB(models.Model):
     already_transfer = models.DecimalField(max_digits=12, decimal_places=0,  default=0,  blank=True)## 已移轉amount
     already_loan = models.DecimalField(max_digits=12, decimal_places=0 , default=0,   blank=True)## 已借款amount
 
+    state = models.IntegerField(choices=LOAN_STATE, null=True, blank=True)
+
+# loancertificate資料表
+# mintCertificate (_loan_id, _borrow_company, _principle, _interest, _datespan, _class)
+class LoanCertificate(models.Model):
+    loan_id = models.CharField(max_length=100, null=True, blank=True) ## tokenB的id, 因為太長所以用charfield
+    loan_company = models.ForeignKey(Company,on_delete=models.CASCADE ,related_name='loan_company', null=True,  blank=True) ## 借錢企業
+    principle = models.CharField(max_length=100, null=True, blank=True) ## 融資多少錢
+    avail_amount = models.CharField(max_length=100, null=True, blank=True) 
+    interest = models.IntegerField(null=True, blank=True)
+    date_span = models.IntegerField(null=True, blank=True) ## 這裡要紀錄期數（單位為月）
+    curr_span = models.IntegerField(null=True, blank=True) ## 剩餘期數
+    riskClass = models.IntegerField(choices=TRANCHE_CHOICES, null=True, blank=True)  ## 分券種類
+    transactionHash = models.CharField(max_length=66, null=True, blank=True)
+
+# tranche資料表
+
+class Tranche(models.Model):
+    # (address _investor, uint _loan_id, uint _class, uint _amount)
+    investor = models.ForeignKey(User,on_delete=models.CASCADE ,related_name='investor', null=True,  blank=True)
+    loan_id = models.CharField(max_length=100, null=True, blank=True) ## tokenB的id, 因為太長所以用charfield
+    riskClass = models.IntegerField(choices=TRANCHE_CHOICES, null=True, blank=True)  ## 分券種類
+    amount = models.CharField(max_length=100, null=True, blank=True) ##tokenB金額
+    accu_earning = models.DecimalField(max_digits=18, decimal_places=18 , default=0, blank=True) ## 累計收益，每次廠商payback後要update
 
 
 
+# investorDividend 資料表
