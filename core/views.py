@@ -61,6 +61,9 @@ invest_contract_address = w3.toChecksumAddress(invest_contract_address)
 Invest = w3.eth.contract(invest_contract_address, abi=invest_abi)
 
 # 廠商登入/註冊（template有兩個form，而且user&company分開，需要兩個modelForm，因此用formView太複雜）
+class invest_wallet(generic.View):
+    def get(self, request, *args, **kwargs):
+        return render(request, 'invest_wallet.html')
 
 class index(generic.View):
     def get(self, request, *args, **kwargs):

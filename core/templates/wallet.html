@@ -16,27 +16,39 @@
         <div class="wallet_content"> 
             <div class="wallet_segement">
                 <section  class = "wallet_card">
-                    <h2 class="card_title">平台幣餘額</h2>
+                    <div class="iconNtitle">
+                        <div class="circle orback"><img class='whSVG' src="{% static 'icon/cash.svg' %}" width="26px" height="26px" alt=""></div>
+                        <h2 class="card_title ">平台幣餘額</h2>
+                    </div>
+                    <h2 class="card_def">與台幣一比一掛鉤，經由入金換取平台幣。</h2>
                     <div class="inner_card">
-                        <h2>$</h2>
-                        <h2 id = "erc865"></h2>
-                        <h2 class="currency">TWD</h2>
+                        <h2 class="one4" >$</h2>
+                        <h2  class="one4"id = "erc865"></h2>
+                        <h2  class="one4"class="currency">TWD</h2>
                     </div>
                 </section>
                 <section class = "wallet_card">
-                    <h2 class="card_title">可發出憑證餘額</h2>
+                    <div class="iconNtitle">
+                        <div class="circle blback"><img class='whSVG' src="{% static 'icon/file.svg' %}" width="26px" height="26px" alt=""></div>
+                        <h2 class="card_title">可發出憑證餘額</h2>
+                    </div>
+                    <h2 class="card_def">經由平台幣兌換，可用於發出應付帳款或訂單。</h2>
                     <div class="inner_card">
-                        <h2>$</h2>
-                        <h2 id = "sendable"></h2>
-                        <h2 class="currency">TWD</h2>
+                        <h2 class="one4">$</h2>
+                        <h2 class="one4" id = "sendable"></h2>
+                        <h2 class="one4" class="currency">TWD</h2>
                     </div>
                 </section>
                 <section class = "wallet_card">
-                    <h2 class="card_title">可借款憑證餘額</h2>
+                    <div class="iconNtitle">
+                        <div class="circle rdback"><img class='whSVG' src="{% static 'icon/personal.svg' %}" width="26px" height="26px" alt=""></div>
+                        <h2 class="card_title">可借款憑證餘額</h2>
+                    </div>
+                    <h2 class="card_def">經由接收訂單或應收帳款，可用於融資或移轉所有權。</h2>
                     <div class="inner_card">
-                        <h2>$</h2>
-                        <h2 id="receivable"></h2>
-                        <h2 class="currency">TWD</h2>
+                        <h2 class="one4">$</h2>
+                        <h2  class="one4"id="receivable"></h2>
+                        <h2  class="one4"class="currency">TWD</h2>
                     </div>
                 </section>
             </div>  
@@ -63,11 +75,15 @@
                     <canvas id="myChart"></canvas>
                 </div>
                 <section class = "wallet_card_lower">
-                    <h2 class="card_title">核心廠商收益</h2>
+                    <div class="iconNtitle">
+                        <div class="circle grback"><img class='whSVG' src="{% static 'icon/lightning-charge.svg' %}" width="24px" height="24px" alt=""></div>
+                        <h2 class="card_title">核心廠商收益</h2>
+                    </div>
+                    <h2 class="card_def">當上下游廠商進行融資時，核心廠商可抽成貸款利息。</h2>
                     <div class="inner_card">
-                        <h2>$</h2>
-                        <h2 id="invest"></h2>
-                        <h2 class="currency">TWD</h2>
+                        <h2 class="one4">$</h2>
+                        <h2 class="one4"id="invest"></h2>
+                        <h2 class="one4"class="currency">TWD</h2>
                     </div>
                 </section>
             </div>

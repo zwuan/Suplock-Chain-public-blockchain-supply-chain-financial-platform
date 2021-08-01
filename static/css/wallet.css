@@ -40,6 +40,13 @@
     justify-content: flex-start;
     align-items: center;
 }
+.iconNtitle{
+    margin-top: 25px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
 .wallet_card_lower{
     width: 30%;
     height: 50%;
@@ -53,11 +60,11 @@
     border: 3px solid rgb(82, 183, 136);
 }
 .card_title{
-    margin-top: 1.5em;
     font-size: 1.8em;
+    margin-left: 20px;
 }   
 .inner_card{
-    margin-top: 1.5em;
+    margin-top: 1em;
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
@@ -122,14 +129,64 @@
 .green{
     background-color: rgb(82, 183, 136);
 }
-
-@media(min-width:1600px){
-    #myChart{
-        width: 380px !important; 
-        height: 380px !important;
-    }
+.circle{
+    width: 40px;
+    height: 40px;
+    margin-left: 10px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+.orback{
+    background-color:rgb(255, 166, 0);
+}
+.blback{
+    background-color: #003566;
+}
+.rdback{
+    background-color:rgb(238, 108, 77);
+}
+.grback{
+    background-color: rgb(82, 183, 136);
+}
+.whSVG{
+    filter: invert(100%) sepia(0%) saturate(0%) hue-rotate(270deg) brightness(102%) contrast(102%);
 }
 .currency{
     font-size:1em;
     margin-left: .5em;
 }
+.card_def{
+    margin-top: 10px;
+    font-size: 1em;
+    color: #616970;
+    width: 80%;
+    text-align: center;
+
+}
+.one4{
+    font-size: 1.4em;
+}
+@media(min-width:1600px){
+    #myChart{
+        width: 380px !important; 
+        height: 380px !important;
+    }
+    .card_title{
+        font-size: 1.4em;
+    }
+    .circle{
+        width: 60px;
+        height: 60px;
+    }
+    .card_def{
+        width: 80%;
+    }
+    .one4{
+        font-size: 2em;
+    }
+    
+}
+
