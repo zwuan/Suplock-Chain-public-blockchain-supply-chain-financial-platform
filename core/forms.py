@@ -79,3 +79,7 @@ class buyTranche(forms.Form):
     _amount = forms.CharField()
     _class = forms.CharField() ##only for 應收移轉
 
+class paybackForm(forms.Form):
+    _loan_id = forms.CharField()
+    _amount = forms.CharField()
+
