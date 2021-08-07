@@ -12,7 +12,7 @@
 <body>
     <div id='overlay'></div>
     {% for card in unique_card_arr %}
-    <div id='pop_loan_div' class="pop_detail ">
+    <div id='pop_loan_div-{{forloop.counter}}' class="pop_detail ">
             <div class="title_info">
                 <h2 class="info_text wh">合約資料</h2>
             </div>
@@ -34,18 +34,18 @@
                     <input type="text" class="input_in_card wh " disabled = 'disabled'id = 'input-4' value="" >
                 </div>
                 <div class="company_input"> 
-                    <label class="detail_text wh" for="input-5">每月還款: {{ card.term_pri }}</label>
+                    <label class="detail_text wh" id = "term_pri_id" for="input-5"  value="{{ card.term_pri }}">每月還款:</label>
                     <input type="text" class="input_in_card wh " disabled = 'disabled'id = 'input-5' value="" >
                 </div>
                 <div class="company_input">
-                    <label class="detail_text wh" for="input-6">最低借款門檻: 雞雞</label>
+                    <label class="detail_text wh" for="input-6">最低借款門檻: 500</label>
                     <input type="text" class="input_in_card wh " disabled = 'disabled'id = 'input-6' value="" >
                 </div>
                 <div class="company_input"> 
-                    <label class="detail_text wh" for="input-7">區塊鏈證明: {{ card.tx_hash }}</label>
-                    <input type="text" class="input_in_card  wh" style="width: 140px;" disabled = 'disabled'id = 'input-7' value="" >
+                    <label class="detail_text wh" for="input-7">區塊鏈證明:</label>
+                    <input type="text" class="input_in_card  wh" style="width: 140px;" disabled = 'disabled'id = 'input-7' value=" {{ card.tx_hash }}" >
                     <a href="#"><img class="svg_18" src="{% static 'icon/arrow-right-circle.svg' %}" alt=""></a>
-                    <label style="color: #05418f;" class="detail_text">Etherscan</label>
+                    <label style="color: #5692e0;" class="detail_text">Etherscan</label>
                 </div>
             </div>
 
@@ -54,19 +54,19 @@
             </div>
             <div class="input_detail">
                 <div class="company_input"> 
-                    <label class="detail_text wh" for="input-1">債權公司:</label>
-                    <input type="text" class="input_in_card wh" disabled = 'disabled'id = 'input-1' value="長春化工" >
+                    <label class="detail_text wh" for="input-7">債權公司:</label>
+                    <input type="text" class="input_in_card wh" disabled = 'disabled'id = 'input-7' value="長春化工" >
                 </div>
                <div class="company_input">
-                    <label class="detail_text wh" for="input-2">核心企業:</label>
-                    <input type="text" class="input_in_card wh" disabled = 'disabled'id = 'input-2' style="color: rgb(255, 255, 255);" value="騰輝電子" >
+                    <label class="detail_text wh" for="input-8">核心企業:</label>
+                    <input type="text" class="input_in_card wh" disabled = 'disabled'id = 'input-8' style="color: rgb(255, 255, 255);" value="騰輝電子" >
                </div>
                <div class="company_input">
-                    <label class="detail_text wh" for="input-2">供應鏈:</label>
-                    <input type="text"class="input_in_card wh"  disabled = 'disabled'id = 'input-2' value="銅箔基板" >
+                    <label class="detail_text wh" for="input-9">供應鏈:</label>
+                    <input type="text"class="input_in_card wh"  disabled = 'disabled'id = 'input-9' value="銅箔基板" >
                </div>
                <div class="company_input">
-                    <label class="detail_text wh wh" for="input-2">借貸紀錄:</label>
+                    <label class="detail_text wh wh" >借貸紀錄:</label>
                     <a  href="#"><img class="svg_18" src="{% static 'icon/arrow-right-circle.svg' %}" alt=""></a>
                </div>
                 <a class="press" href="{% url 'invest_loan' pk=card.id %}">我要投資</a>
@@ -83,17 +83,15 @@
                 <button class="search_button">Search</button>
             </form>
         </div>
+        
         <div class="inv_option">
-            <div class="fast_option">
-                <a class="opt_type">
-                    <h2 class="type_text">訂單類債權</h2>
-                </a>
-                <a class="opt_type">
-                    <h2 class="type_text">應收類債權</h2>
-                </a>
-                <a class="opt_type">
-                    <h2 class="type_text">存貨類債權</h2>
-                </a>
+            <div class="select">
+                <select name="type" class="select-1 wh forte" id="select-1">
+                    <option value="all">所有</option>
+                    <option  value="1">訂單類債權</option>
+                    <option  value="2">應收類債權</option>
+                    <option  value="3">存貨類債權</option>
+                </select>
             </div>
             <div class="whole_table">
             <table class="table" id="loan_table">
@@ -114,73 +112,16 @@
                     <tr name='make_id' class="tr_height">
                         <td name="token_id">DE-{{option.id}}</td>
                         <td name="pre_company">{{option.initial_order.send_company.user}}</td>
-                        <td name="interest">{{option.interest}}%</td>
-                        <td>{{option.get_class_type_display}}</td>
+                        <td name="interest">10%</td>
+                        <td>{{option.initial_order.get_class_type_display}}</td>
                         <td>{{option.amount}}</td>
                         <td>{{ option.date_span }}</td>
                         <td><button id="show" class="detail_btn">詳細</button></td>
                     </tr>
                     {% endfor %}
                 </tbody>
-                <!-- <tbody>
-                    <tr >
-                        <td>DE-123</td>
-                        <td>騰輝電子</td>
-                        <td>9%</td>
-                        <td>訂單</td>
-                        <td>20,000</td>
-                        <td>30天</td>
-                        <td><button id="show"class="detail_btn">詳細</button></td>
-                    </tr>
-                    <tr>
-                        <td>DE-123</td>
-                        <td>騰輝電子</td>
-                        <td>9%</td>
-                        <td>訂單</td>
-                        <td>20,000</td>
-                        <td>30天</td>
-                        <td><button  class="detail_btn">詳細</button></td>
-                    </tr>
-                    <tr>
-                        <td>DE-123</td>
-                        <td>騰輝電子</td>
-                        <td>9%</td>
-                        <td>訂單</td>
-                        <td>20,000</td>
-                        <td>30天</td>
-                        <td><button class="detail_btn">詳細</button></td>
-                    </tr>
-                    <tr>
-                        <td>DE-123</td>
-                        <td>騰輝電子</td>
-                        <td>9%</td>
-                        <td>訂單</td>
-                        <td>20,000</td>
-                        <td>30天</td>
-                        <td><button class="detail_btn">詳細</button></td>
-                    </tr>
-                    <tr>
-                        <td>DE-123</td>
-                        <td>騰輝電子</td>
-                        <td>9%</td>
-                        <td>訂單</td>
-                        <td>20,000</td>
-                        <td>30天</td>
-                        <td><button class="detail_btn">詳細</button></td>
-                    </tr>
-                    <tr>
-                        <td>DE-123</td>
-                        <td>騰輝電子</td>
-                        <td>9%</td>
-                        <td>訂單</td>
-                        <td>20,000</td>
-                        <td>30天</td>
-                        <td><button class="detail_btn">詳細</button></td>
-                    </tr>
-                </tbody> -->
             </table>
             </div>
-            <div class="nothing"></div>
         </div>
 
     </main>
@@ -188,9 +129,14 @@
 <script>
     $(document).ready(async function () {
 
+        term_pri = $('#term_pri_id').attr('value')
+        console.log(term_pri)
+        right_term_pri = term_pri / 10 ** 18;
+        $('#term_pri_id').html('每月還款:'+" "+right_term_pri);
+
         const show = document.getElementById('show')
         const overlay = document.getElementById('overlay')
-        const pop_loan_div = document.getElementById('pop_loan_div')
+        const pop_loan_div = document.getElementById('pop_loan_div-1')
         show.addEventListener('click',()=>{
             overlay.classList.add('active');
             pop_loan_div.classList.add('active');

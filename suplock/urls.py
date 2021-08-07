@@ -12,7 +12,7 @@ urlpatterns = [
     path('login_company/' ,views.login_company.as_view(), name='login_company'),
     path('company_index/', views.company_index.as_view(), name = 'company_index'),
     path('logout/', views.logout, name="logout"),
-    path('temp/', views.temp, name="temp"),
+    path('tx_result/', views.tx_result, name="tx_result"),
     path('company_orders/',views.company_order.as_view(), name='company_orders'),
     path('company_orders_rec/',views.company_order_rec.as_view(), name='company_orders_rec'),
     path('', views.hello_world,name='add_erc865'),
@@ -28,5 +28,6 @@ urlpatterns = [
     path('my_notification/', views.my_notification.as_view(),name='my_notification'),
     path('verification_ERP/', views.verification_ERP.as_view(),name='verification_ERP'),
     path('verification_OK/', views.verification_OK.as_view(),name='verification_OK'),
+    path('payback/', views.payback_loan.as_view(),name='payback_loan'),
 
 ]

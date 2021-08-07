@@ -120,7 +120,7 @@
                         <h2 class="loan_title">存貨驗證</h2>
                         <h2 class='loan_sub'>透過存貨或實體商品抵押借款</h2>
                     </a>
-                    <a href="#"class="miscell-1">
+                    <a href="{% url 'payback_loan' %}"class="miscell-1">
                         <h2 class="loan_title">還款</h2>
                         <h2 class="loan_sub">繳回每期應繳利息，或一併償還本金</h2>
                     </a>
@@ -152,7 +152,7 @@
 {% endif %}
 {% include 'footer.html' %} 
 <script type="text/javascript" src="{%static 'js/check_user.js' %}"></script>
-<script> 
+<script>
     $(document).ready(async function () {
 
         $('#send').on('click',async  function (e) {

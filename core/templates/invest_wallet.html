@@ -60,19 +60,24 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {% for t in tranche %}
                     <tr >
-                        <td>DE-123</td>
-                        <td>騰輝電子</td>
-                        <td>9%</td>
-                        <td>200</td>
-                        <td>訂單</td>
-                        <td>30天</td>
+                        <td>DE-{{t.loanCertificate.tokenB.id}}</td>
+                        <td>{{t.loanCertificate.tokenB.initial_order.send_company.user}}</td>
+                        <td>{{t.loanCertificate.interest}}%</td>
+                        <td name = "change_format">{{t.accu_earning}}</td>
+                        <td>{{t.loanCertificate.tokenB.initial_order.class_type}}</td>
+                        <td>{{t.loanCertificate.date_span}}</td>
                         <td>計息中</td>
                     </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
     </main>
-    
 </body>
+    <script>
+            const accu_earning_array = document.getElementsByName('change_format')
+            accu_earning_array[0].innerHTML = parseInt(accu_earning_array[0].innerHTML)
+    </script>
 </html>

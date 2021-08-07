@@ -735,7 +735,7 @@ contract investmentToken {
     
     uint[4] memory uintArr = [
         getInterestArrValue(_loan_id, 1, curr_term),
-        getInterestArrValue(_loan_id, 1, curr_term),
+        getInterestArrValue(_loan_id, 2, curr_term),
         getInterestArrValue(_loan_id, 3, curr_term),
         getTermIntPayable(_loan_id, curr_term)
     ];

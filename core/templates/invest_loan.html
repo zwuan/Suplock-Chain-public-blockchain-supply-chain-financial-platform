@@ -29,7 +29,7 @@
             <div class="balance">
                 <div class="circle"><img class='whSVG' src="{% static 'icon/wallet.svg' %}" width="24px" height="24px" alt=""></div>
                 <div class="money_info">
-                    <h2 class="tw4 wh fourW" id = "balance" value = "21000">21,000 TWD</h2>
+                    <h2 class="tw4 wh fourW" id = "balance" value = "{{amount_865}}">{{amount_865}} TWD</h2>
                     <h2 class="wh forte fourW">平台幣餘額</h2>
                 </div>
             </div>
@@ -93,7 +93,8 @@
         return str_ref_income
     }
 
-    var avail_arr = {{ avail_arr|safe }}
+    var avail_arr = {{ avail_arr|safe }};
+    console.log(avail_arr);
     $('#select-1').on('change', function(e){
         var optionSelected = $("option:selected", this).attr('type');
         switch (optionSelected) {

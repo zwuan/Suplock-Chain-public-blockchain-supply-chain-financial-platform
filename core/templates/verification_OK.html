@@ -39,17 +39,18 @@
             <!-- hidden input -->
             <input type="text" style="display: none;" name="orders_interest" id="orders_interest" value="">
             <input type="text" style="display: none;" name="optype" value="loan">
+            <input type="text" style="display: none;" name="loan_TOKENB_id" id = "loan_TOKENB_id" value="">
             <!-- hidden input end -->
             <div class="money_input">
                 <h2 class="title_text">訂單編號：</h2>
                 <input type="text" class="rec_comp" readonly="readonly" id="orders_id" name="orders_id" value="">
             </div>
             <div class="money_input">
-                <h2 class="title_text">廠商名稱：</h2>
+                <h2 class="title_text">項目名稱：</h2>
                 <input type="text" class="rec_comp" readonly="readonly" id="orders_from_company_name" name="orders_from_company_name" value="">
             </div>
             <div class="money_input">
-                <h2 class="title_text">訂單金額：</h2>
+                <h2 class="title_text">融資金額：</h2>
                 <input type="text" class="rec_comp" id="orders_price" name="orders_price" placeholder="" value="">
             </div>
             <!-- <div class="money_input">
@@ -69,7 +70,7 @@
 
     <!-- 移轉小卡 -->
     <div id='pop_bToC_div' class="add_rate">
-        <form action="" method="POST">
+        <form  method="POST">
             {% csrf_token %}
             <div class="add_title">
                 <h2 class="title_text">設定融資金額及投資人分券利率</h2>
@@ -77,6 +78,8 @@
             <!-- hidden input -->
             <input type="text" style="display: none;" name="bToC_interest" id="bToC_interest" value="">
             <input type="text" style="display: none;" name="optype" value="bToC">
+            <input type="text" style="display: none;" name="bToC_TOKENB_id" id = "bToC_TOKENB_id" value="">
+
             <!-- hidden input end -->
             <div class="money_input">
                 <h2 class="title_text">訂單編號：</h2>
@@ -153,6 +156,7 @@
                             <td>{{order.initial_order.get_state_display}}</td>
                             <td>{{order.already_loan}}</td>
                             <td>{{order.already_transfer}}</td>
+                            <td style="display: none;">{{order.id}}</td>
                             <td><button type="button" class="pop_loan_btn">融資</button></td>
                             <td><button type="button" class="pop_bToC_btn">移轉</button></td>
                     </tr>
@@ -202,7 +206,9 @@
             var str = '';
             $(ele).find('td').each(function (i, ele) {
                 if(i < 10) str += $(this).html()+'&';
+               
             });
+            console.log(str)
             $(ele).find('td:eq(10)').children().attr("caption", str);
             $(ele).find('td:eq(11)').children().attr("caption", str);
         });
@@ -216,10 +222,11 @@
             var interest = valArr[0];
             var order_id = valArr[1];
             var from_com_name = valArr[2];
-            var product = valArr[3];
-            var price = Number(valArr[4]);
-            var already_loan = Number(valArr[8]);
-            var already_transfer = Number(valArr[9]);
+            var price = Number(valArr[3]);
+            var already_loan = Number(valArr[7]);
+            var already_transfer = Number(valArr[8]);
+            var TOKENB_id = valArr[9];
+            $('#loan_TOKENB_id').val(TOKENB_id);
             $('#orders_id').val(order_id);
             $('#orders_from_company_name').val(from_com_name);
             $('#orders_price').attr('placeholder', price - already_loan - already_transfer);
@@ -235,10 +242,11 @@
             var interest = valArr[0];
             var order_id = valArr[1];
             var from_com_name = valArr[2];
-            var product = valArr[3];
-            var price = valArr[4];
-            var already_loan = Number(valArr[8]);
-            var already_transfer = Number(valArr[9]);
+            var price = Number(valArr[3]);
+            var already_loan = Number(valArr[7]);
+            var already_transfer = Number(valArr[8]);
+            var TOKENB_id = valArr[9];
+            $('#bToC_TOKENB_id').val(TOKENB_id);
             $('#bToC_id').val(order_id);
             $('#bToC_from_company_name').val(from_com_name);
             $('#bToC_price').attr('placeholder', price - already_loan - already_transfer);
@@ -260,10 +268,10 @@
                 if (res['check'] == 'passed') {
                     $('#waiting').css("display", "flex");
                     $('#fade').css("display", "none");
-                    // form.submit(); 好像有問題
+                    form.submit(); 
                 } else {
                     alert('wrong account');
-                    location.href = '/company_orders_rec';
+                    location.href = '/verification_OK';
                 }
                 
             });

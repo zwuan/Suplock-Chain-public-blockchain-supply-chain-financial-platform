@@ -40,10 +40,11 @@
             <input type="text" style="display: none;" name="orders_interest" id="orders_interest" value="">
             <input type="text" style="display: none;" name="optype" value="loan">
             <input type="text" style="display: none;" name="loan_TOKENB_id" id = "loan_TOKENB_id" value="">
+            <input type="text" style="display: none;" name="orders_id" id = "orders_id" value="">
             <!-- hidden input end -->
             <div class="money_input">
                 <h2 class="title_text">訂單編號：</h2>
-                <input type="text" class="rec_comp" readonly="readonly" id="orders_id" name="orders_id" value="">
+                <input type="text" class="rec_comp" readonly="readonly" id="modify_id" value="">
             </div>
             <div class="money_input">
                 <h2 class="title_text">廠商名稱：</h2>
@@ -55,7 +56,7 @@
             </div>
             <div class="money_input" style="display: none;">
                 <h2 class="title_text">設定利率:</h2>
-                <input type="text" name="rate" id="" value="3">
+                <input type="text" name="rate" id="" value="10">
             </div>
             <div class="add_money_btn">
                 <button class="submit_btn" type="button" id='sendloan' name="confirm">融資</button>
@@ -75,11 +76,12 @@
             <input type="text" style="display: none;" name="bToC_interest" id="bToC_interest" value="">
             <input type="text" style="display: none;" name="optype" value="bToC">
             <input type="text" style="display: none;" name="bToC_TOKENB_id" id = "bToC_TOKENB_id" value="">
+            <input type="text" style="display: none;" name="bToC_id" id = "bToC_id" value="">
 
             <!-- hidden input end -->
             <div class="money_input">
                 <h2 class="title_text">訂單編號：</h2>
-                <input type="text" class="rec_comp" readonly="readonly" id="bToC_id" name="bToC_id" value="">
+                <input type="text" class="rec_comp" readonly="readonly" id="modify_t_id" name="modify_t_id" value="">
             </div>
             <div class="money_input">
                 <h2 class="title_text">發出廠商名稱：</h2>
@@ -99,7 +101,7 @@
             </div>
             <div class="money_input" style="display: none;">
                 <h2 class="title_text">設定利率:</h2>
-                <input type="text" name="rate" id="" value="3">
+                <input type="text" name="rate" id="" value="10">
             </div>
             <div class='add_money_btn'>
                 <button class="submit_btn" type="button" id='sendbToC' name="confirm">移轉</button>
@@ -222,6 +224,7 @@
             console.log(TOKENB_id)
             $('#loan_TOKENB_id').val(TOKENB_id);
             $('#orders_id').val(order_id);
+            $('#modify_id').val('ODE-'+TOKENB_id)
             $('#orders_from_company_name').val(from_com_name);
             $('#orders_price').attr('placeholder', price - already_loan - already_transfer);
             $('#orders_interest').val(interest);
@@ -243,6 +246,7 @@
             var TOKENB_id = valArr[10];
             $('#bToC_TOKENB_id').val(TOKENB_id);
             $('#bToC_id').val(order_id);
+            $('#modify_t_id').val('ODE-'+TOKENB_id);
             $('#bToC_from_company_name').val(from_com_name);
             $('#bToC_price').attr('placeholder', price - already_loan - already_transfer);
             $('#bToC_interest').val(interest);
