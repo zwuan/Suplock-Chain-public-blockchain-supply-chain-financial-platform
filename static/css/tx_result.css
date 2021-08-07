@@ -1,0 +1,145 @@
+body{
+    background-color: #14213d;
+}
+a{
+    color: white ;
+    text-decoration: none;
+}
+a:hover{
+    text-decoration: none;
+    color: white;
+}
+main{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+.result{
+    margin-top: 100px;
+    width:450px;
+    height:170px;
+    background-color:  rgba(153, 153, 153, 0.596);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+}
+.btn_g{
+    width: 250px;
+    margin-top: 10px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+.fs{
+    font-size: 20px;
+}
+.fss{
+    font-size: 16px;
+}
+.wh{
+    color: white;
+}
+.fwf{
+    font-weight: 400;
+}
+.mtt{
+    margin-top: 10px;
+}
+
+.subtn{
+    width: 100px;
+    height: 40px;   
+    border: 2px solid white;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    transition: 200ms ease-in-out;
+}
+.subtn:hover{
+    cursor: pointer;
+}
+.subtn:hover a{
+    color: white;
+}
+.ob:hover {
+    background-color: #ffc300;
+    border: none;
+}
+.bb:hover{
+    background-color: #accde4;
+    border: none;
+}
+
+.checkmark__circle {
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-width: 3;
+    stroke-miterlimit: 10;
+    stroke: #ffc300;
+    fill: none;
+    animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+  }
+  
+  .checkmark {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: block;
+    stroke-width: 3;
+    stroke: #ffc300;
+    stroke-miterlimit: 10;
+    margin: 10% auto;
+    box-shadow: inset 0px 0px 0px #ffc300;
+    animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both;
+  }
+  
+  .checkmark__check {
+    transform-origin: 50% 50%;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+  }
+  
+  @keyframes stroke {
+    100% {
+      stroke-dashoffset: 0;
+    }
+  }
+  @keyframes scale {
+    0%, 100% {
+      transform: none;
+    }
+    50% {
+      transform: scale3d(1.1, 1.1, 1);
+    }
+  }
+  @keyframes fill {
+    100% {
+      box-shadow: inset 0px 0px 0px 30px #ffc40000;
+    }
+  }
+
+  .typewriter h2 {
+    color: #fff;
+    overflow: hidden; /* Ensures the content is not revealed until the animation */
+    white-space: nowrap; /* Keeps the content on a single line */
+    margin: 0 auto; /* Gives that scrolling effect as the typing happens */
+    border-right: .15em solid orange; /* The typwriter cursor */
+    animation: typing 1.5s steps(7, end), blink-caret .5s step-end infinite;
+  }
+  
+  /* The typing effect */
+  @keyframes typing {
+    from { width: 0 }
+    to { width: 100% }
+  }
+  
+  /* The typewriter cursor effect */
+  @keyframes blink-caret {
+    from, to { border-color: transparent }
+    50% { border-color: orange }
+  }

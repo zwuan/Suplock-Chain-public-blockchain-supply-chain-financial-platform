@@ -30,9 +30,10 @@
             <div class="add_title">
                 <h2 class="title_text">設定接收廠商可借貸利率</h2>
             </div>
+            <input type="text" style="display: none;" name="orders_id" id="orders_id">
             <div class="money_input">
                 <h2 class="title_text">訂單編號：</h2>
-                <input type="text" class = "rec_comp" readonly='readonly' id = 'orders_id' name = 'orders_id'value=''>
+                <input type="text" class = "rec_comp" readonly='readonly' id = 'modify_id' value=''>
             </div>
             <div class="money_input">
                 <h2 class="title_text">廠商名稱：</h2>
@@ -61,7 +62,6 @@
             <table class="table table-striped">
                 <thead>
                     <tr>
-                        <th>利息</th>
                         <th style="display: none;">訂單編號</th>
                         <th>接收公司</th>
                         <th>項目</th>
@@ -74,11 +74,7 @@
                 <tbody>
                     {% for order in orders %}
                     <tr name = 'make_id' onclick="{% if order.state == 7 %}  pop_set_rate() {% endif %}" >
-                        {% if not order.state == 7  %}
-                        <td name = 'percent'>{{ order.get_rate_display }}</td>
-                        {% else %}
-                        <td name = 'percent'>未設定</td>
-                        {% endif %}
+                        <td name = 'percent' style="display: none;">{{ order.get_rate_display }}</td>
                         <td name = 'order_id' style="display: none;">{{order.id}}</td>
                         <td name= 'to_id' >{{order.receive_compamy.user}}</td>
                         <td >{{order.product}}</td>
@@ -143,7 +139,7 @@
         state[i].setAttribute('id','state-'+i);
         optionArray[i] = document.getElementById('option-'+i);
         reciverArray[i] = document.getElementById('receiver-'+i);
-        orderIDArray[i] =  document.getElementById('orderID-'+i);
+        orderIDArray[i] = document.getElementById('orderID-'+i);
         stateArray[i] =  document.getElementById('state-'+i);
         // 客製化每個訂單彈出的小卡
         optionArray[i].addEventListener('click',()=>{
@@ -152,6 +148,7 @@
                     addr.value = company_addr_dict[ele];
                     rec_company_name.value = reciverArray[i].innerHTML;
                     orders_id.value = orderIDArray[i].innerHTML;
+                    $('#modify_id').val('AR-'+orderIDArray[i].innerHTML)
                 };
             };
         });

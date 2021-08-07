@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的帳戶</title>
+    {% load static %}
+    {% include 'nav_login.html' %} 
+    <link rel="stylesheet" href="{%static 'css/invest_wallet.css' %}">
+</head>
+<body>
+    <main class="main_content">
+        <div class="invest_wallet">
+            <div class="user_pic"><img src="{% static 'icon/person.svg' %}" width="30px" height="30px" alt=""></div>
+            <h2 class="name t4 wh">Ace</h2>
+            <h2 class="user_id e2 wh">用戶：19092</h2>
+            <div class="balance">
+                <div class="circle orback"><img class='whSVG' src="{% static 'icon/wallet.svg' %}" width="24px" height="24px" alt=""></div>
+                <div class="money_info">
+                    <h2 class="tw4 or fourW f9" id = "balance" value = "21000">21,000 TWD</h2>
+                    <h2 class="wh forte fourW">平台幣餘額</h2>
+                </div>
+            </div>
+            <div class="balance">
+                <div class="circle rdback"><img src="{% static 'icon/coin.svg' %}" width="26px" height="26px" alt=""></div>
+                <div class="money_info">
+                    <h2 class="tw4 fourW rd f9" id = "balance" value = "1200">1,200 TWD</h2>
+                    <h2 class="wh forte fourW">過去收益</h2>
+                </div>
+            </div>
+            <div class="balance">
+                <div class="circle blback"><img src="{% static 'icon/moisture.svg' %}" width="24px" height="24px" alt=""></div>
+                <div class="money_info">
+                    <h2 class="tw4  fourW bl f9" id = "balance" value = "2.5">2.5 %</h2>
+                    <h2 class="wh forte fourW">申購手續費</h2>
+                </div>
+            </div>
+        </div>
+        <div class="invest_record">
+            <h2 class="wh ">債權申購紀錄</h2>
+            <div class="select">
+                <select name="type" class="select-1 wh forte" id="select-1">
+                    <option value="all">所有</option>
+                    <option  value="1">訂單類債權</option>
+                    <option  value="2">應收類債權</option>
+                    <option  value="3">存貨類債權</option>
+                </select>
+            </div>
+            <table class="table mgt20">
+                <thead>
+                    <tr>
+                        <th>債權編號</th>
+                        <th>擔保公司</th>
+                        <th>年利率</th>
+                        <th>累計收益</th>
+                        <th>標的種類</th>
+                        <th>期數</th>
+                        <th>狀態</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in tranche %}
+                    <tr >
+                        <td>DE-{{t.loanCertificate.tokenB.id}}</td>
+                        <td>{{t.loanCertificate.tokenB.initial_order.send_company.user}}</td>
+                        <td>{{t.loanCertificate.interest}}%</td>
+                        <td name = "change_format">{{t.accu_earning}}</td>
+                        <td>{{t.loanCertificate.tokenB.initial_order.class_type}}</td>
+                        <td>{{t.loanCertificate.date_span}}</td>
+                        <td>計息中</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+</body>
+    <script>
+            const accu_earning_array = document.getElementsByName('change_format')
+            accu_earning_array[0].innerHTML = parseInt(accu_earning_array[0].innerHTML)
+    </script>
+</html>

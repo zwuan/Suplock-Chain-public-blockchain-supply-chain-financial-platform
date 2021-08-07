@@ -32,26 +32,25 @@
             </div>
             <div class="money_input">
                 <h2 class="title_text">存貨編號：</h2>
-                <input type="text" class = "rec_comp" readonly='readonly' disabled="disabled"id = 'orders_id' name = 'orders_id'value=''>
+                <input type="text" class = "rec_comp" readonly='readonly'  id = 'orders_id' name = 'orders_id' value=''>
             </div>
-            <div class="money_input">
-                <h2 class="title_text">物品名稱：</h2>
-                <input type="text" class = "rec_comp" readonly='readonly'disabled="disabled" id = 'product_name'name = 'rec_company_name' value=''>
+            <div class="money_input"> 
+                <h2 class="title_text">物品單價：</h2> 
+                <!-- rec_company_name當成單價  下面address 當成數量 -->
+                <input type="text" class = "rec_comp" readonly='readonly'  id = 'price' name = 'rec_company_name' value=''>
             </div>
             <div class="money_input">
                 <h2 class="title_text">物品數量：</h2>
-                <input type="text" class = "rec_comp" readonly='readonly'disabled="disabled" id = 'quantities' name = 'rec_com_address' value=''>
+                <input type="text" class = "rec_comp" readonly='readonly'  id = 'quantities' name = 'rec_com_address' value=''>
             </div>
-            <div class="money_input">
+            <div class="money_input " style="display: none;" >
                 <h2 class="title_text">設定利率:</h2>
                 <select class="money_amount"  name="rate">
-                    {% for value, label in form.fields.rate.choices %}
-                    　<option value="{{value}}" >{{label}}</option>
-                    {% endfor %}
+                    　<option value="10" >10</option>
                 </select>
             </div>
             <div class='add_money_btn'>
-                <button class="submit_btn" type="submit" id='send' name="confirm">發起驗證</button>
+                <button class="submit_btn" type="button" id='send' name="confirm">發起驗證</button>
             </div>
         </form>
     </div>
@@ -89,7 +88,7 @@
                         {% endif %}
                         <td name = 'order_id' style="display: none;" id = "order_id-{{ forloop.counter}}">{{order.id}}</td>
                         <td id = "product_id-{{ forloop.counter}}">{{order.product}}</td>
-                        <td>{{order.price}}</td>
+                        <td id = "price_id-{{ forloop.counter}}">{{order.price}}</td>
                         <td id = "quantity_id-{{ forloop.counter}}">{{order.quantity}}</td>
                         <td>{{order.start_date|date:'Y-m-d'}}</td>
                         <td>{{order.end_date|date:'Y-m-d'}}</td>
@@ -129,7 +128,7 @@
     const orders_id = document.getElementById('orders_id');
     const order_id = document.getElementsByName('order_id');
     const quantities = document.getElementById('quantities')
-    const product_name = document.getElementById('product_name')
+    const price = document.getElementById('price')
 
     //const company_addr_dict =  {{ company_addr_dict|safe }};   //django -> js (ignore the warning)
     function pop_set_rate(){
@@ -147,7 +146,7 @@
         optionArray[i].addEventListener('click',()=>{
             orders_id.value = document.getElementById('order_id-'+i).innerHTML;
             quantities.value = document.getElementById('quantity_id-'+i).innerHTML;
-            product_name.value = document.getElementById('product_id-'+i).innerHTML;
+            price.value = document.getElementById('price_id-'+i).innerHTML;
         });
     }
     $('#send').on('click', function(e){
@@ -178,7 +177,6 @@
         });
 
     });
-
 </script>
 
 </html>

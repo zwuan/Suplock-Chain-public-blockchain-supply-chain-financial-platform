@@ -1,5 +1,7 @@
 pragma solidity ^0.8.1;
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+//import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol"; 為啥這個不行
+import "github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/math/SafeMath.sol";
+
 contract Core{
     using SafeMath for uint256;
     using SafeMath for uint16;
@@ -33,7 +35,7 @@ contract Core{
     address public core; // 合約的持有者
     uint256 total_amount_A; //紀錄取得的tokenA總數
     uint256 total_amount_B; //紀錄發出的tokenB總數
-    address platform =  0xA3E58464444bC66b5bb7FB8e76D7F4fDE52126F2; //部署人（平台）
+    address platform =  0x5B38Da6a701c568545dCfcB03FcB875f56beddC4; //部署人（平台）
     //0x5B38Da6a701c568545dCfcB03FcB875f56beddC4
     
     //event 的部分
@@ -91,6 +93,23 @@ contract Core{
         emit tokenB_event(core, _to, _tokenB.amount, _class, _tokenB.id, _tokenB.interest, _tokenB.date); //剩餘次數、存貨驗證? AtoB(), BtoC()
 
     }
+    
+    function llssToB(uint256 _amount, uint256 _interest, uint256 _date) external {
+        uint256 num_trac = _addTransaction(core, 5); //取得本次(原來+1)交易次數
+        TokenB memory _tokenB; //建立一個tokenB
+        _tokenB.core = core; //核心企業地址
+        _tokenB.parent = core; //來源
+        _tokenB.amount = _amount; //amount設定
+        _tokenB.interest = _interest;
+        _tokenB.class = 5; //第5類:實體物驗證抵押
+        _tokenB.date = _date;
+        _tokenB.id = uint(keccak256(abi.encodePacked(block.timestamp))); //ID的建立
+        _tokenB.status = "unfinished";
+        token_B[core][5][num_trac] = _tokenB; //將token轉移給目標地址
+        total_amount_B = total_amount_B.add(_amount);
+        emit tokenB_event(core, core, _tokenB.amount, 5, _tokenB.id, _tokenB.interest, _tokenB.date);
+    } 
+    
     function BtoC(address _from, address _to, uint256 _amount, uint256 _interest, uint _id, uint16 _class, uint16 c_class, uint256 _date) public onlyPlatform {
         //tokenB的二次交易
         //後端做利率及時間的檢查

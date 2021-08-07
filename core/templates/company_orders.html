@@ -30,9 +30,10 @@
             <div class="add_title">
                 <h2 class="title_text">設定接收廠商可借貸利率</h2>
             </div>
+            <input type="text" style="display: none;"  name = 'orders_id'  id = 'orders_id'value='' >
             <div class="money_input">
                 <h2 class="title_text">訂單編號：</h2>
-                <input type="text" class = "rec_comp" readonly='readonly' id = 'orders_id' name = 'orders_id'value=''>
+                <input type="text" class = "rec_comp" readonly='readonly' id = 'modify_id' value=''>
             </div>
             <div class="money_input">
                 <h2 class="title_text">廠商名稱：</h2>
@@ -160,6 +161,7 @@
                     addr.value = company_addr_dict[ele];
                     rec_company_name.value = reciverArray[i].innerHTML;
                     orders_id.value = orderIDArray[i].innerHTML;
+                    $('#modify_id').val('OD-'+orderIDArray[i].innerHTML)
                 };
             };
         });

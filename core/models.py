@@ -124,6 +124,7 @@ class TokenB(models.Model):
 # loancertificate資料表
 # mintCertificate (_loan_id, _borrow_company, _principle, _interest, _datespan, _class)
 class LoanCertificate(models.Model):
+    tokenB  = models.ForeignKey(TokenB,on_delete=models.CASCADE ,related_name='from_tokenB', null=True,  blank=True) ## 來自哪個tokenB 'kevin'
     loan_id = models.CharField(max_length=100, null=True, blank=True) ## tokenB的id, 因為太長所以用charfield
     loan_company = models.ForeignKey(Company,on_delete=models.CASCADE ,related_name='loan_company', null=True,  blank=True) ## 借錢企業
     principle = models.CharField(max_length=100, null=True, blank=True) ## 融資多少錢
@@ -138,6 +139,7 @@ class LoanCertificate(models.Model):
 
 class Tranche(models.Model):
     # (address _investor, uint _loan_id, uint _class, uint _amount)
+    loanCertificate = models.ForeignKey(LoanCertificate,on_delete=models.CASCADE ,related_name='from_certificate', null=True,  blank=True) ##來自哪比loan_certificate 'kevin'
     investor = models.ForeignKey(User,on_delete=models.CASCADE ,related_name='investor', null=True,  blank=True)
     loan_id = models.CharField(max_length=100, null=True, blank=True) ## tokenB的id, 因為太長所以用charfield
     riskClass = models.IntegerField(choices=TRANCHE_CHOICES, null=True, blank=True)  ## 分券種類

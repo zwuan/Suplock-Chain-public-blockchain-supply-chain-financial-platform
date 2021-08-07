@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的訂單</title>
+    {% include 'nav_login.html' %}
+    {% load static %}
+    <link rel="stylesheet" href="{%static 'css/company_orders.css' %}">
+</head>
+<body>
+<div class="loader-wrapper" id = 'waiting'>
+    <div>
+    <span class="loader"><span class="loader-inner"></span></span>
+    </div>
+    <h2 style="color: white; margin-top: 20px;">Wait for the transaction complete</h2>
+</div>
+<main class="main_content" id = 'fade_out'>
+    <div class='content_title'> 
+        <h2>融資還款</h2>
+    </div>
+    <!-- 點擊變暗 -->
+    <div id = 'overlay'></div> 
+    <!-- 彈出小卡 -->
+    <div id = 'pop_div' class = "add_rate">
+        <form action="" method="POST">
+            {% csrf_token %}
+            <div class="add_title">
+                <h2 class="title_text">設定接收廠商可借貸利率</h2>
+            </div>
+            <div class="money_input">
+                <h2 class="title_text">來源訂單編號：</h2>
+                <input type="text" class = "rec_comp" readonly='readonly' id = 'orders_id' name = 'orders_id' value=''>
+            </div>            
+            <div class="money_input">
+                <h2 class="title_text">未還本利和：</h2>
+                <input type="text" class = "rec_comp" readonly='readonly' id = 'total_debt'name = 'total_debt' value=''>
+            </div>
+            <div class="money_input">
+                <h2 class="title_text">剩餘期數：</h2>
+                <input type="text" class = "address_" readonly='readonly' id = 'remain_term' name = 'remain_term' value=''>
+            </div>
+            <div class="money_input">
+                <h2 class="title_text">本期應還：</h2>
+                <input type="text" class = "rec_comp" readonly='readonly' id = 'return_this_month' name = 'return_this_month' value=''>
+            </div>
+            <div class='add_money_btn'>
+                <button class="submit_btn" type="button" id='send' name="confirm">還款</button>
+            </div>
+        </form>
+    </div>
+    <div class="outer">
+    <!-- <input class='btn_div'  id = 'btn_1' value = '透過憑證發出訂單'></input> -->
+        <div class="table_above_tag">
+            <div class='send_btn' id='clicked_1'>
+                <h2 class="send_order" >所有借款</h2>
+            </div>
+        </div>
+        <div class="ordersTable" id="sendOrder">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>來源訂單</th>
+                        <th>項目</th>
+                        <th>融資金額</th>
+                        <th>種類</th>
+                        <th>借款期數</th>
+                        <th>狀態</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mix_tokenB in my_pay_back %}
+                    <tr name = 'make_id' onclick=" pop_set_rate()" >
+                        <td name = 'order_id'>{%if mix_tokenB.num_class_type == 1 %} ARE-{{ mix_tokenB.former_id }} {% elif mix_tokenB.num_class_type == 2%} ODE-{{ mix_tokenB.former_id }} {% endif %}</td>
+                        <td>{{mix_tokenB.product}}</td>
+                        <td>{{mix_tokenB.loan_amount}}</td>
+                        <td>{{mix_tokenB.class_type}}</td>
+                        <td>{{mix_tokenB.date_span}}</td>
+                        <td>{{mix_tokenB.state}}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% if is_paginated %}
+            <div class='paginator'>
+                {% if page_obj.has_previous %}
+                <a  href="?page={{ page_obj.previous_page_number }}">上一頁</a>
+                &emsp;
+                {% endif %}
+                {% if page_obj.has_next %}
+                <a  href="?page={{ page_obj.next_page_number }}">下一頁</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        
+        </div>
+    </div>
+  
+</main>
+
+</body>
+<script type="text/javascript" src="{%static 'js/check_user.js' %}"></script>
+
+<script>
+    $(document).ready(async function () {
+        $('#send').on('click',async  function (e) {
+            var curr_accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+            e.preventDefault();
+            var form = $(this).parents('form:first');
+            let check_addr = await checkUser(form.serializeArray(), curr_accounts[0]);
+            $.ajax({
+                method: "POST",
+                url: "/checkUser/",
+                data: { 'check_addr': check_addr },
+                dataType: "json"
+            }).done(async function (res) {
+                if (res['check'] == 'passed') {
+                    form.submit();
+                    $('#waiting').css("display", "flex");
+                    $('#fade').css("display", "none");
+                    $('#pop_div').css("display", "none");
+                } else {
+                    alert('wrong account');
+                }
+            });
+        });
+
+    });
+
+</script>
+</html>
