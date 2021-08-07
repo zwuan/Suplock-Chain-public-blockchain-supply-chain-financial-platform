@@ -28,23 +28,58 @@
         <form action="" method="POST">
             {% csrf_token %}
             <div class="add_title">
-                <h2 class="title_text">設定接收廠商可借貸利率</h2>
+                <h2 class="title_text">輸入還款金額</h2>
             </div>
+            <!-- hidden input -->
+            <input type="text" style="display: none;" id = 'orders_id' value=''>
+            <!-- hide hidden -->
             <div class="money_input">
                 <h2 class="title_text">來源訂單編號：</h2>
-                <input type="text" class = "rec_comp" readonly='readonly' id = 'orders_id' name = 'orders_id' value=''>
+                <input type="text" class = "rec_comp" readonly='readonly' id = 'modify_id' value=''>
             </div>            
+            <table class="" id="card_table">
+                <thead id='card_table_head'>
+                    <tr class = 'head_tr' id ="head_tr_id">
+                        <th>期數</th>
+                        <th>分期本金</th>
+                        <th>每期利息</th>
+                        <th>攤還金額</th>
+                    </tr>
+                </thead>
+                <tbody id = card_table_body>
+                    <tr class="head_tr">
+                        <td>1</td>
+                        <td>5000</td>
+                        <td>224</td>
+                        <td>5224</td>
+                    </tr>
+                    <tr class="head_tr">
+                        <td>2</td>
+                        <td>5000</td>
+                        <td>224</td>
+                        <td>5224</td>
+                    </tr>
+                    <tr class="head_tr">
+                        <td>3</td>
+                        <td>5000</td>
+                        <td>224</td>
+                        <td>5224</td>
+                    </tr>
+                    <tr class="head_tr">
+                        <td>4</td>
+                        <td>5000</td>
+                        <td>224</td>
+                        <td>5224</td>
+                    </tr>
+                </tbody>
+            </table>
             <div class="money_input">
-                <h2 class="title_text">未還本利和：</h2>
-                <input type="text" class = "rec_comp" readonly='readonly' id = 'total_debt'name = 'total_debt' value=''>
-            </div>
-            <div class="money_input">
-                <h2 class="title_text">剩餘期數：</h2>
-                <input type="text" class = "address_" readonly='readonly' id = 'remain_term' name = 'remain_term' value=''>
+                <h2 class="title_text">本期應還：</h2>
+                <input type="text" class = "rec_comp" readonly='readonly' disabled id = 'return_this_month' name = 'return_this_month' value=''>
             </div>
             <div class="money_input">
                 <h2 class="title_text">本期應還：</h2>
-                <input type="text" class = "rec_comp" readonly='readonly' id = 'return_this_month' name = 'return_this_month' value=''>
+                <input type="text" class = "rec_comp"  id = 'return_this_month' name = 'return_this_month' placeholder = '從前端來' value='' >
             </div>
             <div class='add_money_btn'>
                 <button class="submit_btn" type="button" id='send' name="confirm">還款</button>
@@ -73,12 +108,13 @@
                 <tbody>
                     {% for mix_tokenB in my_pay_back %}
                     <tr name = 'make_id' onclick=" pop_set_rate()" >
-                        <td name = 'order_id'>{%if mix_tokenB.num_class_type == 1 %} ARE-{{ mix_tokenB.former_id }} {% elif mix_tokenB.num_class_type == 2%} ODE-{{ mix_tokenB.former_id }} {% endif %}</td>
+                        <td name = 'order_id' style="display: none;">{{ mix_tokenB.former_id }}</td>
+                        <td name = 'modify_id' >{%if mix_tokenB.num_class_type == 1 %} ARE-{{ mix_tokenB.former_id }} {% elif mix_tokenB.num_class_type == 2%} ODE-{{ mix_tokenB.former_id }} {% endif %}</td>
                         <td>{{mix_tokenB.product}}</td>
                         <td>{{mix_tokenB.loan_amount}}</td>
                         <td>{{mix_tokenB.class_type}}</td>
                         <td>{{mix_tokenB.date_span}}</td>
-                        <td>{{mix_tokenB.state}}</td>
+                        <td name ="state">{{mix_tokenB.state}}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -104,6 +140,42 @@
 <script type="text/javascript" src="{%static 'js/check_user.js' %}"></script>
 
 <script>
+    let optionArray = [];
+    let orderIDArray = [];
+    let modifyID = [];
+    const waiting = document.getElementById('waiting'); //等待
+    const fade = document.getElementById('fade_out'); //等待
+    const overlay = document.getElementById('overlay');
+    const pop_div = document.getElementById('pop_div');
+    const orders_id = document.getElementById('orders_id');
+    const make_id = document.getElementsByName('make_id');
+    const order_id = document.getElementsByName('order_id');
+    const modify_id = document.getElementsByName('modify_id');
+    const rec_company_name = document.getElementById('rec_company_name');
+    function pop_set_rate(){
+        pop_div.classList.add('active');
+        overlay.classList.add('active');
+    }
+    overlay.addEventListener('click',()=>{
+        pop_div.classList.remove('active');
+        overlay.classList.remove('active');
+    });
+    for (let i = 0; i < make_id.length; i++){
+        // set unique id for every order
+        make_id[i].setAttribute('id','option-'+i);
+        order_id[i].setAttribute('id','orderID-'+i);
+        modify_id[i].setAttribute('id','modify_id-'+i);
+        optionArray[i] = document.getElementById('option-'+i);
+        orderIDArray[i] = document.getElementById('orderID-'+i);
+        modifyID[i] = document.getElementById('modify_id-'+i);
+        // 客製化每個訂單彈出的小卡
+        optionArray[i].addEventListener('click',()=>{
+            orders_id.value = orderIDArray[i].innerHTML;
+            $('#modify_id').val(modifyID[i].innerHTML);
+            
+        });
+    };
+
     $(document).ready(async function () {
         $('#send').on('click',async  function (e) {
             var curr_accounts = await ethereum.request({ method: 'eth_requestAccounts' });

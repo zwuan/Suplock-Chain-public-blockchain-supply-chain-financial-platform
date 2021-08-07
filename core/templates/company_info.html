@@ -14,58 +14,93 @@
 <body>
     <main class="main_content" id = "fade_out">
         {% include 'company_index_left.html' %}
-        <!-- <div class='content_title'> 
-            <h2>公司資料</h2>
-        </div> -->
-        <div class="info_content"> 
+        
+        <div class="info_content">  
+            <form action="" method="POST">
+                {% csrf_token %}
+    
             <div class="info_segement">
+                <div>
+                    <button type="button" value='edit' id = "edit">編輯</button>
+                    <button type="submit" value='done' id = "done">提交</button>
+                </div>
                 <section  class = "info_card">
                     <div class="info_column">
                         <div class="info_row">
                             <h3 class="title">公司名稱：</h3>
-                            <h3 class='info'>media tech</h3>
+                            <!-- <h3 class='info'>media tech</h3> -->
+                            <input class='info' name="company_name" value="{{company.user}}" readonly='readonly'>
                         </div>
                         <div class="info_row">
                             <h3 class="title">統一編號：</h3>
-                            <h3 class='info'>73245881</h3>
+                            <!-- <h3 class='info'>73245881</h3> -->
+                            <input class='info' name="company_number" value="{{company.uni_num}}" readonly='readonly'>
                         </div>
                         <div class="info_row">
                             <h3 class="title">行業別：</h3>
-                            <h3 class='info'>科技業</h3>
+                            <!-- <h3 class='info'>科技業</h3> -->
+                            <input class='info' name="company_type" value="{{company.company_type}}" readonly='readonly'>
                         </div>
                         <div class="info_row">
                             <h3 class="title">資本額：</h3>
-                            <h3 class='info'>1,000,000</h3>
+                            <!-- <h3 class='info'>1,000,000</h3> -->
+                            <input class='info' name="company_capital" value="{{company.capital}}" readonly='readonly'>
                         </div>
                         <div class="info_row">
                             <h3 class="title">董事長：</h3>
-                            <h3 class='info'>吳紹宏</h3>
+                            <!-- <h3 class='info'>吳紹宏</h3> -->
+                            <input class='info' name="company_chairman" value="{{company.chairman}}" readonly='readonly'>
                         </div>
                     </div>
                     <div class="info_column">
                         <div class="info_row">
                             <h3 class="title">公司所在地：</h3>
-                            <h3 class='info'>231新北市新店區中央五街110號</h3>
+                            <!-- <h3 class='info'>231新北市新店區中央五街110號</h3> -->
+                            <input class='info' name="company_address" value="{{company.company_location}}" readonly='readonly'>
                         </div>
                         <div class="info_row">
                             <h3 class="title">登記機關：</h3>
-                            <h3 class='info'>新北市政府</h3>
+                            <!-- <h3 class='info'>新北市政府</h3> -->
+                            <input class='info' name="company_supervisor" value="{{company.supervisor}}" readonly='readonly'>
                         </div>
                         <div class="info_row">
                             <h3 class="title">成立日期：</h3>
-                            <h3 class='info'>100/07/22</h3>
+                            <!-- <h3 class='info'>100/07/22</h3> -->
+                            <input class='info' name="company_start_date" value="{{company.establish_date}}" readonly='readonly'>
                         </div>
                         <div class="info_row">
                             <h3 class="title">負責人：</h3>
-                            <h3 class='info'>黃凱文</h3>
+                            <!-- <h3 class='info'>黃凱文</h3> -->
+                            <input type="text" class='info' name="company_responsible_person" value="{{company.responsible_person}}" readonly='readonly'>
                         </div>
                         <div class="info_row">
                             <h3 class="title">負責人信箱：</h3>
-                            <h3 class='info'>kevin@ggmail.com</h3>
+                            <!-- <h3 class='info'>kevin@ggmail.com</h3> -->
+                            <input type="text" class='info' name="company_responsible_person_email" value="{{user.email}}" readonly='readonly'>
                         </div>
                     </div>    
                 </section>
-            </div>  
+            </div>
+        </form>  
     </main>
 </body>
-</h3
+<script language="javascript">
+    
+    const edit = document.getElementById('edit');
+    edit.addEventListener('click',()=>{
+        let x =  document.getElementsByClassName("info");
+        for (let i = 0; i < x.length; i++){
+            x[i].readOnly = false;
+        }
+    });
+
+    const done = document.getElementById('done');
+    done.addEventListener('click',()=>{
+        let x =  document.getElementsByClassName("info");
+        for (let i = 0; i < x.length; i++){
+            x[i].readOnly = true;
+        }
+    });
+
+    
+    </script>
