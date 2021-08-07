@@ -51,7 +51,7 @@ account_from = {
     'address': '0xA3E58464444bC66b5bb7FB8e76D7F4fDE52126F2',
 }
 fee = 30 ##手續費
-DECIMALS = 10**18
+DECIMALS = 10**18 
 erc865_contract_address = '0xcb8565c6eeb98fc8c441b5e07c1d6e7cb200b277'
 erc865_contract_address = w3.toChecksumAddress(erc865_contract_address)
 
@@ -59,6 +59,7 @@ invest_contract_address = '0x9633BdF7a5Ee0eA48f4160b03dA3f7bB2CD5Bb57'
 invest_contract_address = w3.toChecksumAddress(invest_contract_address)
 
 Invest = w3.eth.contract(invest_contract_address, abi=invest_abi)
+
 
 # 廠商登入/註冊（template有兩個form，而且user&company分開，需要兩個modelForm，因此用formView太複雜）
 
@@ -378,8 +379,8 @@ class company_order(generic.ListView):
             ######################## 這裡要一個頁面説訂單已發出 ########################
             return redirect(reverse_lazy('company_index'))
         
-    
-   
+
+
 @method_decorator(login_required, name='dispatch')
 class company_order_rec(generic.ListView):
     model = TokenB
