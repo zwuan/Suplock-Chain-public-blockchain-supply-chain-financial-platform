@@ -15,7 +15,7 @@ from core.solidity.llss_bytecode import llss_bytecode
 from core.solidity.invest_bytecode import invest_bytecode
 import json
 from django.views import generic
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.contrib.auth.hashers import make_password
 from .forms import user_login, user_register, deposit, set_order_rate, companyListForm, set_loan,send_account_pay, buyTranche
 from django.contrib import auth
@@ -42,6 +42,7 @@ from notifications.signals import notify ## 通知模組
 from notifications.models import Notification ##通知模組
 from django.db.models import Avg,Count,Max,Min,Sum
 import math
+
 #預留空位給其他testnet
 provider_rpc = {
     'development': 'https://ropsten.infura.io/v3/396094052a124676a222214bd8a3bab8',
@@ -93,8 +94,6 @@ class invest_option(generic.ListView):
     context_object_name = 'invest_option'
     paginate_by = 6
     def get_queryset(self):
-        user = self.request.user
-        company = Company.objects.get(user = user)
         invest_option = TokenB.objects.filter(Q(class_type = 4)).order_by('date_span')
         return invest_option 
 
@@ -212,8 +211,11 @@ class login_company(generic.View):
                 user = auth.authenticate(username=username, password=password)
             if user and user.is_active:
                 auth.login(request, user)
-                return redirect(reverse_lazy('company_index'))
-                
+                if user.groups.filter(name = 'firm').exists():
+                    return redirect(reverse_lazy('company_index'))
+                else:
+                    return redirect(reverse_lazy('invest_index'))
+
         if 'register' in request.POST: ##註冊表單
             form = user_register(request.POST)
             if form.is_valid():
@@ -235,7 +237,7 @@ class login_company(generic.View):
                         amount_865 = 0,
                         user = user,
                 )
-            return render(request, 'login_company.html') 
+            return render(request, 'login_company.html')
         return render(request, 'login_company.html') 
 
 
@@ -906,7 +908,9 @@ class company_account_rec(generic.ListView):
 class my_notification(generic.View):
     def get(self, request, *args, **kwargs):
         ##大於9個通知刪除##
-        return render(request,'my_notification.html')
+        company = Company.objects.get(user = request.user)
+        context = {'msg':company}
+        return render(request,'my_notification.html',context)
     def post(self, request, *args, **kwargs):
         notify_ID = request.POST.get("notify_ID")
         unread_obj = Notification.objects.get(pk = notify_ID)
@@ -915,8 +919,15 @@ class my_notification(generic.View):
         return HttpResponse(json.dumps(context),content_type="application/json")
 ## 基本資料
 class company_info(generic.View):
-     def get(self, request, *args, **kwargs):
-        return render(request, 'company_info.html')
+    def get(self, request, *args, **kwargs):
+        company = Company.objects.get(user = request.user)
+        context = {'msg':company}
+        return render(request, 'company_info.html',context)
+    def post(self, request, *args, **kwargs):
+        img = request.FILES['logo'] 
+        return redirect(reverse_lazy('company_info'))
+
+
 ##各項目餘額
 class wallet(generic.View):
      def get(self, request, *args, **kwargs):
@@ -934,6 +945,7 @@ class wallet(generic.View):
             context['sum_receive_order'] = json.dumps(int(sum_receive_order['tokenB_sum']))
         else:
             context['sum_receive_order'] = 0
+        context['msg'] = company
         return render(request, 'wallet.html',context)
 
 
@@ -1245,6 +1257,9 @@ def tx_result(request):
 def logout(request):
     auth.logout(request)
     return redirect(reverse_lazy('login_company'))
+
+
+
 
 '''ERC-865 contract manipulate'''
 

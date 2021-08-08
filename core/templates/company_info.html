@@ -16,15 +16,24 @@
         {% include 'company_index_left.html' %}
         
         <div class="info_content">  
-            <form action="" method="POST">
+            <form enctype="multipart/form-data" method="POST">
                 {% csrf_token %}
     
             <div class="info_segement">
                 <div>
                     <button type="button" value='edit' id = "edit">編輯</button>
-                    <button type="submit" value='done' id = "done">提交</button>
+                    <div class="edit_group">
+                        <button type="submit" value='done' id = "done">提交</button>
+                        <button type="button" value='cancel' class="ml-3" id = "cancel">取消</button>
+                    </div>
                 </div>
                 <section  class = "info_card">
+                    <div class="info_column-1">
+                        <div class="img_preview">
+                            <img id = "mtk" src="/media/{{msg.image}}"alt="">
+                        </div>
+                        <input type="file" class="upload" name="logo" id ="logo" disabled = "disabled"></input>
+                    </div>
                     <div class="info_column">
                         <div class="info_row">
                             <h3 class="title">公司名稱：</h3>
@@ -54,9 +63,9 @@
                     </div>
                     <div class="info_column">
                         <div class="info_row">
-                            <h3 class="title">公司所在地：</h3>
+                            <h3 class="title">公司地址：</h3>
                             <!-- <h3 class='info'>231新北市新店區中央五街110號</h3> -->
-                            <input class='info' name="company_address" value="{{company.company_location}}" readonly='readonly'>
+                            <input class='info' name="company_address" value="{{company.company_location}}" readonly='readonly' >
                         </div>
                         <div class="info_row">
                             <h3 class="title">登記機關：</h3>
@@ -89,16 +98,26 @@
     const edit = document.getElementById('edit');
     edit.addEventListener('click',()=>{
         let x =  document.getElementsByClassName("info");
+        $('#edit').css('display','none')
+        $('#done').css('display','block')
+        $('#cancel').css('display','block')
+        $('#logo').attr("disabled",false);
         for (let i = 0; i < x.length; i++){
             x[i].readOnly = false;
+            x[i].style.border = '2px solid #e2dfdf'
         }
     });
 
-    const done = document.getElementById('done');
+    const done = document.getElementById('cancel');
     done.addEventListener('click',()=>{
+        $('#edit').css('display','block')
+        $('#cancel').css('display','none')
+        $('#done').css('display','none')
+        $('#logo').attr("disabled",true);
         let x =  document.getElementsByClassName("info");
         for (let i = 0; i < x.length; i++){
             x[i].readOnly = true;
+            x[i].style.border = 'none'
         }
     });
 
