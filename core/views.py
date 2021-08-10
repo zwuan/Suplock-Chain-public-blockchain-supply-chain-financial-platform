@@ -42,10 +42,7 @@ from notifications.signals import notify ## 通知模組
 from notifications.models import Notification ##通知模組
 from django.db.models import Avg,Count,Max,Min,Sum
 import math
-<<<<<<< HEAD
 from decimal import Decimal
-=======
->>>>>>> 3c2de05a75bdef2cf6c803c0b464b0e25f1c59a5
 
 #預留空位給其他testnet
 provider_rpc = {
@@ -117,13 +114,9 @@ class invest_option(generic.ListView):
     context_object_name = 'invest_option'
     paginate_by = 6
     def get_queryset(self):
-<<<<<<< HEAD
         user = self.request.user
         company = Company.objects.get(user = user)
         invest_option = TokenB.objects.filter(Q(class_type = 4)).order_by('-id')
-=======
-        invest_option = TokenB.objects.filter(Q(class_type = 4)).order_by('date_span')
->>>>>>> 3c2de05a75bdef2cf6c803c0b464b0e25f1c59a5
         return invest_option 
 
     def get_context_data(self, **kwargs):
