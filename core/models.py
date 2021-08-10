@@ -144,7 +144,7 @@ class Tranche(models.Model):
     loan_id = models.CharField(max_length=100, null=True, blank=True) ## tokenB的id, 因為太長所以用charfield
     riskClass = models.IntegerField(choices=TRANCHE_CHOICES, null=True, blank=True)  ## 分券種類
     amount = models.CharField(max_length=100, null=True, blank=True) ##tokenB金額
-    accu_earning = models.DecimalField(max_digits=18, decimal_places=18 , default=0, blank=True) ## 累計收益，每次廠商payback後要update
+    accu_earning = models.CharField(max_length=100, null=True, default='0') ## 融資多少錢
 
 
 

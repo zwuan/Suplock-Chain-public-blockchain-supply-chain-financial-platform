@@ -12,38 +12,38 @@
 <body>
     <div id='overlay'></div>
     {% for card in unique_card_arr %}
-    <div id='pop_loan_div-{{forloop.counter}}' class="pop_detail ">
+    <div id='pop_loan_div-{{forloop.counter}}' name="count" class="pop_detail ">
             <div class="title_info">
                 <h2 class="info_text wh">合約資料</h2>
             </div>
             <div class="input_detail">
                 <div class="company_input"> 
-                    <label class="detail_text wh" for="input-1">合約編號: DE-{{ card.id }}</label>
-                    <input type="text" class="input_in_card wh "  disabled = 'disabled'id = 'input-1' value="" >
+                    <label class="detail_text wh" for="input-1">合約編號: {{card.id}}</label>
+                    <!-- <input type="text" class="input_in_card wh "  disabled = 'disabled'id = 'input-1' value="" > -->
                 </div>
                <div class="company_input">
                     <label class="detail_text wh" for="input-2">融資金額: {{ card.principle }}</label>
-                    <input type="text" class="input_in_card wh " disabled = 'disabled'id = 'input-2' value="" >
+                    <!-- <input type="text" class="input_in_card wh " disabled = 'disabled'id = 'input-2' value="" > -->
                </div>
                 <div class="company_input">
                     <label class="detail_text wh" for="input-3">年化利率: {{ card.interest }}</label>
-                    <input type="text" class="input_in_card wh " disabled = 'disabled'id = 'input-3' value="" >
+                    <!-- <input type="text" class="input_in_card wh " disabled = 'disabled'id = 'input-3' value="" > -->
                 </div>
                 <div class="company_input"> 
                     <label class="detail_text wh" for="input-4">融資期間: {{ card.start_date|date:'Y-m-d' }} ～ {{ card.end_date|date:'Y-m-d' }}</label>
-                    <input type="text" class="input_in_card wh " disabled = 'disabled'id = 'input-4' value="" >
+                    <!-- <input type="text" class="input_in_card wh " disabled = 'disabled'id = 'input-4' value="" > -->
                 </div>
                 <div class="company_input"> 
-                    <label class="detail_text wh" id = "term_pri_id" for="input-5"  value="{{ card.term_pri }}">每月還款:</label>
-                    <input type="text" class="input_in_card wh " disabled = 'disabled'id = 'input-5' value="" >
+                    <label class="detail_text wh" for="input-5">每月還款: {{ card.term_pri }}</label>
+                    <!-- <input type="text" class="input_in_card wh " disabled = 'disabled'id = 'input-5' value="" > -->
                 </div>
                 <div class="company_input">
                     <label class="detail_text wh" for="input-6">最低借款門檻: 500</label>
-                    <input type="text" class="input_in_card wh " disabled = 'disabled'id = 'input-6' value="" >
+                    <!-- <input type="text" class="input_in_card wh " disabled = 'disabled'id = 'input-6' value="" > -->
                 </div>
                 <div class="company_input"> 
                     <label class="detail_text wh" for="input-7">區塊鏈證明:</label>
-                    <input type="text" class="input_in_card  wh" style="width: 140px;" disabled = 'disabled'id = 'input-7' value=" {{ card.tx_hash }}" >
+                    <input type="text" class="input_in_card  wh" style="width: 140px;" disabled = 'disabled' value=" {{ card.tx_hash }}" >
                     <a href="#"><img class="svg_18" src="{% static 'icon/arrow-right-circle.svg' %}" alt=""></a>
                     <label style="color: #5692e0;" class="detail_text">Etherscan</label>
                 </div>
@@ -55,15 +55,15 @@
             <div class="input_detail">
                 <div class="company_input"> 
                     <label class="detail_text wh" for="input-7">債權公司:</label>
-                    <input type="text" class="input_in_card wh" disabled = 'disabled'id = 'input-7' value="長春化工" >
+                    <input type="text" class="input_in_card wh" disabled = 'disabled' value="長春化工" >
                 </div>
                <div class="company_input">
                     <label class="detail_text wh" for="input-8">核心企業:</label>
-                    <input type="text" class="input_in_card wh" disabled = 'disabled'id = 'input-8' style="color: rgb(255, 255, 255);" value="騰輝電子" >
+                    <input type="text" class="input_in_card wh" disabled = 'disabled' style="color: rgb(255, 255, 255);" value="騰輝電子" >
                </div>
                <div class="company_input">
                     <label class="detail_text wh" for="input-9">供應鏈:</label>
-                    <input type="text"class="input_in_card wh"  disabled = 'disabled'id = 'input-9' value="銅箔基板" >
+                    <input type="text"class="input_in_card wh"  disabled = 'disabled' value="銅箔基板" >
                </div>
                <div class="company_input">
                     <label class="detail_text wh wh" >借貸紀錄:</label>
@@ -102,6 +102,7 @@
                         <th>最高年化</th>
                         <th>標的種類</th> 
                         <th>融資金額</th>
+                        <th>剩餘可投資</th>
                         <th>期數</th>
                         <th></th>
                     </tr>
@@ -115,8 +116,9 @@
                         <td name="interest">10%</td>
                         <td>{{option.initial_order.get_class_type_display}}</td>
                         <td>{{option.amount}}</td>
+                        <td>{{option.already_loan}}</td>
                         <td>{{ option.date_span }}</td>
-                        <td><button id="show" class="detail_btn">詳細</button></td>
+                        <td><button id="-{{forloop.counter}}" class="show detail_btn">詳細</button></td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -129,28 +131,65 @@
 <script>
     $(document).ready(async function () {
 
-        term_pri = $('#term_pri_id').attr('value')
-        console.log(term_pri)
-        right_term_pri = term_pri / 10 ** 18;
-        $('#term_pri_id').html('每月還款:'+" "+right_term_pri);
-
-        const show = document.getElementById('show')
+        // term_pri = $('#term_pri_id').attr('value')
+        // console.log(term_pri)
+        // right_term_pri = term_pri / 10 ** 18;
+        // $('#term_pri_id').html('每月還款:'+" "+right_term_pri);
+        
+        var count = document.getElementsByName('count').length;
+        // const show = document.getElementById('show')
         const overlay = document.getElementById('overlay')
-        const pop_loan_div = document.getElementById('pop_loan_div-1')
-        show.addEventListener('click',()=>{
-            overlay.classList.add('active');
-            pop_loan_div.classList.add('active');
-        });
+        var pop_loan_div
+        // show.addEventListener('click',()=>{
+        //     overlay.classList.add('active');
+        //     pop_loan_div.classList.add('active');
+        // });
         overlay.addEventListener('click',()=>{
             overlay.classList.remove('active');
-            pop_loan_div.classList.remove('active');
+            pop_loan_div.removeClass('active');
         });
+        // for(let i =1; i< count+1; i++){
+        $('.show').on('click', function (e) {
+            let index = $(this).attr('id');
+            e.preventDefault();
+            overlay.classList.add('active');
+            pop_loan_div = $('#pop_loan_div' + index);
+            pop_loan_div.addClass('active');
+        })
+        // }
+        // function showCard() {
 
+        // }
+        
         $('#loan_table tr').each((i, ele) => {
-            var target = $(ele).find('td:eq(5)');
+            var target = $(ele).find('td:eq(6)');
             var num = target.text()
             target.text(parseInt(num / 30)+1);
         });
+
+        // $('.press').on('click', async function (e) {
+        //     e.preventDefault();
+        //     var form = $(this).parents('form:first');
+        //     var curr_accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+        //     let check_addr = await checkUser(form.serializeArray(), curr_accounts[0]);
+        //     $.ajax({
+        //         method: "POST",
+        //         url: "/checkUser/",
+        //         data: { 'check_addr': check_addr },
+        //         dataType: "json"
+        //     }).done(async function (res) {
+        //         if (res['check'] == 'passed') {
+        //             $('#waiting').css("display", "flex");
+        //             $('#fade').css("display", "none");
+        //             form.submit();
+        //         } else {
+        //             alert('wrong account');
+        //             location.href = '/payback';
+        //         }
+        //     });
+        // });
+
+
     });
     
 </script>

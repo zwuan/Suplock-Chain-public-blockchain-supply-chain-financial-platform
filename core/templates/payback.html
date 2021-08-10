@@ -24,18 +24,20 @@
     <!-- 點擊變暗 -->
     <div id = 'overlay'></div> 
     <!-- 彈出小卡 -->
-    <div id = 'pop_div' class = "add_rate">
+    {% for card in uni_payback_card %}
+    <div id ='pop_div-{{forloop.counter}}' name="count" class = "add_rate">
         <form action="" method="POST">
             {% csrf_token %}
             <div class="add_title">
                 <h2 class="title_text">輸入還款金額</h2>
             </div>
             <!-- hidden input -->
-            <input type="text" style="display: none;" id = 'orders_id' value=''>
+            
+            <input type="text" style="display: none;" name="_loan_id" id="token_id{{forloop.counter}}" value='{{ card.token_id }}'>
             <!-- hide hidden -->
             <div class="money_input">
                 <h2 class="title_text">來源訂單編號：</h2>
-                <input type="text" class = "rec_comp" readonly='readonly' id = 'modify_id' value=''>
+                <input type="text" class = "rec_comp" readonly='readonly'  value= "">
             </div>            
             <table class="" id="card_table">
                 <thead id='card_table_head'>
@@ -46,46 +48,35 @@
                         <th>攤還金額</th>
                     </tr>
                 </thead>
-                <tbody id = card_table_body>
+                <tbody id ="card_table_body">
+                    {%for payable in card.payback%}
                     <tr class="head_tr">
-                        <td>1</td>
-                        <td>5000</td>
-                        <td>224</td>
-                        <td>5224</td>
+                        <td style="display: none;">{{card.token_id}}</td>
+                        <td>{{payable.term}}</td>
+                        <td>{{payable.term_principle}}</td>
+                        <td>{{payable.term_interest}}</td>
+                        <td></td>
                     </tr>
-                    <tr class="head_tr">
-                        <td>2</td>
-                        <td>5000</td>
-                        <td>224</td>
-                        <td>5224</td>
-                    </tr>
-                    <tr class="head_tr">
-                        <td>3</td>
-                        <td>5000</td>
-                        <td>224</td>
-                        <td>5224</td>
-                    </tr>
-                    <tr class="head_tr">
-                        <td>4</td>
-                        <td>5000</td>
-                        <td>224</td>
-                        <td>5224</td>
-                    </tr>
+                    {% endfor %}
                 </tbody>
             </table>
             <div class="money_input">
+                <h2 class="title_text">本期期數：</h2>
+                <input type="text" class="rec_comp" id="curr_term{{forloop.counter}}" readonly='readonly' placeholder='期數' value='{{card.curr_span}}'>
                 <h2 class="title_text">本期應還：</h2>
-                <input type="text" class = "rec_comp" readonly='readonly' disabled id = 'return_this_month' name = 'return_this_month' value=''>
+                <input type="text" class = "rec_comp" readonly='readonly' id = 'return_this_month{{forloop.counter}}' placeholder = ''  value=''>
             </div>
             <div class="money_input">
-                <h2 class="title_text">本期應還：</h2>
-                <input type="text" class = "rec_comp"  id = 'return_this_month' name = 'return_this_month' placeholder = '從前端來' value='' >
+                <h2 class="title_text">輸入還款金額：</h2>
+                <input type="text" class = "rec_comp"  name = '_amount'  value='' >
             </div>
             <div class='add_money_btn'>
-                <button class="submit_btn" type="button" id='send' name="confirm">還款</button>
+                <button class="send submit_btn" type="submit" name="confirm">還款</button>
             </div>
+           
         </form>
     </div>
+    {% endfor %}
     <div class="outer">
     <!-- <input class='btn_div'  id = 'btn_1' value = '透過憑證發出訂單'></input> -->
         <div class="table_above_tag">
@@ -100,6 +91,7 @@
                         <th>來源訂單</th>
                         <th>項目</th>
                         <th>融資金額</th>
+                        <th>剩餘未還</th>
                         <th>種類</th>
                         <th>借款期數</th>
                         <th>狀態</th>
@@ -107,11 +99,11 @@
                 </thead>
                 <tbody>
                     {% for mix_tokenB in my_pay_back %}
-                    <tr name = 'make_id' onclick=" pop_set_rate()" >
-                        <td name = 'order_id' style="display: none;">{{ mix_tokenB.former_id }}</td>
-                        <td name = 'modify_id' >{%if mix_tokenB.num_class_type == 1 %} ARE-{{ mix_tokenB.former_id }} {% elif mix_tokenB.num_class_type == 2%} ODE-{{ mix_tokenB.former_id }} {% endif %}</td>
+                    <tr class = 'make_id' id = -{{forloop.counter}} >
+                        <td >{%if mix_tokenB.num_class_type == 1 %} ARE-{{ mix_tokenB.former_id }} {% elif mix_tokenB.num_class_type == 2%} ODE-{{ mix_tokenB.former_id }} {% endif %}</td>
                         <td>{{mix_tokenB.product}}</td>
                         <td>{{mix_tokenB.loan_amount}}</td>
+                        <td>{{mix_tokenB.notyet_paypack}}</td>
                         <td>{{mix_tokenB.class_type}}</td>
                         <td>{{mix_tokenB.date_span}}</td>
                         <td name ="state">{{mix_tokenB.state}}</td>
@@ -140,66 +132,76 @@
 <script type="text/javascript" src="{%static 'js/check_user.js' %}"></script>
 
 <script>
-    let optionArray = [];
-    let orderIDArray = [];
-    let modifyID = [];
     const waiting = document.getElementById('waiting'); //等待
     const fade = document.getElementById('fade_out'); //等待
     const overlay = document.getElementById('overlay');
-    const pop_div = document.getElementById('pop_div');
+    const count = document.getElementsByName('count').length; // 總共幾筆
     const orders_id = document.getElementById('orders_id');
     const make_id = document.getElementsByName('make_id');
     const order_id = document.getElementsByName('order_id');
     const modify_id = document.getElementsByName('modify_id');
     const rec_company_name = document.getElementById('rec_company_name');
-    function pop_set_rate(){
-        pop_div.classList.add('active');
-        overlay.classList.add('active');
-    }
-    overlay.addEventListener('click',()=>{
-        pop_div.classList.remove('active');
-        overlay.classList.remove('active');
-    });
-    for (let i = 0; i < make_id.length; i++){
-        // set unique id for every order
-        make_id[i].setAttribute('id','option-'+i);
-        order_id[i].setAttribute('id','orderID-'+i);
-        modify_id[i].setAttribute('id','modify_id-'+i);
-        optionArray[i] = document.getElementById('option-'+i);
-        orderIDArray[i] = document.getElementById('orderID-'+i);
-        modifyID[i] = document.getElementById('modify_id-'+i);
-        // 客製化每個訂單彈出的小卡
-        optionArray[i].addEventListener('click',()=>{
-            orders_id.value = orderIDArray[i].innerHTML;
-            $('#modify_id').val(modifyID[i].innerHTML);
-            
+    
+    var pop_div;
+
+    for(let i=1; i<count+1; i++) {
+        let curr_term = $('#curr_term'+i).val();
+        let curr_id = $('#token_id'+i).val();
+
+        $('#card_table_body tr').each((j, ele) => {
+            // 將每期應還本金加上利息
+            let interest = parseFloat($(ele).find('td:eq(2)').text());
+            let prinicple = parseFloat($(ele).find('td:eq(3)').text());
+            $(ele).find('td:eq(4)').html(interest + prinicple);
+
+            // 把本期應還顯示在下面
+            if ($(ele).find('td:eq(1)').text()==curr_term && curr_id == $(ele).find('td:eq(0)').text()) {
+                $('#return_this_month' + i).val(interest + prinicple);
+            }
         });
-    };
+    }
 
     $(document).ready(async function () {
-        $('#send').on('click',async  function (e) {
-            var curr_accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-            e.preventDefault();
-            var form = $(this).parents('form:first');
-            let check_addr = await checkUser(form.serializeArray(), curr_accounts[0]);
-            $.ajax({
-                method: "POST",
-                url: "/checkUser/",
-                data: { 'check_addr': check_addr },
-                dataType: "json"
-            }).done(async function (res) {
-                if (res['check'] == 'passed') {
-                    form.submit();
-                    $('#waiting').css("display", "flex");
-                    $('#fade').css("display", "none");
-                    $('#pop_div').css("display", "none");
-                } else {
-                    alert('wrong account');
-                }
-            });
+        $('.make_id').on('click', function (e) {
+            let index = $(this).attr('id');
+            pop_div = $('#pop_div' + index);
+            pop_div.addClass('active');
+            overlay.classList.add('active');
+        });
+        overlay.addEventListener('click', () => {
+            pop_div.removeClass('active');
+            overlay.classList.remove('active');
+        });
+    })
+
+    $('.send').on('click', async function (e) {
+        e.preventDefault();
+        var form = $(this).parents('form:first');
+        var curr_accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+        let check_addr = await checkUser(form.serializeArray(), curr_accounts[0]);
+        $.ajax({
+            method: "POST",
+            url: "/checkUser/",
+            data: { 'check_addr': check_addr },
+            dataType: "json"
+        }).done(async function (res) {
+            if (res['check'] == 'passed') {
+                $('#waiting').css("display", "flex");
+                $('#fade').css("display", "none");
+                form.submit();
+            } else {
+                alert('wrong account');
+                location.href = '/payback';
+            }
+
         });
 
+
     });
+
+    
+    
+
 
 </script>
 </html>

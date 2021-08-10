@@ -10,7 +10,14 @@
     <link rel="stylesheet" href="{%static 'css/invest_loan.css' %}">
 </head>
 <body>
-    <main class="main_content">
+    <div class="loader-wrapper" id='waiting'>
+        <div>
+            <span class="loader"><span class="loader-inner"></span></span>
+        </div>
+        <h2 style="color: white; margin-top: 20px;">Wait for the transaction complete</h2>
+    </div>
+    <main class="main_content" id="fade">
+        <!-- 點擊變暗 -->
         <form action="" method="POST">
         {% csrf_token %}
 
@@ -55,11 +62,15 @@
     
     
 </body>
+<script type="text/javascript" src="{%static 'js/check_user.js' %}"></script>
 <script>
+    const DECIMALS = 10**18;
+    const overlay = document.getElementById('overlay');
+
     function numberWithCommas(x) {
         x = x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
         return x;
-    }       
+    }      
     $('#amount').on('input',function(){
         if ($('#amount').val().length){
             $('#btn-real').prop('disabled', false);
@@ -74,7 +85,7 @@
         }
     });
     $('#click_all').on('click', function(){
-        $('#amount').val($('#limit').val());
+        $('#amount').val($('#limit').val()/DECIMALS);
         $('#btn').css("display","none");
         $('#btn-real').css('display', "block");
         $('#btn-real').prop('disabled', false);
@@ -85,7 +96,7 @@
     });
     function set_ref() {
         const interest = ($('#select-1').val()) / 100;
-        const amount = $('#amount').val();
+        const amount = $('#amount').val()/DECIMALS;
         let reference = parseInt(amount * interest / 4);
         let ref_income = numberWithCommas(reference);
         let str_ref_income = "參考收益: " + ref_income;
@@ -100,20 +111,42 @@
         switch (optionSelected) {
             case '1':
                 $('#limit').val(avail_arr[0]);
-                $('#limit').text('申購上限: '+ avail_arr[0]);
+                $('#limit').text('申購上限: '+ avail_arr[0]/DECIMALS);
                 break;
             case '2':
                 $('#limit').val(avail_arr[1]);
-                $('#limit').text('申購上限: ' + avail_arr[1]);
+                $('#limit').text('申購上限: ' + avail_arr[1]/DECIMALS);
                 break;
             case '3':
                 $('#limit').val(avail_arr[2]);
-                $('#limit').text('申購上限: ' + avail_arr[2]);
+                $('#limit').text('申購上限: ' + avail_arr[2]/DECIMALS);
                 break;
             default:
                 alert('沒有符合的條件');
         }    });
-        
+    
+    $('#btn-real').on('click', async function (e) {
+        e.preventDefault();
+        var form = $(this).parents('form:first');
+        var curr_accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+        let check_addr = await checkUser(form.serializeArray(), curr_accounts[0]);
+        $.ajax({
+            method: "POST",
+            url: "/checkUser/",
+            data: { 'check_addr': check_addr },
+            dataType: "json"
+        }).done(async function (res) {
+            if (res['check'] == 'passed') {
+                $('#waiting').css("display", "flex");
+                $('#fade').css("display", "none");
+                form.submit();
+            } else {
+                alert('wrong account');
+                location.href = '/invest_loan';
+            }
+        });
+    });
+
   
 </script>
 </html>
