@@ -13,26 +13,26 @@
     <main class="main_content">
         <div class="invest_wallet">
             <div class="user_pic"><img src="{% static 'icon/person.svg' %}" width="30px" height="30px" alt=""></div>
-            <h2 class="name t4 wh">Ace</h2>
+            <h2 class="name t4 wh">{{user}}</h2>
             <h2 class="user_id e2 wh">用戶：19092</h2>
             <div class="balance">
                 <div class="circle orback"><img class='whSVG' src="{% static 'icon/wallet.svg' %}" width="24px" height="24px" alt=""></div>
                 <div class="money_info">
-                    <h2 class="tw4 or fourW f9" id = "balance" value = "21000">21,000 TWD</h2>
+                    <h2 class="tw4 or fourW f9" id = "balance">{{erc856}} TWD</h2>
                     <h2 class="wh forte fourW">平台幣餘額</h2>
                 </div>
             </div>
             <div class="balance">
                 <div class="circle rdback"><img src="{% static 'icon/coin.svg' %}" width="26px" height="26px" alt=""></div>
                 <div class="money_info">
-                    <h2 class="tw4 fourW rd f9" id = "balance" value = "1200">1,200 TWD</h2>
+                    <h2 class="tw4 fourW rd f9" >{{ past_earning }} TWD</h2>
                     <h2 class="wh forte fourW">過去收益</h2>
                 </div>
             </div>
             <div class="balance">
                 <div class="circle blback"><img src="{% static 'icon/moisture.svg' %}" width="24px" height="24px" alt=""></div>
                 <div class="money_info">
-                    <h2 class="tw4  fourW bl f9" id = "balance" value = "2.5">2.5 %</h2>
+                    <h2 class="tw4  fourW bl f9" value = "2.5">2.5 %</h2>
                     <h2 class="wh forte fourW">申購手續費</h2>
                 </div>
             </div>
@@ -79,5 +79,6 @@
     <script>
             const accu_earning_array = document.getElementsByName('change_format')
             accu_earning_array[0].innerHTML = parseInt(accu_earning_array[0].innerHTML)
+
     </script>
 </html>
