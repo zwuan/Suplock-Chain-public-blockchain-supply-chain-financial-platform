@@ -65,6 +65,7 @@ class Company(models.Model):
     supervisor = models.CharField(max_length=42,null=True,blank=True) #登記機關
     establish_date = models.CharField(max_length=42,null=True,blank=True) #成立日期
     responsible_person = models.CharField(max_length=42,null=True,blank=True) #負責人
+    image = models.ImageField(upload_to='static/image/', blank=True, null=True)  ##logo
     
 
 

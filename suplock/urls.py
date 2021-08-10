@@ -2,6 +2,8 @@ from django.urls import path,include
 from django.contrib import admin
 from core import views
 import notifications.urls
+from django.conf import settings
+from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('welcome/',views.index.as_view(),name = 'welcome'),
@@ -31,3 +33,8 @@ urlpatterns = [
     path('payback/', views.payback_loan.as_view(),name='payback_loan'),
 
 ]
+
+urlpatterns += static(
+    settings.MEDIA_URL, 
+    document_root=settings.MEDIA_ROOT
+)
