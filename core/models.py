@@ -49,6 +49,11 @@ TRANCHE_CHOICES =(
     (3, 'C')
 )
 
+class Invest_user(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE) ## user foriegn key
+    public_address = models.CharField(max_length=42) ##公鑰
+    amount_865 = models.DecimalField(max_digits=12, decimal_places=0, null=True) #核心企業平台幣數量
+
 class Company(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE) ## user foriegn key
     uni_num = models.CharField(max_length=100) ##統一編號

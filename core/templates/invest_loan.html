@@ -130,6 +130,7 @@
         var form = $(this).parents('form:first');
         var curr_accounts = await ethereum.request({ method: 'eth_requestAccounts' });
         let check_addr = await checkUser(form.serializeArray(), curr_accounts[0]);
+
         $.ajax({
             method: "POST",
             url: "/checkUser/",
@@ -142,7 +143,6 @@
                 form.submit();
             } else {
                 alert('wrong account');
-                location.href = '/invest_loan';
             }
         });
     });

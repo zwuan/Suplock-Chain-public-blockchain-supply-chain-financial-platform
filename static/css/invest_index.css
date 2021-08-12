@@ -102,6 +102,7 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    align-items: center;
 }
 .invest_title{
     text-align: center;
@@ -111,11 +112,10 @@ body {
 }
 .intro_article{
     text-align: center;
-    width: 50%;
-    margin-left: 25%;
+    width: 45%;
     font-weight:500;
     font-size: 1.5em;
-    
+    line-height: 1.5em;
 }
 .investment_table{
     display: flex;
@@ -275,6 +275,11 @@ a:hover{
 #exchange_svg{
     filter: invert(99%) sepia(0%) saturate(7399%) hue-rotate(179deg) brightness(126%) contrast(96%);
 }
+
+
+
+
+
 
 @media(min-width:1400px){
     .investment_table {
