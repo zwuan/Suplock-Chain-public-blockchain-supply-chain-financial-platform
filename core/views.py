@@ -1200,7 +1200,7 @@ class verification_OK(generic.ListView):
                 _interest = int(form.cleaned_data['orders_interest'][:-1])
                 _date = date_span
 
-                print("---------",contract_address, _loaner, _amount ,_class, _id, _interest, _date,'--------')
+               
                 try: 
                     tx_receipt = loan(contract_address, _loaner, _amount ,_class, _id, _interest, _date)
                 except exceptions.SolidityError as error:
@@ -1803,12 +1803,11 @@ def checkUser(request):
 
     curr_user_addr = company.public_address
     curr_user_addr = w3.toChecksumAddress(curr_user_addr)
-
     if request.POST:
         check_addr = w3.toChecksumAddress(request.POST['check_addr'])
         if check_addr == curr_user_addr:
-            print('noooooooo')
             context['check'] = 'passed'
+            print('context:',context)
             if 'fallback' in request.session.keys():
                 del request.session['fallback']
             return HttpResponse(json.dumps(context), content_type="application/json")
@@ -1816,7 +1815,6 @@ def checkUser(request):
             request.session['fallback'] = '非本人'
             context['check'] = 'reject'
             return HttpResponse(json.dumps(context), content_type="application/json")
-
 
 
 
