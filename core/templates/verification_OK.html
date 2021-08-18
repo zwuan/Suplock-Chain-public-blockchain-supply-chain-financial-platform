@@ -131,7 +131,7 @@
             <table class="table table-striped" id="rec_table">
                 <thead>
                     <tr>
-                        <th>利息</th>
+                        <th>利率</th>
                         <th style="display: none;">訂單編號</th>
                         <th>項目</th>
                         <th>金額</th>
@@ -147,7 +147,7 @@
                     {% for order in rec_orders %}
                     <!-- <tr name = 'make_id' onclick = pop_setIndex()> -->
                     <tr name='make_id' class="tr_height">
-                            <td name = 'percent'>{{order.interest}}</td>
+                            <td name = 'percent'>{{order.interest}}%</td>
                             <td name = 'order_id' style="display: none;">{{order.initial_order.id}}</td>
                             <td>{{order.initial_order.product}}</td>
                             <td>{{order.amount}}</td>
@@ -257,21 +257,21 @@
         $('.submit_btn').on('click',async  function (e) {
             e.preventDefault();
             var form = $(this).parents('form:first');
-
+            
             let check_addr = await checkUser(form.serializeArray(), curr_accounts[0]);
             $.ajax({
                 method: "POST",
-                url: "checkUser/",
+                url: "/checkUser/",
                 data: { 'check_addr': check_addr },
                 dataType: "json"
             }).done(async function (res) {
                 if (res['check'] == 'passed') {
                     $('#waiting').css("display", "flex");
                     $('#fade').css("display", "none");
-                    form.submit(); 
+                    form.submit();
                 } else {
                     alert('wrong account');
-                    location.href = '/verification_OK';
+                
                 }
                 
             });

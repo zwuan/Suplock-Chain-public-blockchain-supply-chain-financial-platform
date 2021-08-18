@@ -6,7 +6,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('welcome/',views.index.as_view(),name = 'welcome'),
+    path('',views.index.as_view(),name = 'welcome'),
     path('invest_index/',views.invest_index.as_view(),name = 'invest_index'),
     path('invest_option/',views.invest_option.as_view(),name = 'invest_option'),
     path('invest_option/<int:pk>',views.invest_loan.as_view(),name = 'invest_loan'),
@@ -17,7 +17,7 @@ urlpatterns = [
     path('tx_result/', views.tx_result, name="tx_result"),
     path('company_orders/',views.company_order.as_view(), name='company_orders'),
     path('company_orders_rec/',views.company_order_rec.as_view(), name='company_orders_rec'),
-    path('', views.hello_world,name='add_erc865'),
+    path('add_erc865/', views.hello_world,name='add_erc865'),
     path('getAbiBytecode/', views.getAbiBytecode),
     path('buyERC865/', views.buyERC865),
     path('frontend/return/', views.PaymentReturnView.as_view()),

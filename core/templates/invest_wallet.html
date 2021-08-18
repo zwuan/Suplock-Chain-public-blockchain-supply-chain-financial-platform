@@ -66,13 +66,24 @@
                         <td>{{t.loanCertificate.tokenB.initial_order.send_company.user}}</td>
                         <td>{{t.loanCertificate.interest}}%</td>
                         <td name = "change_format">{{t.accu_earning}}</td>
-                        <td>{{t.loanCertificate.tokenB.initial_order.class_type}}</td>
+                        <td>{{t.loanCertificate.tokenB.initial_order.get_class_type_display}}</td>
                         <td>{{t.loanCertificate.date_span}}</td>
                         <td>計息中</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+            {% if is_paginated %}
+            <div class='paginator'>
+                {% if page_obj.has_previous %}
+                <a  href="?page={{ page_obj.previous_page_number }}">上一頁</a>
+                &emsp;
+                {% endif %}
+                {% if page_obj.has_next %}
+                <a  href="?page={{ page_obj.next_page_number }}">下一頁</a>
+                {% endif %}
+            </div>
+            {% endif %}
         </div>
     </main>
 </body>

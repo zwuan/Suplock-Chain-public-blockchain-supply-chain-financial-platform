@@ -19,15 +19,15 @@ body{
   color: #e9ecef;
   background-size: contain;
   background-repeat: no-repeat;
+  background: linear-gradient( rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1) ), url('/static/icon/investor_back.jpeg');
   height:100vh;
   background-position: center;
   display: flex;
-  background: linear-gradient( rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1) ), url('/static/icon/investor_back.jpeg');
   align-content: center;
   flex-direction: column;
   justify-content: center;
   width: 100%;
-  transition: all 1s ease-in-out;
+  transition: all .8s ease-in-out;
 }
 .introduction2{
   color: #e9ecef;
@@ -41,7 +41,7 @@ body{
   flex-direction: column;
   justify-content: center;
   width: 100%;
-  transition: all 1s ease-in-out;
+  transition: all .8s ease-in-out;
 }
 .introduction3{
   color: #e9ecef;
@@ -55,7 +55,7 @@ body{
   flex-direction: column;
   justify-content: center;
   width: 100%;
-  transition: all 1s ease-in-out;
+  transition: all .8s ease-in-out;
 }
 .introHeader{
   font-weight: 600;
@@ -64,8 +64,16 @@ body{
 }
 .features{
   margin:15px 0 25px;
+  font-size: 18px;
 }
-
+.features-1{
+  width: 80%;
+  font-size: 20px;
+  color: rgb(255, 218, 52);
+}
+.hide{
+  visibility: hidden;
+}
 .introduction1:hover .detail{
   opacity: 1;
   transition:all 400ms ease-in-out;
@@ -99,7 +107,13 @@ body{
 }
 .brief{
   text-align: left;
-  width: 50%;
+  width: 60%;
+  margin-left: 25%;
+}
+
+.brief-1{
+  text-align: left;
+  width: 70%;
   margin-left: 25%;
 }
 .footer{
@@ -141,8 +155,8 @@ ul.no-bullets {
   color: #f8f9fa;
 }
 .enter_btn{
-  width: 35%;
-  height: 25%;
+  width: 100px;
+  height: 40px;
   border: 2px solid rgb(255, 218, 52);
   display: flex;
   flex-direction: row;
@@ -151,6 +165,7 @@ ul.no-bullets {
   align-items: center;
   color: rgb(255, 218, 52);
   border-radius: 1em;
+  transition: 200ms ease-in-out;
 }
 .join_us{
   font-size: 1.1em;
@@ -167,6 +182,9 @@ a{
 }
 a:hover{
   text-decoration: none;
+}
+.outer{
+  height: 600px;
 }
 @media(max-width:1024px){
   .panel{

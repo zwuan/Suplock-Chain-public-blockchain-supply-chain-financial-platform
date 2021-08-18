@@ -18,7 +18,7 @@
             </div>
             <div class="input_detail">
                 <div class="company_input"> 
-                    <label class="detail_text wh" for="input-1">合約編號: {{card.id}}</label>
+                    <label class="detail_text wh" for="input-1">合約編號:DE-{{card.id}}</label>
                     <!-- <input type="text" class="input_in_card wh "  disabled = 'disabled'id = 'input-1' value="" > -->
                 </div>
                <div class="company_input">
@@ -26,7 +26,7 @@
                     <!-- <input type="text" class="input_in_card wh " disabled = 'disabled'id = 'input-2' value="" > -->
                </div>
                 <div class="company_input">
-                    <label class="detail_text wh" for="input-3">年化利率: {{ card.interest }}</label>
+                    <label class="detail_text wh" for="input-3">年化利率: {{ card.interest }}%</label>
                     <!-- <input type="text" class="input_in_card wh " disabled = 'disabled'id = 'input-3' value="" > -->
                 </div>
                 <div class="company_input"> 
@@ -55,15 +55,15 @@
             <div class="input_detail">
                 <div class="company_input"> 
                     <label class="detail_text wh" for="input-7">債權公司:</label>
-                    <input type="text" class="input_in_card wh" disabled = 'disabled' value="長春化工" >
+                    <input type="text" class="input_in_card wh" disabled = 'disabled' value="高通" >
                 </div>
                <div class="company_input">
                     <label class="detail_text wh" for="input-8">核心企業:</label>
-                    <input type="text" class="input_in_card wh" disabled = 'disabled' style="color: rgb(255, 255, 255);" value="騰輝電子" >
+                    <input type="text" class="input_in_card wh" disabled = 'disabled' style="color: rgb(255, 255, 255);" value="華為" >
                </div>
                <div class="company_input">
                     <label class="detail_text wh" for="input-9">供應鏈:</label>
-                    <input type="text"class="input_in_card wh"  disabled = 'disabled' value="銅箔基板" >
+                    <input type="text"class="input_in_card wh"  disabled = 'disabled' value="5G" >
                </div>
                <div class="company_input">
                     <label class="detail_text wh wh" >借貸紀錄:</label>
@@ -121,8 +121,82 @@
                         <td><button id="-{{forloop.counter}}" class="show detail_btn">詳細</button></td>
                     </tr>
                     {% endfor %}
+
+                    <!-- 假的 -->
+                    <tr class="tr_height">
+                        <td>DE-65</td>
+                        <td>騰輝電子</td>
+                        <td>10%</td>
+                        <td>應收</td>
+                        <td>15000</td>
+                        <td>15000</td>
+                        <td>200</td>
+                        <td><button class="show detail_btn">詳細</button></td>
+                    </tr>
+                    <tr class="tr_height">
+                        <td>DE-66</td>
+                        <td>高通</td>
+                        <td>12%</td>
+                        <td>應收</td>
+                        <td>30000</td>
+                        <td>30000</td>
+                        <td>170</td>
+                        <td><button class="show detail_btn">詳細</button></td>
+                    </tr>
+                    <tr class="tr_height">
+                        <td>DE-67</td>
+                        <td>聯發科</td>
+                        <td>10%</td>
+                        <td>應收</td>
+                        <td>25000</td>
+                        <td>25000</td>
+                        <td>110</td>
+                        <td><button class="show detail_btn">詳細</button></td>
+                    </tr>
+                    <tr class="tr_height">
+                        <td>DE-68</td>
+                        <td>Subaru</td>
+                        <td>10%</td>
+                        <td>存貨</td>
+                        <td>8000</td>
+                        <td>8000</td>
+                        <td>220</td>
+                        <td><button class="show detail_btn">詳細</button></td>
+                    </tr>
+                    <tr class="tr_height">
+                        <td>DE-69</td>
+                        <td>CHT</td>
+                        <td>12%</td>
+                        <td>訂單</td>
+                        <td>16000</td>
+                        <td>16000</td>
+                        <td>160</td>
+                        <td><button class="show detail_btn">詳細</button></td>
+                    </tr>
+
+
+
+
+
+
+
+
+
+
+                    <!-- 假的 -->
                 </tbody>
             </table>
+            {% if is_paginated %}
+            <div class='paginator'>
+                {% if page_obj.has_previous %}
+                <a  href="?page={{ page_obj.previous_page_number }}">上一頁</a>
+                &emsp;
+                {% endif %}
+                {% if page_obj.has_next %}
+                <a  href="?page={{ page_obj.next_page_number }}">下一頁</a>
+                {% endif %}
+            </div>
+            {% endif %}
             </div>
         </div>
 

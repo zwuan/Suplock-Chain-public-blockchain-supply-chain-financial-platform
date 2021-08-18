@@ -4,7 +4,7 @@ from django.shortcuts import render
 from django.http import HttpResponse 
 from web3 import Web3
 import web3
-from .models import Company, Company_orders, TokenB, Deposit, TokenA, LoanCertificate, Tranche, LoanPayable
+from .models import Company, Company_orders, TokenB, Deposit, TokenA, LoanCertificate, Tranche, LoanPayable, Invest_user
 from core.solidity.abi import abi
 from core.solidity.erc865_abi import erc865_abi
 from core.solidity.bytecode import bytecode
@@ -88,10 +88,19 @@ class invest_wallet(generic.ListView):
     def get(self, request, *args, **kwargs):
         user = self.request.user
         '''
-        user 不一定是company, 之後要改
+        user 改成 company or Investor -kevin
         '''
-        company_erc865 = Company.objects.get(user=user).amount_865
+        if user.groups.filter(name = 'firm').exists():
+            company = Company.objects.get(user=user)
+            com_addr = company.public_address
+            com_addr = w3.toChecksumAddress(com_addr)
+            company_erc865 = int(call_ERC865(com_addr)  / DECIMALS)
 
+        else:
+            investor = Invest_user.objects.get(user=user)
+            investor_addr = investor.public_address
+            investor_addr = w3.toChecksumAddress(investor_addr)
+            company_erc865 = int(call_ERC865(investor_addr)  / DECIMALS)  
         tranche_bought = Tranche.objects.filter(investor = user).order_by('-id')
         sum=0
         for t in tranche_bought:
@@ -118,7 +127,6 @@ class invest_option(generic.ListView):
     paginate_by = 6
     def get_queryset(self):
         user = self.request.user
-        company = Company.objects.get(user = user)
         invest_option = TokenB.objects.filter(Q(class_type = 4)).order_by('-id')
         return invest_option 
 
@@ -152,10 +160,18 @@ class invest_loan(generic.View):
         id=kwargs['pk']
         
         ## 更新帳號餘額
-        company = Company.objects.get(user = request.user)
-        core_address = company.public_address ##公司錢包地址
-        core_address = Web3.toChecksumAddress(core_address) #轉換成checksum address
-        amount_865 =int(call_ERC865(core_address)  / DECIMALS) ## 先 view 餘額
+        user = request.user
+        if user.groups.filter(name = 'firm').exists():
+            company = Company.objects.get(user = user)
+            core_address = company.public_address ##公司錢包地址
+            core_address = Web3.toChecksumAddress(core_address) #轉換成checksum address
+            amount_865 =int(call_ERC865(core_address)  / DECIMALS) ## 先 view 餘額
+        else:
+            Investor = Invest_user.objects.get(user=user)
+            investor_address = Investor.public_address ##公司錢包地址
+            investor_address = Web3.toChecksumAddress(investor_address) #轉換成checksum address
+            amount_865 = int(call_ERC865(investor_address)  / DECIMALS) ## 先 view 餘額
+
         # 編號, 利率, 申購金額餘額, 生效,截止日期
         tokenB = TokenB.objects.get(pk=id)
         context['id'] = id
@@ -168,23 +184,25 @@ class invest_loan(generic.View):
         
         trancheC = LoanCertificate.objects.filter(loan_id = tokenB.token_id)[2]
         context['c_interest'] = trancheC.interest
-        print(trancheA)
+
         context['avail_arr'] = [trancheA.avail_amount, trancheB.avail_amount, trancheC.avail_amount]
 
         context['start_date'] = tokenB.initial_order.start_date
         context['end_date'] = tokenB.initial_order.end_date
         
-        context['amount_865'] = amount_865
+        context['amount_865'] = amount_865 ## 先 view 餘額
 
         return render(request, 'invest_loan.html', context)
     
     def post(self, request, *args, **kwargs):
         allUser = auth.get_user_model() # return all user
         user = self.request.user
-        company = Company.objects.filter(user = user)[0]
-        # print(request.POST)
         form = buyTranche(request.POST)
-
+        if user.groups.filter(name = 'firm').exists():
+            company = Company.objects.filter(user = user)[0]
+        else:
+            company = Invest_user.objects.filter(user = user)[0] ##偷懶
+    
         if form.is_valid():
             print(form.cleaned_data)
             _investor = Web3.toChecksumAddress(company.public_address)
@@ -263,6 +281,8 @@ class login_company(generic.View):
                         password=make_password(password), # 密碼加密
                         email = email,
                     )
+                firm = Group.objects.get(name='firm')
+                firm.user_set.add(user)
                 uni_num = form.cleaned_data['uni_num']
                 public_address = form.cleaned_data['address']
                 company = Company.objects.create(
@@ -977,12 +997,43 @@ class my_notification(generic.View):
 ## 基本資料
 class company_info(generic.View):
     def get(self, request, *args, **kwargs):
-        company = Company.objects.get(user = request.user)
+        user = request.user
+        company = Company.objects.get(user = user)
         context = {'msg':company}
+
         return render(request, 'company_info.html',context)
     def post(self, request, *args, **kwargs):
-        img = request.FILES['logo'] 
-        return redirect(reverse_lazy('company_info'))
+        user = request.user
+        company = Company.objects.get(user = user)
+        company_number = request.POST.get('company_number')
+        company_type = request.POST.get('company_type')
+        company_capital = request.POST.get('company_capital')
+        company_chairman = request.POST.get('company_chairman')
+        company_address = request.POST.get('company_address')
+        company_supervisor = request.POST.get('company_supervisor')
+        company_start_date = request.POST.get('company_start_date')
+        company_responsible_person = request.POST.get('company_responsible_person')
+        company_responsible_person_email = request.POST.get('company_responsible_person_email')
+        company_img = request.FILES['logo']
+        
+        company.uni_num = company_number
+        company.company_type = company_type
+        company.capital = company_capital
+        company.chairman = company_chairman
+        company.company_location = company_address
+        company.supervisor = company_supervisor
+        company.establish_date = company_start_date
+        company.responsible_person = company_responsible_person
+        user.email = company_responsible_person_email
+        company.image = company_img
+
+        company.save()
+        user.save()
+
+        context = {'msg':company}
+        return render(request, 'company_info.html',context)
+        
+
 
 
 ##各項目餘額
@@ -1156,7 +1207,7 @@ class verification_OK(generic.ListView):
                 _interest = int(form.cleaned_data['orders_interest'][:-1])
                 _date = date_span
 
-                print("---------",contract_address, _loaner, _amount ,_class, _id, _interest, _date,'--------')
+               
                 try: 
                     tx_receipt = loan(contract_address, _loaner, _amount ,_class, _id, _interest, _date)
                 except exceptions.SolidityError as error:
@@ -1285,7 +1336,7 @@ class payback_loan(generic.View):
             tokenB_token_id = int(ele.token_id)   ##所有融資tokenB的鏈上id
             former_tokenB_id = loan_former_tokenB(contract_address,company_address,tokenB_token_id)
             parent_tokenB.append(former_tokenB_id)
-            payback_token['state'] = ele.state ## 融資token的狀態 index 0
+            payback_token['state'] = ele.get_state_display ## 融資token的狀態 index 0
             payback_token['loan_amount'] = ele.amount ##融資金額
             payback_token['notyet_paypack'] = ele.tokenB_balance
             all_payback_token.append(payback_token)  ##包進大list
@@ -1536,21 +1587,23 @@ class PaymentReturnView(View):
         event = logs[0]['args']
 
         ## db manpulation
-        company = Company.objects.filter(public_address = res['CustomField1'])[0]
-        transactionHash = str(logs[0]['transactionHash'].hex())
 
-        new_deposit = Deposit.objects.create(
-            deposit_company = company,
-            deposit_amount = int(int(event['value'])/DECIMALS),
-            transactionHash = transactionHash
-        )
+       
+        if  Company.objects.filter(public_address = res['CustomField1']).exists():
+            company = Company.objects.filter(public_address = res['CustomField1'])[0]
+            transactionHash = str(logs[0]['transactionHash'].hex())
+            new_deposit = Deposit.objects.create(
+                deposit_company = company,
+                deposit_amount = int(int(event['value'])/DECIMALS),
+                transactionHash = transactionHash
+            )
+        else:
+            investor = Invest_user.objects.get(public_address = res['CustomField1'])
+            investor_addr = w3.toChecksumAddress(investor.public_address)
+            amount =  int(call_ERC865(investor_addr)  / DECIMALS)
+            investor.amount_865 = int(int(event['value'])/DECIMALS)
+            investor.save()
 
-        t = loader.get_template('payment_success.html')
-        context.update({ 
-            "res": res,
-            "receipt": tx_receipt,
-            "event":event,
-        })
         content = {"txhash":txhash,'res':res} ##顯示到前端
         return render(request, 'tx_result.html', content)
 
@@ -1798,12 +1851,18 @@ def paybackDividend(_loan_id, _amount):
 def checkUser(request):
     context={}
     user = request.user
-    company = Company.objects.filter(user = user)[0]
+    if user.groups.filter(name = 'firm').exists():
+        company = Company.objects.filter(user = user)[0]
+    else:
+        company = Invest_user.objects.filter(user = user)[0]
+
     curr_user_addr = company.public_address
-    
+    curr_user_addr = w3.toChecksumAddress(curr_user_addr)
     if request.POST:
-        if request.POST['check_addr'] == curr_user_addr:
+        check_addr = w3.toChecksumAddress(request.POST['check_addr'])
+        if check_addr == curr_user_addr:
             context['check'] = 'passed'
+            print('context:',context)
             if 'fallback' in request.session.keys():
                 del request.session['fallback']
             return HttpResponse(json.dumps(context), content_type="application/json")
@@ -1811,7 +1870,6 @@ def checkUser(request):
             request.session['fallback'] = '非本人'
             context['check'] = 'reject'
             return HttpResponse(json.dumps(context), content_type="application/json")
-
 
 
 
