@@ -152,6 +152,6 @@ class Tranche(models.Model):
 # investorDividend 資料表
 class LoanPayable(models.Model):
     tokenB = models.ForeignKey(TokenB, on_delete=models.CASCADE ,related_name='loan_id', null=True,  blank=True)
-    term_principle = models.TextField(null=True, blank=True)
-    term_interest = models.TextField(null=True, blank=True)
+    term_principle = models.DecimalField(max_digits=30, decimal_places=4)
+    term_interest = models.DecimalField(max_digits=30, decimal_places=4)
     term = models.IntegerField(null=True, blank=True)
