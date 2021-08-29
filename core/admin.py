@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Company ,Company_orders, TokenB, Deposit, TokenA, LoanCertificate,Tranche,LoanPayable, Invest_user
+from .models import Company ,Company_orders, TokenB, Deposit, TokenA, LoanCertificate,Tranche,LoanPayable, Invest_user,Acc_rec_for_sale
 # Register your models here.
 admin.site.register(Company)
 admin.site.register(Company_orders)
@@ -10,3 +10,4 @@ admin.site.register(LoanCertificate)
 admin.site.register(Tranche)
 admin.site.register(LoanPayable)
 admin.site.register(Invest_user)
+admin.site.register(Acc_rec_for_sale)

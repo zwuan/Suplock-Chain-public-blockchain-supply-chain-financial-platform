@@ -1,0 +1,213 @@
+body{
+    background-color: #14213d;
+}
+.main_content{
+    margin-top: 80px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+.invest_form{
+    width: 400px;
+    height: 480px;
+    background-color: rgba(153, 153, 153, 0.596);
+    border-radius: 5px;
+    border-top: 4px solid #ffc300;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: 20px;
+    padding-top: 0px;
+}
+.card_title{
+    height: 60px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;   
+    border-bottom: 1px solid gray;
+    align-items: center;
+}
+.title_text{
+    font-size: 20px;
+    margin-top:.5em;
+}
+.wh{
+    color: white;
+}
+.buy_label{
+    margin-top: 30px;
+    font-size: 14px;
+}
+.buy_input{
+    margin-top: 10px;
+    height: 40px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    border: 1px solid rgba(153, 153, 153, 0.726);
+    border-radius: 18px;
+    padding-left: 20px;
+}
+.buy_amount{
+    color: #ffc300;
+    font-weight: 500;
+}
+input:focus{
+    outline: none;
+    color: #ffc300;
+    font-weight: 500;
+}
+input:focus::placeholder{
+    color: white;
+}
+input::placeholder{
+    color: rgb(192, 192, 192);
+}
+.buy_amount{
+    height: 40px;
+    background-color: rgba(153, 153, 153, 0);
+    border: none;
+    height: 60%;
+    width: 80%;
+}
+.buy_all{
+    margin-left: 10px;
+    margin-top: 0.5em;
+    font-size: 14px;
+    transition: 200ms ease-in-out;
+}
+.buy_all:hover{
+    cursor: pointer;
+    color: #ffc300;
+}
+.balance{
+    margin-top: 20px;
+    height: 100px;
+    background-color: rgb(139, 142, 155);
+    border-radius:8px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+}
+.circle{
+    width: 60px;
+    height: 60px;
+    background-color: #ffd60a;
+    margin-left: 10px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+.money_info{
+    margin-left: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.tw4{
+    font-size: 24px;
+}
+.forte{
+    font-size: 14px;
+}
+.fourW{
+    font-weight: 400;
+}
+.sixte{
+    font-size: 16px;
+}
+.mabt5{
+    margin-bottom:15px;
+}
+.whSVG{
+    filter: invert(17%) sepia(9%) saturate(872%) hue-rotate(169deg) brightness(94%) contrast(82%);
+}
+.check{
+    width: 16px; /*Desired width*/
+    height: 16px; /*Desired height*/
+    cursor: pointer;
+}
+.loan_detail{
+    border-top: 1px solid rgba(153, 153, 153, 0.726);
+    height: 130px;
+    margin-top: 10px;
+    padding-top: 20px;
+}
+.confirm_loan{
+    height: 60px;
+    margin-top: 10px;
+    padding-top: 20px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(153, 153, 153, 0.726);
+}
+.select-1{
+    width: 100%;
+    background-color: rgba(153, 153, 153, 0);
+    color: #ffc300;
+}
+.select-1:focus{
+    outline: none;
+}
+.confirm_btn{
+    height: 35px;
+    transition: 200ms ease-in-out;
+    border: none;
+    background-color:#ffc300 ;
+    border-radius: 5px;
+}
+#btn-real:hover{
+    opacity: 0.6;
+}
+
+.loader-wrapper {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: #242f3f;
+    display:flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+    display: none;
+    
+}
+.loader {
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    position: relative;
+    border: 4px solid #Fff;
+    animation: loader 2s infinite ease;
+}
+.loader-inner {
+    vertical-align: top;
+    display: inline-block;
+    width: 100%;
+    background-color: #fff;
+    animation: loader-inner 2s infinite ease-in;
+}
+@keyframes loader {
+    0% { transform: rotate(0deg);}
+    25% { transform: rotate(180deg);}
+    50% { transform: rotate(180deg);}
+    75% { transform: rotate(360deg);}
+    100% { transform: rotate(360deg);}
+    }
+@keyframes loader-inner {
+    0% { height: 0%;}
+    25% { height: 0%;}
+    50% { height: 100%;}
+    75% { height: 100%;}
+    100% { height: 0%;}
+}

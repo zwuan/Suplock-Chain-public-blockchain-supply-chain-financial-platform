@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>投資標的</title>
+    {% load static %}
+    {% include 'nav_login.html' %} 
+    <link rel="stylesheet" href="{%static 'css/acc_rec_auction.css' %}">
+</head>
+<body>
+    <div class="page_title"><h2 style="font-size: 36px;">應收帳款買賣</h2></div>
+    <main class="main_content">
+        <div class="inv_option">
+            <div class="whole_table">
+            <table class="table" id="loan_table">
+                <thead>
+                    <tr>
+                        <th>應收編號</th>
+                        <th>擔保公司</th>
+                        <th>應收金額</th>
+                        <th>開價</th> 
+                        <th>購買</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for option in acc_rec %}
+                    <tr name='make_id' class="tr_height">
+                        <td >ARS-{{option.id}}</td>
+                        <td >{{option.core_company.user}}</td>
+                        <td >{{option.tokenB.amount}}</td>
+                        <td>{{option.opening_price}}</td>
+                        {% if option.state == 1 %}
+                        <td><a  href="{% url 'buy_acc_rec' pk=option.id %}" ><button id="-{{forloop.counter}}" class="show detail_btn">購買</button></a></td>
+                        {% else %}
+                        <td>已成交</td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% if is_paginated %}
+            <div class='paginator'>
+                {% if page_obj.has_previous %}
+                <a  href="?page={{ page_obj.previous_page_number }}">上一頁</a>
+                &emsp;
+                {% endif %}
+                {% if page_obj.has_next %}
+                <a  href="?page={{ page_obj.next_page_number }}">下一頁</a>
+                {% endif %}
+            </div>
+            {% endif %}
+            </div>
+        </div>
+
+    </main>
+
+<script>
+    
+</script>
+
+</body>
+</html>
