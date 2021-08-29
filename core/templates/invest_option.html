@@ -69,7 +69,7 @@
                     <label class="detail_text wh wh" >借貸紀錄:</label>
                     <a  href="#"><img class="svg_18" src="{% static 'icon/arrow-right-circle.svg' %}" alt=""></a>
                </div>
-                <a class="press" href="{% url '' pk=card.id %}">我要投資</a>
+                <a class="press" href="{% url 'invest_loan' pk=card.id %}">我要投資</a>
             </div>
     </div>
     {% endfor %}
@@ -121,59 +121,6 @@
                         <td><button id="-{{forloop.counter}}" class="show detail_btn">詳細</button></td>
                     </tr>
                     {% endfor %}
-
-                    <!-- 假的 -->
-                    <tr class="tr_height">
-                        <td>DE-65</td>
-                        <td>騰輝電子</td>
-                        <td>10%</td>
-                        <td>應收</td>
-                        <td>15000</td>
-                        <td>15000</td>
-                        <td>200</td>
-                        <td><button class="show detail_btn">詳細</button></td>
-                    </tr>
-                    <tr class="tr_height">
-                        <td>DE-66</td>
-                        <td>高通</td>
-                        <td>12%</td>
-                        <td>應收</td>
-                        <td>30000</td>
-                        <td>30000</td>
-                        <td>170</td>
-                        <td><button class="show detail_btn">詳細</button></td>
-                    </tr>
-                    <tr class="tr_height">
-                        <td>DE-67</td>
-                        <td>聯發科</td>
-                        <td>10%</td>
-                        <td>應收</td>
-                        <td>25000</td>
-                        <td>25000</td>
-                        <td>110</td>
-                        <td><button class="show detail_btn">詳細</button></td>
-                    </tr>
-                    <tr class="tr_height">
-                        <td>DE-68</td>
-                        <td>Subaru</td>
-                        <td>10%</td>
-                        <td>存貨</td>
-                        <td>8000</td>
-                        <td>8000</td>
-                        <td>220</td>
-                        <td><button class="show detail_btn">詳細</button></td>
-                    </tr>
-                    <tr class="tr_height">
-                        <td>DE-69</td>
-                        <td>CHT</td>
-                        <td>12%</td>
-                        <td>訂單</td>
-                        <td>16000</td>
-                        <td>16000</td>
-                        <td>160</td>
-                        <td><button class="show detail_btn">詳細</button></td>
-                    </tr>
-                    <!-- 假的 -->
                 </tbody>
             </table>
             {% if is_paginated %}
