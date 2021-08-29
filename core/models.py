@@ -125,6 +125,8 @@ class TokenB(models.Model):
     already_transfer = models.DecimalField(max_digits=12, decimal_places=0,  default=0,  blank=True)## 已移轉amount
     already_loan = models.DecimalField(max_digits=12, decimal_places=0 , default=0,   blank=True)## 已借款amount
 
+    pmt = models.DecimalField(max_digits=20, decimal_places=0 , default=0, blank=True)##tokenB可使用餘額
+
     state = models.IntegerField(choices=LOAN_STATE, null=True, blank=True)
 
 # loancertificate資料表
@@ -157,6 +159,6 @@ class Tranche(models.Model):
 # investorDividend 資料表
 class LoanPayable(models.Model):
     tokenB = models.ForeignKey(TokenB, on_delete=models.CASCADE ,related_name='loan_id', null=True,  blank=True)
-    term_principle = models.DecimalField(max_digits=30, decimal_places=4)
-    term_interest = models.DecimalField(max_digits=30, decimal_places=4)
+    term_principle = models.DecimalField(null=True, blank=True, max_digits=30, decimal_places=2)
+    term_interest = models.DecimalField(null=True, blank=True, max_digits=30, decimal_places=2)
     term = models.IntegerField(null=True, blank=True)

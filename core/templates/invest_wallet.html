@@ -53,21 +53,27 @@
                         <th>債權編號</th>
                         <th>擔保公司</th>
                         <th>年利率</th>
+                        <th>所有本金</th>
+                        <th>剩餘本金</th>
                         <th>累計收益</th>
                         <th>標的種類</th>
                         <th>期數</th>
+                        <th>剩餘期數</th>
                         <th>狀態</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for t in tranche %}
                     <tr >
-                        <td>DE-{{t.loanCertificate.tokenB.id}}</td>
-                        <td>{{t.loanCertificate.tokenB.initial_order.send_company.user}}</td>
-                        <td>{{t.loanCertificate.interest}}%</td>
-                        <td name = "change_format">{{t.accu_earning}}</td>
-                        <td>{{t.loanCertificate.tokenB.initial_order.get_class_type_display}}</td>
-                        <td>{{t.loanCertificate.date_span}}</td>
+                        <td>DE-{{t.id}}</td>
+                        <td>{{t.company}}</td>
+                        <td>{{t.interest}}%</td>
+                        <td>{{t.amount}}</td>
+                        <td>{{t.pri_left}}</td>
+                        <td>{{t.accu_earning}}</td>
+                        <td >{{t.class_display}}</td>
+                        <td>{{t.total_term}}</td>
+                        <td>{{t.left_term}}</td>
                         <td>計息中</td>
                     </tr>
                     {% endfor %}

@@ -60,7 +60,7 @@ DECIMALS = 10**18
 erc865_contract_address = '0xcb8565c6eeb98fc8c441b5e07c1d6e7cb200b277'
 erc865_contract_address = w3.toChecksumAddress(erc865_contract_address)
 ##投資人合約地址
-invest_contract_address = '0x7Dc19321399571c9675A74eB19d892544D83B397'
+invest_contract_address = '0x3790aA59B967800e2F25B4495C375EA14bd1DAC6'
 invest_contract_address = w3.toChecksumAddress(invest_contract_address)
 Invest = w3.eth.contract(invest_contract_address, abi=invest_abi)
 
@@ -90,24 +90,45 @@ class invest_wallet(generic.ListView):
         '''
         user 改成 company or Investor -kevin
         '''
+        _address = ''
         if user.groups.filter(name = 'firm').exists():
             company = Company.objects.get(user=user)
             com_addr = company.public_address
             com_addr = w3.toChecksumAddress(com_addr)
-            company_erc865 = int(call_ERC865(com_addr)  / DECIMALS)
+            _address = com_addr
+            company_erc865 = int(call_ERC865(com_addr) / DECIMALS)
 
         else:
             investor = Invest_user.objects.get(user=user)
             investor_addr = investor.public_address
             investor_addr = w3.toChecksumAddress(investor_addr)
-            company_erc865 = int(call_ERC865(investor_addr)  / DECIMALS)  
+            _address = investor_addr
+            company_erc865 = int(call_ERC865(investor_addr) / DECIMALS)  
+        ### 製作每列
+        # tranche_bought = {}
         tranche_bought = Tranche.objects.filter(investor = user).order_by('-id')
+        # tranche_bought['tranche'] = curr_tranche_set
+
         sum=0
+        tranche=[]
         for t in tranche_bought:
+            curr_dict = {}
+            curr_dict['id'] = t.loanCertificate.tokenB.id
+            curr_dict['company'] = t.loanCertificate.tokenB.initial_order.send_company.user
+            curr_dict['interest'] = t.loanCertificate.interest
+            curr_dict['amount'] = int(t.amount) / DECIMALS
+            curr_dict['pri_left'] = round(Invest.functions.investorTranche(_address, int(t.loan_id), t.riskClass).call({'from': account_from['address']})[0] / DECIMALS, 0)
+            curr_dict['accu_earning'] = round(Decimal(t.accu_earning), 0)
+            curr_dict['class_display'] = t.loanCertificate.tokenB.initial_order.get_class_type_display
+            curr_dict['total_term'] = t.loanCertificate.date_span
+            curr_dict['left_term'] = t.loanCertificate.curr_span
+
+            tranche.append(curr_dict)
+
             curr_accu = Decimal(t.accu_earning)
             sum+=curr_accu
-        
-        context = {'tranche': tranche_bought, 'past_earning':round(sum, 4), 'user':user, 'erc856':company_erc865}
+
+        context = {'tranche': tranche, 'past_earning':round(sum, 4), 'user':user, 'erc856':company_erc865}
         return render(request, 'invest_wallet.html',context) 
 
 class index(generic.View):
@@ -615,8 +636,8 @@ class company_order_rec(generic.ListView):
                 pri_left = amount
                 pmt_for_company = math.floor(calculatePmt(interest/1200, amount, _month_span))
                 for i in range(_month_span):
-                    term_interest = pri_left*interest/1200
-                    term_principle = pmt_for_company - term_interest
+                    term_interest = math.ceil(pri_left*interest/1200)
+                    term_principle = math.ceil((pmt_for_company - term_interest))
                     
                     new_payable = LoanPayable.objects.create(
                         tokenB = new_tknB,
@@ -627,6 +648,8 @@ class company_order_rec(generic.ListView):
 
                     pri_left -= term_principle
                 ''' #################################### '''
+
+                new_tknB.pmt = pmt_for_company
                 
                 content = {"txhash":logs[0]['transactionHash'].hex()} ##顯示到前端
                 return render(request, 'tx_result.html', content)
@@ -1335,6 +1358,7 @@ class payback_loan(generic.View):
             contract_address = ele.initial_order.send_company.contract_address ##找到初始發出者的合約
             tokenB_token_id = int(ele.token_id)   ##所有融資tokenB的鏈上id
             former_tokenB_id = loan_former_tokenB(contract_address,company_address,tokenB_token_id)
+            print(former_tokenB_id)
             parent_tokenB.append(former_tokenB_id)
             payback_token['state'] = ele.get_state_display ## 融資token的狀態 index 0
             payback_token['loan_amount'] = ele.amount ##融資金額
@@ -1356,6 +1380,7 @@ class payback_loan(generic.View):
 
         former_token = TokenB.objects.filter(token_id__in = parent_tokenB) ##!!!!來自同一筆會被算成一筆 
         former_token_list = []
+        print(parent_tokenB)
         for ele in parent_tokenB:
             former_token = TokenB.objects.get(token_id = ele)
             former_token_list.append(former_token)
@@ -1379,7 +1404,6 @@ class payback_loan(generic.View):
         company = Company.objects.filter(user = user)[0]
         form = paybackForm(request.POST)
         if form.is_valid():
-            print(form.cleaned_data)
             _loan_id = int(form.cleaned_data['_loan_id'])
             _amount = int(form.cleaned_data['_amount'])
             ### 操控invest token合約
@@ -1399,10 +1423,10 @@ class payback_loan(generic.View):
             curr_total_payable = curr_term_pri + curr_term_int
             print(curr_total_payable)
             ### 檢查這次還款金額
-            # 大於本金加利息
+            # 大於本金加利息             
             '''
-            這邊還要加上erc865的部分 及 鏈上鏈下差額部分 及 吳紹宏core
-            '''                
+            0829: 差erc865(分紅給核心) / 吳紹宏core / 
+            '''
             # if _amount < curr_term_int:
             #     tx_receipt = paybackDividend(_loan_id, int(_amount*DECIMALS))
             #     print('<利息')
@@ -1411,25 +1435,21 @@ class payback_loan(generic.View):
             amount = _amount - curr_term_int
             tx_receipt = payback(_loan_id, int(amount*DECIMALS))
             print('>利息')
-            print(tx_receipt)
 
             ### 更改loan_certificate的期數
             update_cer_set = LoanCertificate.objects.filter(loan_id = curr_tokenB.token_id)
             for cer in update_cer_set:
                 ### 分潤給投資人
-                '''
-                暫時用company當user
-                '''
                 for tranche in Tranche.objects.filter(loanCertificate=cer):
+
                     tranche_owner = tranche.investor
-                    # 這裡之後要改，用user就可以拿到public address
                     if tranche_owner.groups.filter(name = 'firm').exists():
                         tranche_owner = Company.objects.filter(user = tranche_owner)[0]
                     else:
                         tranche_owner = Invest_user.objects.filter(user = tranche_owner)[0] ##偷懶
 
                     company = Web3.toChecksumAddress(tranche_owner.public_address)
-                    ###########
+
                     _term = cer.date_span - cer.curr_span
                     term_interest = Invest.functions.getTermInvestorDiv(company, int(tranche.loan_id) , cer.riskClass, _term).call({'from': account_from['address']})
                     print(term_interest)
@@ -1445,22 +1465,31 @@ class payback_loan(generic.View):
             #因為鏈上已經到下一期 所以練下也要，curr_term代表當前期數
             curr_term += 1
             principle_left = Invest.functions.getTotalPrincipleNotPaid(int(curr_tokenB.token_id)).call({'from': account_from['address']})/DECIMALS
-            span_left = LoanCertificate.objects.filter(loan_id = curr_tokenB.token_id)[0].curr_span
-            date_span = LoanCertificate.objects.filter(loan_id = curr_tokenB.token_id)[0].date_span
-            pmt = calculatePmt(curr_interest/1200, principle_left, span_left)
-            for i in range(LoanPayable.objects.count()):
+            sec_cer = LoanCertificate.objects.filter(loan_id = curr_tokenB.token_id)[2]
+            span_left = sec_cer.curr_span
+            date_span = sec_cer.date_span
+            # if span_left == 0:
+            #     pmt = 0
+            # else:
+            #     pmt = math.floor(calculatePmt(curr_tokenB.interest/1200, principle_left, span_left))
+            curr_interest = sec_cer.interest/1200
+            pmt = curr_tokenB.pmt
+            for i in range(LoanPayable.objects.filter(tokenB = curr_tokenB).count()):
                 pay = LoanPayable.objects.get(tokenB = curr_tokenB, term=i)
-                curr_interest = pay.tokenB.interest
                 if i < curr_term:
                     pay.term_principle = 0
                     pay.term_interest = 0
-                    pay.save()
+
                 else: 
-                    term_interest = principle_left*curr_interest/1200
+                    term_interest = math.ceil(principle_left*curr_tokenB.interest/1200)
                     pay.term_interest = term_interest
-                    pay.term_principle = pmt - term_interest
-                    pay.save()
-                    principle_left -= term_principle
+                    pay.term_principle = math.ceil((pmt - term_interest))
+
+                    principle_left -= pay.term_principle
+                if  i == LoanPayable.objects.filter(tokenB = curr_tokenB).count() - 1:
+                    pay.term_principle = principle_left
+                    
+                pay.save()
 
             context = {"txhash":tx_receipt['transactionHash'].hex()}
             return render(request, 'tx_result.html', context)
@@ -1785,48 +1814,52 @@ def payback(_loan_id, _amount):
     tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash ,timeout=600)
     
     ##接到normalpayback的event
-    nor_logs = Invest.events.NormalPayback().processReceipt(tx_receipt)
-    for event in nor_logs:
-        _loan_id = int(event['args']['_loan_id'])
-        _class = int(event['args']['_class'])
-        _principle_not_paid = int(event['args']['_principleNotPaid'])
-        _termLeft = int(event['args']['_termLeft'])
-        _interest = int(event['args']['_interest'])/1200
-        _pmt = int(math.floor(calculatePmt(_interest, _principle_not_paid, _termLeft)))
-        
-        invest_txn = Invest.functions.updateAndAllocate(_loan_id, _class, _principle_not_paid, _pmt).buildTransaction(
-            {
-                'from': account_from['address'],
-                'nonce': w3.eth.getTransactionCount(account_from['address']),
-            }
-        )
-        # 簽名
-        update_tx_create = w3.eth.account.signTransaction(invest_txn, account_from['private_key'])
-        # transaction送出並且等待回傳
-        update_tx_hash = w3.eth.sendRawTransaction(update_tx_create.rawTransaction)
-        update_tx_receipt = w3.eth.waitForTransactionReceipt(update_tx_hash ,timeout=600)
+    # nor_logs = Invest.events.NormalPayback().processReceipt(tx_receipt)
+    # print(nor_logs)
+    # for event in nor_logs:
+    #     _loan_id = int(event['args']['_loan_id'])
+    #     _class = int(event['args']['_class'])
+    #     _principle_not_paid = int(event['args']['_principleNotPaid'])
+    #     _termLeft = int(event['args']['_termLeft'])
+    #     _interest = int(event['args']['_interest'])/1200
+    #     if _termLeft == 0:
+    #         _pmt = 0
+    #     else:
+    #         _pmt = int(math.floor(calculatePmt(_interest, _principle_not_paid, _termLeft)/10**10)*10**10)
+    #     print(_loan_id, _class, _principle_not_paid, _pmt)
+    #     invest_txn = Invest.functions.updateAndAllocate(_loan_id, _class, _principle_not_paid, _pmt).buildTransaction(
+    #         {
+    #             'from': account_from['address'],
+    #             'nonce': w3.eth.getTransactionCount(account_from['address']),
+    #         }
+    #     )
+    #     # 簽名
+    #     update_tx_create = w3.eth.account.signTransaction(invest_txn, account_from['private_key'])
+    #     # transaction送出並且等待回傳
+    #     update_tx_hash = w3.eth.sendRawTransaction(update_tx_create.rawTransaction)
+    #     update_tx_receipt = w3.eth.waitForTransactionReceipt(update_tx_hash ,timeout=600)
 
-    ear_logs = Invest.events.EarlyPayback().processReceipt(tx_receipt)
-    if ear_logs:
-        for event in ear_logs:
-            _loan_id = int(event['args']['_loan_id'])
-            _class = int(event['args']['_class'])
-            _principle = int(event['args']['_principle'])
-            _termLeft = int(event['args']['_termLeft'])
-            _interest = int(event['args']['_interest'])/1200
-            _pmt = int(math.floor(calculatePmt(_interest, _principle_not_paid, _termLeft)))
-
-            Invest.functions.earlyUpdateInterestArr(_loan_id, _class, _principle, _pmt).buildTransaction(
-                {
-                    'from': account_from['address'],
-                    'nonce': w3.eth.getTransactionCount(account_from['address']),
-                }
-            )
-            # 簽名
-            update_tx_create = w3.eth.account.signTransaction(invest_txn, account_from['private_key'])
-            # transaction送出並且等待回傳
-            update_tx_hash = w3.eth.sendRawTransaction(update_tx_create.rawTransaction)
-            update_tx_receipt = w3.eth.waitForTransactionReceipt(update_tx_hash ,timeout=600)
+    # ear_logs = Invest.events.EarlyPayback().processReceipt(tx_receipt)
+    # if ear_logs:
+    #     for event in ear_logs:
+    #         _loan_id = int(event['args']['_loan_id'])
+    #         _class = int(event['args']['_class'])
+    #         _principle = int(event['args']['_principle'])
+    #         _termLeft = int(event['args']['_termLeft'])
+    #         _interest = int(event['args']['_interest'])/1200
+    #         _pmt = int(math.floor(calculatePmt(_interest, _principle, _termLeft)/10**10)*10**10)
+    #         print(_loan_id, _class, _principle, _pmt)
+    #         early_txn = Invest.functions.earlyUpdateInterestArr(_loan_id, _class, _principle, _pmt).buildTransaction(
+    #             {
+    #                 'from': account_from['address'],
+    #                 'nonce': w3.eth.getTransactionCount(account_from['address']),
+    #             }
+    #         )
+    #         # 簽名
+    #         early_tx_create = w3.eth.account.signTransaction(early_txn, account_from['private_key'])
+    #         # transaction送出並且等待回傳
+    #         early_tx_hash = w3.eth.sendRawTransaction(early_tx_create.rawTransaction)
+    #         early_tx_receipt = w3.eth.waitForTransactionReceipt(early_tx_hash ,timeout=600)
     return tx_receipt    
 
 def paybackDividend(_loan_id, _amount):
@@ -1927,7 +1960,6 @@ def core_1155ToB(_contract_addr, _amount, _interest, _date):
 
 
 ## 尋找成功融資的來源tokenB
-
 def loan_former_tokenB(_contract_addr,company_address,_tokenB_token_id):
     Core = w3.eth.contract(address = _contract_addr, abi=abi)
     curr_tx_count = Core.functions._findTransaction(company_address, 4, _tokenB_token_id).call({'from': account_from['address']})

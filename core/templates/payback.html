@@ -152,11 +152,11 @@
             // 將每期應還本金加上利息
             let interest = parseFloat($(ele).find('td:eq(2)').text());
             let prinicple = parseFloat($(ele).find('td:eq(3)').text());
-            $(ele).find('td:eq(4)').html(interest + prinicple);
+            $(ele).find('td:eq(4)').html(parseInt(interest + prinicple));
 
             // 把本期應還顯示在下面
             if ($(ele).find('td:eq(1)').text()==curr_term && curr_id == $(ele).find('td:eq(0)').text()) {
-                $('#return_this_month' + i).val(interest + prinicple);
+                $('#return_this_month' + i).val(parseInt(interest + prinicple));
             }
         });
     }

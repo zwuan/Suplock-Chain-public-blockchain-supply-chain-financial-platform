@@ -21,7 +21,7 @@ body{
     margin-right: 40px;
 }
 .invest_record{
-    width: 800px;
+    min-width: 800px;
     height: 600px;
 }
 .user_pic{

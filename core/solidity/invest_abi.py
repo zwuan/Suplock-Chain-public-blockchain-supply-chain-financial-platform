@@ -11,6 +11,37 @@ invest_abi = json.loads('''[
 			{
 				"indexed": false,
 				"internalType": "uint256",
+				"name": "_loan_id",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "_class",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "currIntPayable",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "paid",
+				"type": "uint256"
+			}
+		],
+		"name": "AllocateInfo",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "uint256",
 				"name": "_amount",
 				"type": "uint256"
 			},
@@ -477,64 +508,6 @@ invest_abi = json.loads('''[
 			},
 			{
 				"internalType": "uint256",
-				"name": "_amount",
-				"type": "uint256"
-			}
-		],
-		"name": "earlyPayback",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "_loan_id",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_class",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_amount",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_pmt",
-				"type": "uint256"
-			}
-		],
-		"name": "earlyUpdateInterestArr",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "_loan_id",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
 				"name": "_class",
 				"type": "uint256"
 			}
@@ -814,6 +787,11 @@ invest_abi = json.loads('''[
 			{
 				"internalType": "uint256",
 				"name": "interest",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "pmt",
 				"type": "uint256"
 			}
 		],

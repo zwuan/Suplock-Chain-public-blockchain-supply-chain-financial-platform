@@ -68,7 +68,7 @@ contract investmentToken {
   uint public constant decimals = 10**18;
 
   
-  address platform =  0xA3E58464444bC66b5bb7FB8e76D7F4fDE52126F2; //部署人（平台）
+  address platform =  0x5B38Da6a701c568545dCfcB03FcB875f56beddC4; //部署人（平台）
 
   enum State {financing, passed, ended}
   
@@ -94,6 +94,7 @@ contract investmentToken {
     uint dateSpan;          // 總共期數
     uint termLeft;          // 剩下期數    
     uint interest;          // 利率
+    uint pmt;               // pmt (每期應還)
     uint[] principleArr;    // 每期應還本金
     uint[] interestArr;     // 每期應還利息    
   }
@@ -146,16 +147,18 @@ contract investmentToken {
       _;
   }
   
-  event MintCertificate(uint _loan_id, address _borrow_company, uint _principle, uint _interest, uint _datespan, uint _riskClass);
+  event MintCertificate(uint _loan_id, address _borrow_company, uint _principle, uint _interest, uint _datespan, uint _riskClass, uint _pmt);
   event LoanPassed(uint _loan_id, uint _class);
   event LoanEnded(uint _loan_id, uint _class);
   event BuyTranche(address _investor, uint _loan_id, uint _class, uint _amount);
-  event EarlyPayback(uint _amount, uint _loan_id);  // emit 多還的部分(若還的剛好等於債權，則會回傳0)
-  event NormalPayback(uint _amount, uint _loan_id); // emit 多還的部分(若還的剛好等於債權，則會回傳0)
+  event EarlyPayback(uint _loan_id, uint _class, uint _principle, uint _termLeft, uint _interest);  // emit _principle為剩餘未還、_type 1 代表
+  event NormalPayback(uint _loan_id, uint _class, uint _principleNotPaid, uint _termLeft, uint _interest); // (uint _loan_id, uint _class, uint _principleNotPaid, uint _pmt)
   event BurnCertificae(uint _loan_id, uint _class);
   event Breach(uint _amount, uint _class);
+  event AllocateInfo(uint _loan_id, uint _class, uint currIntPayable, uint paid);
   
-  constructor () public {}
+  constructor () public {
+  }
   
   
   function trancheAddInvestor (uint _loan_id, uint _class, address _investor) public onlyPlatform {
@@ -208,55 +211,10 @@ contract investmentToken {
     return sum;
   }
 
-  function getTrancheState (uint _loan_id, uint _class) public view returns (State) {
-      return certificateMapping[_loan_id][_class].state;
-  }
-  
-//   function getTrancheAvail (uint _loan_id, uint _class) public view returns (uint) {
-//     // return availamount[_loan_id];
-//     return certificateMapping[_loan_id][_class].availAmount;
-//   }
   
   function getInvestorTrancheAmount (address _investor, uint _loan_id, uint _class) public view returns (uint) {
       return investorTranche[_investor][_loan_id][_class].amount;
   }
-  
-  function getPaidTrancheNum (uint _loan_id, uint _class) public view returns (uint) {
-    uint count = 0;
-    for (uint i=0; i< trancheInvestor[_loan_id][_class].length; i++) {
-        address investor = trancheGetInvestor(_loan_id, _class, i);
-        if (investorTranche[investor][_loan_id][_class].amount == 0){
-            count = count.add(1);
-        }
-    }
-    return count;
-  }
-  
-  // return a list of investor's loan_id, for backend
-  function getInvestorLoanIdList(address _investor) public view returns (uint[] memory){
-    uint count = investorTrancheList[_investor].length;
-    uint[] memory ret = new uint[](count);
-    for (uint i = 0; i < count; i++) {
-        ret[i] = investorTrancheList[_investor][i];
-    }
-    return ret;
-  }
-  
-  // return a list of investor's loan_id's class, for backend
-  function getInvestorLoanIdClassList(address _investor, uint _loan_id) public view returns (uint[] memory){
-    uint count = investorTrancheClassList[_investor][_loan_id].length;
-    uint[] memory ret = new uint[](count);
-    for (uint i = 1; i < count+1; i++) {
-        ret[i-1] = investorTrancheClassList[_investor][_loan_id][i];
-    }
-    return ret;
-  }
-  
-  // return tranche, for backend
-  function getTrancheByInvestor(address _investor, uint _loan_id, uint _class) public view returns (TrancheInv memory) {
-      return investorTranche[_investor][_loan_id][_class];
-  }
-  
   
   function getInterestArrValue (uint _loan_id, uint _class, uint _index) public onlyPlatform view returns (uint) {
     InterestRec memory curr_interestRec = interestRecMapping[_loan_id][_class];
@@ -326,8 +284,8 @@ contract investmentToken {
   // ------------------------------------------------------------------------------------------------------------------------------------------
   // manipulate section
   // ------------------------------------------------------------------------------------------------------------------------------------------
-    
-  function mintCertificate (uint _loan_id, address _borrow_company, uint _principle, uint _interest, uint _datespan, uint _class)
+  // 後端計算pmt
+  function mintCertificate (uint _loan_id, address _borrow_company, uint _principle, uint _interest, uint _datespan, uint _class, uint _pmt)
     public 
     onlyPlatform
   {
@@ -345,9 +303,9 @@ contract investmentToken {
     certificateMapping[_loan_id][_class] = inv;
     
     // init interestArr
-    createInterestArray(_loan_id, _class, _principle, _interest, _datespan);
+    createInterestArray(_loan_id, _class, _principle, _interest, _datespan, _pmt);
 
-    emit MintCertificate(_loan_id, _borrow_company, _principle, _interest, _datespan, _class);
+    emit MintCertificate(_loan_id, _borrow_company, _principle, _interest, _datespan, _class, _pmt);
     
   }
   
@@ -397,7 +355,7 @@ contract investmentToken {
   
   // 首期分期利息按「核准金額X分期年利率÷12」計收；次期起，每期分期利息按「每期應付分期本金X未償期數X分期年利率÷12」計收。
   // _principle為融資總金額
-  function createInterestArray (uint _loan_id, uint _class, uint _principle, uint _interest, uint _datespan)
+  function createInterestArray (uint _loan_id, uint _class, uint _principle, uint _interest, uint _datespan, uint _pmt)
     public
     onlyPlatform
     returns
@@ -406,28 +364,26 @@ contract investmentToken {
     // uint amount = _principle.mul(decimals);
     uint amount = _principle;
 
-    // 每期應還本金
-    uint principlePayable = amount.div(_datespan);
     // 建立array存每期應還
     uint[] memory _principleArr = new uint[](_datespan);
     uint[] memory _interestArr = new uint[](_datespan);
-    
-    // 計算每期應還
+
+    // 計算每期應還利息
     for (uint i=0; i<_datespan; i++) {
-        _principleArr[i] = principlePayable;
-        if(i==0){
-            uint firstTerm = amount.mul(_interest).div(12).div(100);
-            _interestArr[i] = firstTerm;
-        } else {
-            uint term = amount.sub(principlePayable.mul(i)).mul(_interest).div(12).div(100);
-            _interestArr[i] = term;
-        }
+        // 每期應還利息
+        uint term_interest = amount.mul(_interest).div(12).div(100);
+        _interestArr[i] = term_interest;
+        // 每期應還本金
+        _principleArr[i] = _pmt.sub(term_interest);
+        amount = amount.sub(_principleArr[i]);
     }
+    
     
     InterestRec memory inv;
     inv.dateSpan = _datespan;
     inv.termLeft = _datespan;
     inv.interest = _interest;
+    inv.pmt = _pmt;
     inv.principleArr = _principleArr;
     inv.interestArr = _interestArr;
     
@@ -438,43 +394,44 @@ contract investmentToken {
   
 
   // _amount是剩下本金 (從trancheNotPaid來)，return該期應償還利息
-  function updateInterestArr (uint _loan_id, uint _class, uint _amount)
+  function updateInterestArr (uint _loan_id, uint _class, uint _amount, uint _pmt)
     public 
     onlyPlatform
     returns
     (uint)
-  {
+  { 
 
     InterestRec storage curr_interestRec = interestRecMapping[_loan_id][_class];
     uint curr_datespan = curr_interestRec.dateSpan;
     uint curr_termLeft = curr_interestRec.termLeft.sub(1);
+    uint curr_interest = curr_interestRec.interest;
     uint[] memory curr_principleArr = curr_interestRec.principleArr;
     uint[] memory curr_interestArr = curr_interestRec.interestArr;
     
+    // 本期所付利息
     uint curr_termdiv = 0;
+    
     if (curr_termLeft > 0) {
-        uint principlePayable = _amount.div(curr_termLeft);
         for (uint i=0; i< curr_datespan; i++) {
             
             if (curr_interestArr[i] == 0) continue;
-            
+            // 若到最後一期，為了平衡須強制將本金設為剩餘未還本金
+            if (curr_termLeft == 1) {
+                curr_principleArr[i] = _amount;
+            } 
             // 如果還完則將term更新為0，並分配利息
             if (i < curr_datespan.sub(curr_termLeft)) {
-                curr_principleArr[i] = 0;
-                
                 curr_termdiv = curr_interestArr[i];
                 curr_interestArr[i] = 0;
-            } else {
-                // 當期
-                curr_principleArr[i] = principlePayable;
-    
-                uint term = principlePayable.mul(curr_datespan.sub(i)).mul(curr_interestRec.interest).div(1200); // 因interest所以要除100
-                curr_interestArr[i] = term;
+            } else if (i == curr_datespan.sub(curr_termLeft)){   
+                // 每期應還利息
+                uint term_interest = _amount.mul(curr_interest).div(1200);
+                curr_interestArr[i] = term_interest;
             }
         }
+        
     } else {
         // curr_termLeft變0時
-        curr_principleArr[curr_datespan.sub(curr_termLeft).sub(1)] = 0;
         curr_termdiv = curr_interestArr[curr_datespan.sub(curr_termLeft).sub(1)];
         curr_interestArr[curr_datespan.sub(curr_termLeft).sub(1)] = 0;
     }
@@ -488,54 +445,57 @@ contract investmentToken {
     return curr_termdiv;
   }
   
-    // _amount是剩下本金 (從trancheNotPaid來)，return該期應償還利息
-  function earlyUpdateInterestArr (uint _loan_id, uint _class, uint _amount)
-    public 
-    onlyPlatform
-    returns
-    (uint)
-  {
+//     // _amount是剩下本金 (從trancheNotPaid來)，return該期應償還利息
+//   function earlyUpdateInterestArr (uint _loan_id, uint _class, uint _amount, uint _pmt)
+//     public 
+//     onlyPlatform
+//     returns
+//     (uint)
+//   {
 
-    InterestRec storage curr_interestRec = interestRecMapping[_loan_id][_class];
-    uint curr_datespan = curr_interestRec.dateSpan;
-    uint curr_termLeft = curr_interestRec.termLeft;
-    uint[] memory curr_principleArr = curr_interestRec.principleArr;
-    uint[] memory curr_interestArr = curr_interestRec.interestArr;
+//     InterestRec storage curr_interestRec = interestRecMapping[_loan_id][_class];
+//     uint curr_datespan = curr_interestRec.dateSpan;
+//     uint curr_termLeft = curr_interestRec.termLeft.sub(1);
+//     uint curr_interest = curr_interestRec.interest;
+//     uint[] memory curr_principleArr = curr_interestRec.principleArr;
+//     uint[] memory curr_interestArr = curr_interestRec.interestArr;
     
-    uint curr_termdiv = 0;
-    if (curr_termLeft > 0) {
-        uint principlePayable = _amount.div(curr_termLeft);
-        for (uint i=0; i< curr_datespan; i++) {
+//     // 本期所付利息
+//     uint curr_termdiv = 0;
+    
+//     if (curr_termLeft > 0) {
+//         for (uint i=0; i< curr_datespan; i++) {
             
-            if (curr_interestArr[i] == 0) continue;
+//             if (curr_interestArr[i] == 0) continue;
             
-            // 如果還完則將term更新為0，並分配利息
-            if (i < curr_datespan.sub(curr_termLeft)) {
-                curr_principleArr[i] = 0;
-                
-                curr_termdiv = curr_interestArr[i];
-                curr_interestArr[i] = 0;
-            } else {
-                // 當期
-                curr_principleArr[i] = principlePayable;
+//             // 如果還完則將term更新為0，並分配利息
+//             if (i < curr_datespan.sub(curr_termLeft)) {
+//                 curr_principleArr[i] = 0;
+//                 curr_termdiv = curr_interestArr[i];
+//                 curr_interestArr[i] = 0;
+//             } else {    
+//                 // 每期應還利息
+//                 uint term_interest = _amount.mul(curr_interest).div(1200);
+//                 curr_interestArr[i] = term_interest;
+//                 // 每期應還本金
+//                 curr_principleArr[i] = _pmt.sub(term_interest);
+//                 _amount = _amount.sub(curr_principleArr[i]);
+//             }
+//         }
+        
+//     } else {
+//         // curr_termLeft變0時
+//         curr_principleArr[curr_datespan.sub(curr_termLeft).sub(1)] = 0;
+//         curr_termdiv = curr_interestArr[curr_datespan.sub(curr_termLeft).sub(1)];
+//         curr_interestArr[curr_datespan.sub(curr_termLeft).sub(1)] = 0;
+//     }
     
-                uint term = principlePayable.mul(curr_datespan.sub(i)).mul(curr_interestRec.interest).div(1200); // 因interest所以要除100
-                curr_interestArr[i] = term;
-            }
-        }
-    } else {
-        // curr_termLeft變0時
-        curr_principleArr[curr_datespan.sub(curr_termLeft).sub(1)] = 0;
-        curr_termdiv = curr_interestArr[curr_datespan.sub(curr_termLeft).sub(1)];
-        curr_interestArr[curr_datespan.sub(curr_termLeft).sub(1)] = 0;
-    }
-    
-    // update interestRec
-    curr_interestRec.interestArr = curr_interestArr;
-    curr_interestRec.principleArr = curr_principleArr;
+//     // update interestRec
+//     curr_interestRec.interestArr = curr_interestArr;
+//     curr_interestRec.principleArr = curr_principleArr;
 
-    return curr_termdiv;
-  }
+//     return curr_termdiv;
+//   }
   
   // _amount是本期廠商所支付的利息
   function allocateDividend (uint _loan_id, uint _class, uint _amount, uint _term)
@@ -553,6 +513,7 @@ contract investmentToken {
   }
 
   // 換端需先分割本金部分及利息部分，而這裡吃的_amount為本金部分，不讓使用者輸入大於應還的值
+  // 後端需計算剩餘期數的pmt
   function payback (uint _loan_id, uint _amount)
     public
     onlyPlatform
@@ -561,22 +522,22 @@ contract investmentToken {
     // uint amount = _amount.mul(decimals);
     uint amount = _amount;
 
-    // 將class abc的第一期principle加起來
-    // 這裡只是為了拿到curr term(還到第幾期) ,abc都一樣
-    InterestRec memory curr_interestRec = interestRecMapping[_loan_id][1];
-    uint curr_term = curr_interestRec.dateSpan.sub(curr_interestRec.termLeft);
+    // // 將class abc的第一期principle加起來
+    // // 這裡只是為了拿到curr term(還到第幾期) ,abc都一樣
+    // InterestRec memory curr_interestRec = interestRecMapping[_loan_id][1];
+    // uint curr_term = curr_interestRec.dateSpan.sub(curr_interestRec.termLeft);
 
-    // 當期應還本金
-    uint curr_PriPayable = getTermPriPayable(_loan_id, curr_term);
+    // // 當期應還本金
+    // uint curr_PriPayable = getTermPriPayable(_loan_id, curr_term);
 
     // 1. amount 大於termPayable, 多還本金  
     // 3. amount小等於, 將未還本金計入下次償還
-    if (amount > curr_PriPayable) {
-        normalPayback(_loan_id, curr_PriPayable);
-        earlyPayback(_loan_id, amount.sub(curr_PriPayable));
-    }  else {
-        normalPayback(_loan_id, amount);
-    }
+    // if (amount > curr_PriPayable) {
+    //     normalPayback(_loan_id, curr_PriPayable);
+    //     earlyPayback(_loan_id, amount.sub(curr_PriPayable));
+    // }  else {
+    normalPayback(_loan_id, amount);
+    // }
     
   }
   
@@ -604,75 +565,97 @@ contract investmentToken {
             investorTranche[investor][_loan_id][i].amount = investorCredit.sub(curr_inv_payback);
             // curr_payback_left = curr_payback_left.sub(curr_inv_payback);
         }
-        
-        InterestRec storage curr_interestRec = interestRecMapping[_loan_id][i];
+        InterestRec memory curr_interestRec = interestRecMapping[_loan_id][i];
 
         // 更新termLeft(期數減一)及interest arr的值（分配完歸零）
         uint classPrincipleNotPaid = getClassPrincipleNotPaid(_loan_id, i);
-        uint currIntPayable = updateInterestArr(_loan_id, i, classPrincipleNotPaid);
         
-        // 分配利息
-        allocateDividend(_loan_id, i, currIntPayable, curr_interestRec.dateSpan.sub(curr_interestRec.termLeft).sub(1));
-
+        updateAndAllocate(_loan_id, i, classPrincipleNotPaid, curr_interestRec.pmt);
+        
+        // emit event
+        // emit NormalPayback(_loan_id, i, classPrincipleNotPaid, curr_interestRec.termLeft.sub(1), curr_interestRec.interest);
     }
     
-    // emit NormalPayback(curr_payback_left, _loan_id);
     return true;
   } 
   
-  // 更新本金（1. 還超過每月應還，將多餘將的的金額從從本金扣除，call earlyPayback 2. 還低於每月應每月應還還，少的金額要繼續滾利息）
-  // 呼叫情境: 假設當期本金加利息廠商須還5114，而廠商還了6000，則886便為多餘本金(其中可能5%平台會收走)，因此實際只有840被帶入earlypayback
-  // 提前歸還本金，從A開始還本金
-  function earlyPayback (uint _loan_id, uint _amount)
-    public 
+  // 這個function要接後端的pmt然後做到1. update interest array 2. allocate dividend
+  function updateAndAllocate (uint _loan_id, uint _class, uint _principleNotPaid, uint _pmt)
+    public
     onlyPlatform
-    returns
-    (uint)
-  { 
-    uint amount = _amount;
+  {
+    InterestRec storage curr_interestRec = interestRecMapping[_loan_id][_class];
+    uint curr_term = curr_interestRec.dateSpan.sub(curr_interestRec.termLeft);
     
-    // error handling
-    uint totalPrinciple = getTotalPrincipleNotPaid(_loan_id);
-    if (amount > totalPrinciple) {
-        amount = totalPrinciple;
-    }
+    // 實際分配給頭茲人
+    uint currIntPayable = getInterestArrValue(_loan_id, _class, curr_term);
+    // 分配利息
+    allocateDividend(_loan_id, _class, currIntPayable, curr_term);
+    // 借錢企業應還(paid應大於currIntPayable)
+    uint paid = updateInterestArr(_loan_id, _class, _principleNotPaid, _pmt);
+    // 更新termLeft(期數減一)及interest arr的值（分配完歸零）
     
-    // 由A -> C 檢查是否還有尚未還清的
-    for (uint i=1;i<4;i++) {
-        if (amount == 0 ) break;
-        
-        // 檢查還完分券等級class後是否有剩餘
-        // left == 0的情況為amount不夠還或這等級已還清;
-        uint left = classPayback(_loan_id, i, amount);
-        // 等級class還有多少本金未償還
-        uint classPrincipleNotPaid = getClassPrincipleNotPaid(_loan_id, i);
-        
-        if (left == 0 && classPrincipleNotPaid == 0) {
-            // 等級i已經還清的情況，因此開始還下一個等級
-            continue;
-        } else if (left == 0 && classPrincipleNotPaid > 0){
-            // 不夠還，下次還要繼續還這等級
-            amount = 0;
-            
-            // 更新interstArr（償還部分本金）
-            earlyUpdateInterestArr(_loan_id, i, classPrincipleNotPaid);
-
-            break;
-        } else {
-            // 一次還玩等級i，用剩下的開始還等級i+1
-            amount = left;
-            
-            // 更新interstArr(分券等級i的本金全部償還完)
-            earlyUpdateInterestArr(_loan_id, i, 0);
-
-            continue;
-        }
-        
-    }
-            
-    emit EarlyPayback(amount, _loan_id);
-    return 0;
+    emit AllocateInfo(_loan_id, _class, currIntPayable, paid);
+    
   }
+  
+//   // 更新本金（1. 還超過每月應還，將多餘將的的金額從從本金扣除，call earlyPayback 2. 還低於每月應每月應還還，少的金額要繼續滾利息）
+//   // 呼叫情境: 假設當期本金加利息廠商須還5114，而廠商還了6000，則886便為多餘本金(其中可能5%平台會收走)，因此實際只有840被帶入earlypayback
+//   // 提前歸還本金，從A開始還本金
+//   function earlyPayback (uint _loan_id, uint _amount)
+//     public 
+//     onlyPlatform
+//     returns
+//     (uint)
+//   { 
+//     uint amount = _amount;
+    
+//     // error handling
+//     uint totalPrinciple = getTotalPrincipleNotPaid(_loan_id);
+//     if (amount > totalPrinciple) {
+//         amount = totalPrinciple;
+//     }
+    
+//     // 由A -> C 檢查是否還有尚未還清的
+//     for (uint i=1;i<4;i++) {
+//         if (amount == 0 ) break;
+        
+//         // 檢查還完分券等級class後是否有剩餘
+//         // left == 0的情況為amount不夠還或這等級已還清;
+//         uint left = classPayback(_loan_id, i, amount);
+//         // 等級class還有多少本金未償還
+//         uint classPrincipleNotPaid = getClassPrincipleNotPaid(_loan_id, i);
+//         InterestRec memory curr_interestRec = interestRecMapping[_loan_id][i];
+
+//         if (left == 0 && classPrincipleNotPaid == 0) {
+//             // 等級i已經還清的情況，因此開始還下一個等級
+//             continue;
+//         } else if (left == 0 && classPrincipleNotPaid > 0){
+//             // 不夠還，下次還要繼續還這等級
+//             amount = 0;
+            
+//             // emit event(_loan_id, _class, _這層剩餘未還, 剩餘期數, interest)
+//             // 後端接到event之後要update earlyinterest arr
+//             // 帶入earlyUpdateInterestArr(_loan_id, i, classPrincipleNotPaid, _pmt);
+
+//             emit EarlyPayback(_loan_id, i, classPrincipleNotPaid, curr_interestRec.termLeft, curr_interestRec.interest);
+//             break;
+//         } else {
+//             // 一次還玩等級i，用剩下的開始還等級i+1
+//             amount = left;
+            
+//             // emit event(_loan_id, _class, _這層剩餘未還, 2)
+//             // 後端接到event之後要update earlyinterest arr
+//             // 帶入earlyUpdateInterestArr(_loan_id, i, 0, _pmt);
+            
+//             emit EarlyPayback(_loan_id, i, classPrincipleNotPaid, curr_interestRec.termLeft, curr_interestRec.interest);
+
+//             continue;
+//         }
+        
+//     }
+//     return 0;
+//   }
   
   function classPayback (uint _loan_id, uint _class, uint _amount)
     public 
@@ -720,7 +703,7 @@ contract investmentToken {
   }
   
   // 當廠商本期償還金額小於該期應付利息
-  function paybackDividend (uint _loan_id, uint _amount)
+  function paybackDividend (uint _loan_id, uint _amount, uint _pmt)
     public 
     onlyPlatform
   {
@@ -739,10 +722,6 @@ contract investmentToken {
         getInterestArrValue(_loan_id, 3, curr_term),
         getTermIntPayable(_loan_id, curr_term)
     ];
-    // uint classNumerA = getInterestArrValue(_loan_id, 1, curr_term);
-    // uint classNumerB = getInterestArrValue(_loan_id, 2, curr_term);
-    // uint classNumerC = getInterestArrValue(_loan_id, 3, curr_term);
-    // uint base = classNumerA.add(classNumerB).add(classNumerC);
 
     // 償還金額(利息)先分給投資人
     for (uint i=1; i<4; i++) {
@@ -773,7 +752,7 @@ contract investmentToken {
         addInvestorPrinciple(_loan_id, i, currAddtoPrinciple);
 
         // 更新下期應付利息及本金
-        updateInterestArr(_loan_id, i, getClassPrincipleNotPaid(_loan_id, i));
+        updateInterestArr(_loan_id, i, getClassPrincipleNotPaid(_loan_id, i), _pmt);
         
     }
     
@@ -825,13 +804,5 @@ contract investmentToken {
     emit Breach(_amount, _loan_id);
     return true;     
   }
-  
-  
-
-  
-  
-  
-
-
 
 }
