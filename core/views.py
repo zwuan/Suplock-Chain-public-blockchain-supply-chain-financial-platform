@@ -1,10 +1,11 @@
+import decimal
 from django import forms
 from web3 import contract, exceptions
 from django.shortcuts import render
 from django.http import HttpResponse 
 from web3 import Web3
 import web3
-from .models import Company, Company_orders, TokenB, Deposit, TokenA, LoanCertificate, Tranche, LoanPayable, Invest_user
+from .models import Company, Company_orders, TokenB, Deposit, TokenA, LoanCertificate, Tranche, LoanPayable, Invest_user, Acc_rec_for_sale
 from core.solidity.abi import abi
 from core.solidity.erc865_abi import erc865_abi
 from core.solidity.bytecode import bytecode
@@ -17,7 +18,7 @@ import json
 from django.views import generic
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.hashers import make_password
-from .forms import user_login, user_register, deposit, set_order_rate, companyListForm, set_loan,send_account_pay, buyTranche, paybackForm
+from .forms import user_login, user_register, deposit, set_order_rate, companyListForm, set_loan,send_account_pay, buyTranche, paybackForm, acc_rec_form, buy_acc_rec
 from django.contrib import auth
 from django.shortcuts import render ,redirect
 from django.urls import reverse_lazy
@@ -42,7 +43,7 @@ from notifications.signals import notify ## 通知模組
 from notifications.models import Notification ##通知模組
 from django.db.models import Avg,Count,Max,Min,Sum
 import math
-from decimal import Decimal
+from decimal import Context, Decimal
 
 #預留空位給其他testnet
 provider_rpc = {
@@ -770,8 +771,6 @@ class company_account_pay(generic.ListView):
             logs = token_A_to_B(contract_address, rec_com_address, amount, 0, date_span, 1) ##應收 class = 1 應收上鏈
             # tokenAtoB的 event
             event = logs[0]['args']
-
-            print(logs)
             
             log_amount, log_rate, log_receiver, log_id=  event['amount'], event['interest'], event['receiver'], event['id']
             transactionHash = str(logs[0]['transactionHash'].hex())
@@ -811,7 +810,7 @@ class company_account_rec(generic.ListView):
         user = self.request.user
         company = Company.objects.get(user = user)
         account_rec_orders = Company_orders.objects.filter(state = 8) ##找出應收
-        ## initial_order__in 用於filte 集合
+        ## initial_order__in 用於filter 集合
         tokenB_is_account_rec = TokenB.objects.filter(Q(initial_order__in = account_rec_orders) & Q(curr_company = company) & (Q(class_type = 1) | Q(class_type =3))).order_by('date_span')
 
         return  tokenB_is_account_rec 
@@ -821,7 +820,7 @@ class company_account_rec(generic.ListView):
         company_list = list(Company.objects.all())
         for com in company_list:
             _company_list.append(com.user.username)
-        form = companyListForm(data_list = _company_list)
+        form = acc_rec_form()
         form_loan = set_loan()
         context['form'] = form
         context['form_loan'] = form_loan
@@ -835,7 +834,7 @@ class company_account_rec(generic.ListView):
         if optype == 'loan':
             form = set_loan(request.POST)
         elif optype =='bToC':
-            form = companyListForm(request.POST)
+            form = acc_rec_form(request.POST)
         print(form.errors)
         if form.is_valid():
             if form.cleaned_data['optype'] == 'loan':
@@ -945,6 +944,7 @@ class company_account_rec(generic.ListView):
                 TOKENB_id = int(form.cleaned_data['bToC_TOKENB_id'])
                 _rate = int(form.cleaned_data['rate']) ##票貼
                 notes_rate = (100 - _rate) ## 實拿比例
+                opening_price = int(form.cleaned_data['actual_price']) ##開價
                 order = Company_orders.objects.filter(id = bToC_id)[0] ##找到資料庫的這筆訂單
                 tokenB = TokenB.objects.filter(id = TOKENB_id)[0]  
                 tokenB_transfer_count = int(tokenB.transfer_count)
@@ -953,14 +953,12 @@ class company_account_rec(generic.ListView):
                 end = order.end_date ## 結束日
                 date_span = end - now ## 時間段
                 date_span = date_span.days
-                to_company = form.cleaned_data['bToC_to_company_name'] # 被移轉的公司
-                to_company = allUser.objects.filter(username = to_company)[0]
-                to_company = Company.objects.filter(user = to_company)[0]
+                core_company = order.send_company
                 contract_address = order.send_company.contract_address
-                
+                to_company = Company.objects.get(id = 4) 
                 ### contract manipulation
                 _from = Web3.toChecksumAddress(company.public_address)
-                _to = Web3.toChecksumAddress(to_company.public_address)
+                _to = account_from['address']
                 _interest = int(form.cleaned_data['bToC_interest'][:-1])
                 _amount = int(form.cleaned_data['bToC_price'])
                 _id = tokenB_id
@@ -980,12 +978,11 @@ class company_account_rec(generic.ListView):
                 transactionHash = str(logs[0]['transactionHash'].hex()),
                 # db manipulation
                 token_id = event['id']
-
                 new_tknB = TokenB.objects.create(
                     amount=_amount, 
                     class_type=3, 
                     token_id=token_id, 
-                    interest=notes_rate,  ##票貼比例 賣給下一家企業的價錢 ＝ amount * notes_rate
+                    interest=notes_rate,  
                     date_span=date_span, 
                     transfer_count=tokenB_transfer_count+1, 
                     initial_order=order,
@@ -994,6 +991,15 @@ class company_account_rec(generic.ListView):
                     transactionHash = str(logs[0]['transactionHash'].hex()),
                     tokenB_balance = log_amount
                 ) 
+                ##紀錄出售的應收帳款
+                new_Acc_rec_for_sale = Acc_rec_for_sale.objects.create(
+                    tokenB = new_tknB,
+                    opening_price = opening_price, ## 開價
+                    core_company = core_company, ##應付的公司
+                    pre_own = company, ##目前出售的公司,
+                    state = 1 ##出售中
+                )
+
                 tokenB_balance = tokenB.tokenB_balance - log_amount
                 already_transfer = tokenB.already_transfer + log_amount
                 tokenB.already_transfer = already_transfer
@@ -1003,6 +1009,98 @@ class company_account_rec(generic.ListView):
                 tokenB.save()
                 content = {"txhash":logs[0]['transactionHash'].hex()} ##顯示到前端
                 return render(request, 'tx_result.html', content)
+
+class acc_rec_auction(generic.ListView):
+    model = Acc_rec_for_sale
+    template_name = 'acc_rec_auction.html'
+    context_object_name = 'acc_rec'
+    paginate_by = 6
+    def get_queryset(self):
+        return Acc_rec_for_sale.objects.all()
+
+class buy_acc_rec(generic.View):
+    def get(self, request, *args, **kwargs):
+        context={}
+        id=kwargs['pk']
+        core_address = Company.objects.get(user = request.user).public_address
+        core_address =  w3.toChecksumAddress(core_address)
+        AR_for_sale = Acc_rec_for_sale.objects.get(id = id)
+        opening_price = AR_for_sale.opening_price
+        today = datetime.date.today().strftime('%Y-%m-%d')
+        actual_price = AR_for_sale.tokenB.amount
+        end_date = AR_for_sale.tokenB.initial_order.end_date
+        amount_865 =int(call_ERC865(core_address)  / DECIMALS)
+        context['id'] = id
+        context['opening_price'] = opening_price
+        context['today'] = today
+        context['actual_price'] = actual_price
+        context['end_date'] = end_date
+        context['amount_865'] = amount_865
+        return render(request, 'buy_acc_rec.html', context) 
+    def post(self, request, *args, **kwargs):
+        context = {}
+        company = Company.objects.get(user = request.user)
+        company_address =  w3.toChecksumAddress(company.public_address)
+        buy_acc_rec_id = request.POST.get('arc_rec_id')
+        price = int(request.POST.get('_amount')) * DECIMALS
+        fee = 30 *DECIMALS
+        tokenB_for_transfer = Acc_rec_for_sale.objects.get(id = buy_acc_rec_id).tokenB
+        Acc_rec_sold = Acc_rec_for_sale.objects.get(id = buy_acc_rec_id)
+        tokenB_transfer_count = int(tokenB_for_transfer.transfer_count)
+        tokenB_id = int(tokenB_for_transfer.token_id)
+        initial_order = tokenB_for_transfer.initial_order
+        end = initial_order.end_date
+        now = datetime.date.today() 
+        date_span = end-now
+        date_span = date_span.days
+        core_contract = initial_order.send_company.contract_address
+        ##上鏈資料
+        _from = Web3.toChecksumAddress(account_from['address'])
+        _to = Web3.toChecksumAddress(company.public_address)
+        _interest = tokenB_for_transfer.interest
+        _amount = int(tokenB_for_transfer.amount)
+        _id = tokenB_id
+        _class = tokenB_for_transfer.class_type
+        c_class = 3
+        _date = date_span
+        ##上鏈資料
+        ##contract manipulation
+        transfer_event = transfer_865(company_address, price, fee) ##先轉錢
+        transfer_tx_receipt = bToC(core_contract, _from, _to ,_amount, _interest, _id, _class, c_class,  _date)
+        ##
+        Core = w3.eth.contract(core_contract, abi=abi)
+        logs = Core.events.tokenB_event().processReceipt(transfer_tx_receipt) #拿log
+        event = logs[0]['args']
+        log_amount = event['amount']
+        transactionHash = str(logs[0]['transactionHash'].hex())
+        token_id = event['id']
+        new_tknB = TokenB.objects.create(
+            amount=_amount, 
+            class_type=3, 
+            token_id=token_id, 
+            interest=_interest, 
+            date_span=date_span, 
+            transfer_count=tokenB_transfer_count+1, 
+            initial_order= initial_order,
+            curr_company = company,
+            pre_company = Acc_rec_sold.pre_own, 
+            transactionHash = transactionHash,
+            tokenB_balance = log_amount
+        ) 
+        tokenB_balance = tokenB_for_transfer.tokenB_balance - log_amount
+        already_transfer = tokenB_for_transfer.already_transfer + log_amount
+        transfer_count = tokenB_transfer_count+1
+        tokenB_for_transfer.already_transfer = already_transfer
+        tokenB_for_transfer.tokenB_balance =  tokenB_balance
+        tokenB_for_transfer.transfer_count = transfer_count
+        tokenB_for_transfer.save()
+
+       
+        Acc_rec_sold.state = 2 
+        Acc_rec_sold.save() ##更新出售的應收帳款
+
+        content = {"txhash":logs[0]['transactionHash'].hex()} ##顯示到前端
+        return render(request, 'tx_result.html', content)
 ##通知
 @method_decorator(csrf_exempt, name='dispatch')
 class my_notification(generic.View):

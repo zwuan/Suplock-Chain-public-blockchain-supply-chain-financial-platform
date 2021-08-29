@@ -91,24 +91,21 @@
                 <input type="text" class="rec_comp" readonly="readonly" id="bToC_from_company_name"
                     name="bToC_from_company_name" value="">
             </div>
-            <!-- 下拉選單dropdown -->
-            <div class="money_input">
-                 <h2 class="title_text">移轉廠商名稱：</h2>
-                    {{form.bToC_to_company_name}}
-                <!-- <input type="text" class="rec_comp" for readonly='readonly' id='bToC_to_company_name'
-                    name='bToC_to_company_name' value=''> -->
-            </div>
             <div class="money_input">
                 <h2 class="title_text">移轉數量：</h2>
                 <input type="text" class="rec_comp" id="bToC_price" name="bToC_price" placeholder="" value="">
             </div>
             <div class="money_input">
                 <h2 class="title_text">設定票貼比例:</h2>
-                <select class="money_amount"  name="rate">
-                    {% for value, label in form_loan.fields.rate.choices %}
+                <select class="money_amount" id ="actRates" name="rate">
+                    {% for value, label in form.fields.rate.choices %}
                     　<option value="{{value}}" >{{label}}</option>
                     {% endfor %}
                 </select>
+            </div>
+            <div class="money_input">
+                <h2 class="title_text">欲出售價格:</h2>
+                <input type="text" class="rec_comp" id="actual_price" readonly="readonly" name="actual_price" placeholder="" value="">
             </div>
             <div class='add_money_btn'>
                 <button class="submit_btn" type="button" id='sendbToC' name="confirm">移轉</button>
@@ -277,11 +274,20 @@
                 } else {
                     alert('wrong account');
                     location.href = '/company_orders_rec';
-                }
-                
+                }  
             });
-
-            
+        });
+        function setActualPrice(){
+            price = $('#bToC_price').val();
+            rate = $('#actRates').val() / 100;
+            actPrice = parseInt(price * rate);
+            $('#actual_price').val(actPrice);
+        }
+        $('#actRates').change(function(){
+            setActualPrice();
+        });
+        $('#bToC_price').on('input', function(){
+            setActualPrice();
         });
 
     });

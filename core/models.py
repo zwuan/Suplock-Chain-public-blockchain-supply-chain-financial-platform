@@ -28,27 +28,27 @@ LOAN_STATE = (
     (4, '融資結束'),
     (5, '違約')
 )
-
 CLASS_CHOICES = (
     (1, '應收'),
     (2, '訂單'),
     (3, '移轉'),
     (4, '貸款'),
     (5, '驗證抵押')
-)
+) 
 CLASS_CHOICES_2000 = (
     (1, '應收'),
     (2, '訂單'),
     (3, '存貨'),
 )
-
-
 TRANCHE_CHOICES =(
     (1, 'A'),
     (2, 'B'),
     (3, 'C')
 )
-
+ARA_CHOICES = (
+    (1,'出售中'),
+    (2,'成交'),
+)
 class Invest_user(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE) ## user foriegn key
     public_address = models.CharField(max_length=42) ##公鑰
@@ -159,6 +159,14 @@ class Tranche(models.Model):
 # investorDividend 資料表
 class LoanPayable(models.Model):
     tokenB = models.ForeignKey(TokenB, on_delete=models.CASCADE ,related_name='loan_id', null=True,  blank=True)
-    term_principle = models.DecimalField(null=True, blank=True, max_digits=30, decimal_places=2)
-    term_interest = models.DecimalField(null=True, blank=True, max_digits=30, decimal_places=2)
+    term_principle = models.TextField(null=True, blank=True)
+    term_interest = models.TextField(null=True, blank=True)
     term = models.IntegerField(null=True, blank=True)
+
+
+class Acc_rec_for_sale(models.Model):
+    tokenB = models.ForeignKey(TokenB, on_delete=models.CASCADE ,related_name='acc_recB_id', null=True,  blank=True)
+    opening_price = models.IntegerField(null=True, blank=True)
+    core_company = models.ForeignKey(Company, on_delete=models.CASCADE ,related_name='core_company', null=True,  blank=True)
+    pre_own = models.ForeignKey(Company, on_delete=models.CASCADE ,related_name='pre_own', null=True,  blank=True)
+    state =  models.IntegerField(choices=ARA_CHOICES, null=True, blank=True)

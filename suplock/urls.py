@@ -31,6 +31,8 @@ urlpatterns = [
     path('verification_ERP/', views.verification_ERP.as_view(),name='verification_ERP'),
     path('verification_OK/', views.verification_OK.as_view(),name='verification_OK'),
     path('payback/', views.payback_loan.as_view(),name='payback_loan'),
+    path('acc_rec_auction',views.acc_rec_auction.as_view(),name='acc_rec_auction'),
+    path('acc_rec_auction/<int:pk>',views.buy_acc_rec.as_view(),name='buy_acc_rec'),
 
 ]
 

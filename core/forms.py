@@ -1,4 +1,5 @@
 from django import forms
+from django.forms.forms import Form
 from .models import Company
 from django.contrib.auth.models import User
 from .fields import ListTextWidget
@@ -9,7 +10,12 @@ RATE_CHOICES = (
     (10,'10%'),
     (12,'12%'),
 )
-
+SELL_ACC_CHOICES = (
+    (95, '95%'),
+    (90, '90%'),
+    (85, '85%'),
+    (80, '80%'),
+)
 
 ##註冊表單  
 class user_register(forms.Form):
@@ -52,7 +58,7 @@ class set_loan(forms.Form):
     orders_from_company_name = forms.CharField()
     orders_price = forms.CharField()
     rate = forms.ChoiceField(choices = RATE_CHOICES ,widget = forms.Select) ##only for 應收移轉
-    
+
 # 移轉表單
 class companyListForm(forms.Form):
     optype = forms.CharField(required=True)
@@ -72,7 +78,18 @@ class companyListForm(forms.Form):
         # same list.
         self.fields['bToC_to_company_name'].widget = ListTextWidget(data_list=_company_list, name='bToC_to_company_name')
 
-## 發應收表單
+## 應收移轉
+class acc_rec_form(forms.Form):
+    optype = forms.CharField(required=True)
+    bToC_TOKENB_id = forms.CharField(required=True)
+    bToC_interest = forms.CharField(required=True)
+    bToC_id = forms.CharField(required=True)
+    bToC_from_company_name = forms.CharField(required=True)
+    bToC_price = forms.CharField(required=True)
+    actual_price = forms.CharField(required=True)
+    rate = forms.ChoiceField(choices = SELL_ACC_CHOICES ,widget = forms.Select) ##only for 應收移轉
+
+
 # (address _investor, uint _loan_id, uint _class, uint _amount)
 class buyTranche(forms.Form):
     _loan_id = forms.CharField()
@@ -83,3 +100,6 @@ class paybackForm(forms.Form):
     _loan_id = forms.CharField()
     _amount = forms.CharField()
 
+class buy_acc_rec(forms.Form):
+    arc_rec_id = forms.IntegerField
+    _amount = forms.CharField()

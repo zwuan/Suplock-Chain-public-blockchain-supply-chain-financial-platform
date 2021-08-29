@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    {% load static %}
+    {% include 'nav_login.html' %} 
+    <link rel="stylesheet" href="{%static 'css/buy_acc_rec.css' %}">
+</head>
+<body>
+    <div class="loader-wrapper" id='waiting'>
+        <div>
+            <span class="loader"><span class="loader-inner"></span></span>
+        </div>
+        <h2 style="color: white; margin-top: 20px;">Wait for the transaction complete</h2>
+    </div>
+    <main class="main_content" id="fade">
+        <form action="" method="POST">
+        {% csrf_token %}
+
+        <div class="invest_form">
+            <div class="card_title">
+                <h2 class="title_text wh">購買: ARS-{{ id }}</h2>
+                <input type="text" style="display: none" name="arc_rec_id" value="{{ id }}">
+                <h2 class="title_text wh">轉入代幣</h2>
+            </div>
+            <h2 class="buy_label wh">申購金額:</h2>
+            <div class="buy_input">
+                <input type="text" name="_amount" id="amount" class="buy_amount" readonly = 'readonly' value = "{{opening_price}}">
+            </div>
+            <div class="balance">
+                <div class="circle"><img class='whSVG' src="{% static 'icon/wallet.svg' %}" width="24px" height="24px" alt=""></div>
+                <div class="money_info">
+                    <h2 class="tw4 wh fourW" id = "balance" value = "{{amount_865}}">{{amount_865}} TWD</h2>
+                    <h2 class="wh forte fourW">平台幣餘額</h2>
+                </div>
+            </div>
+            <div class="loan_detail">
+                <h2 class="wh sixte mabt5">應收價值: {{actual_price}}</h2>
+                <h2 class="wh sixte mabt5">生效日期: {{ today }} </h2>
+                <h2 class="wh sixte mabt5">應收日期: {{ end_date|date:'Y-m-d' }}</h2>
+            </div>
+            <button class="confirm_btn"  id = 'btn-real' >確認購買</button>
+        </div>
+    </form>
+    </main>
+    
+    
+</body>
+<script type="text/javascript" src="{%static 'js/check_user.js' %}"></script>
+<script>
+    const DECIMALS = 10**18;
+    const overlay = document.getElementById('overlay');
+
+    function numberWithCommas(x) {
+        x = x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        return x;
+    }      
+    $('#btn-real').on('click', async function (e) {
+        e.preventDefault();
+        var form = $(this).parents('form:first');
+        var curr_accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+        let check_addr = await checkUser(form.serializeArray(), curr_accounts[0]);
+
+        $.ajax({
+            method: "POST",
+            url: "/checkUser/",
+            data: { 'check_addr': check_addr },
+            dataType: "json"
+        }).done(async function (res) {
+            if (res['check'] == 'passed') {
+                $('#waiting').css("display", "flex");
+                $('#fade').css("display", "none");
+                form.submit();
+            } else {
+                alert('wrong account');
+            }
+        });
+    });
+
+  
+</script>
+</html>

@@ -364,6 +364,9 @@ tbody tr:hover{
 .greenText{
     color: green !important;
 }
+.outline{
+    border: 1px solid gray;
+}
 @keyframes loader {
     0% { transform: rotate(0deg);}
     25% { transform: rotate(180deg);}
