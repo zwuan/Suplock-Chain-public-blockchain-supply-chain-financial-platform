@@ -125,7 +125,7 @@ class TokenB(models.Model):
     already_transfer = models.DecimalField(max_digits=12, decimal_places=0,  default=0,  blank=True)## 已移轉amount
     already_loan = models.DecimalField(max_digits=12, decimal_places=0 , default=0,   blank=True)## 已借款amount
 
-    pmt = models.DecimalField(max_digits=20, decimal_places=0 , default=0, blank=True)##tokenB可使用餘額
+    pmt = models.IntegerField(null=True, blank=True)
 
     state = models.IntegerField(choices=LOAN_STATE, null=True, blank=True)
 
@@ -170,3 +170,8 @@ class Acc_rec_for_sale(models.Model):
     core_company = models.ForeignKey(Company, on_delete=models.CASCADE ,related_name='core_company', null=True,  blank=True)
     pre_own = models.ForeignKey(Company, on_delete=models.CASCADE ,related_name='pre_own', null=True,  blank=True)
     state =  models.IntegerField(choices=ARA_CHOICES, null=True, blank=True)
+
+class Payback_record(models.Model):
+    tokenB = models.ForeignKey(TokenB, on_delete=models.CASCADE ,related_name='payback_loan_id', null=True,  blank=True)
+    term = models.IntegerField(null=True, blank=True) ## 還錢的期數
+    amount = models.TextField(null=True, blank=True)  ## 還錢的金額

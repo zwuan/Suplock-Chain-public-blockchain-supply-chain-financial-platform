@@ -68,7 +68,7 @@ contract investmentToken {
   uint public constant decimals = 10**18;
 
   
-  address platform =  0x5B38Da6a701c568545dCfcB03FcB875f56beddC4; //部署人（平台）
+  address platform =  0xA3E58464444bC66b5bb7FB8e76D7F4fDE52126F2; //部署人（平台）
 
   enum State {financing, passed, ended}
   
@@ -84,7 +84,8 @@ contract investmentToken {
   
   // 投資人分券
   struct TrancheInv {
-    uint amount;            // 持有金額
+    uint tranchePri;        // 投資金額
+    uint amount;            // 剩餘持有
     uint[] dividendIncome;    // 利息收入
     uint riskClass;         // 分券等級(1:A, 2:B, 3:C)
   }
@@ -325,12 +326,14 @@ contract investmentToken {
 
     // 如果同個tranche已申購過
     if (investorTranche[_investor][_loan_id][_class].amount > 0) {
+        investorTranche[_investor][_loan_id][_class].tranchePri = investorTranche[_investor][_loan_id][_class].tranchePri.add(amount);
         investorTranche[_investor][_loan_id][_class].amount = investorTranche[_investor][_loan_id][_class].amount.add(amount);
     } else {
         
         uint[] memory _dividendIncome = new uint[](curr_certificate.dateSpan);
 
         TrancheInv memory inv;
+        inv.tranchePri = amount;
         inv.amount = amount;
         inv.dividendIncome = _dividendIncome;
         inv.riskClass = curr_certificate.riskClass;
@@ -394,7 +397,7 @@ contract investmentToken {
   
 
   // _amount是剩下本金 (從trancheNotPaid來)，return該期應償還利息
-  function updateInterestArr (uint _loan_id, uint _class, uint _amount, uint _pmt)
+  function updateInterestArr (uint _loan_id, uint _class, uint _amount)
     public 
     onlyPlatform
     returns
@@ -413,12 +416,13 @@ contract investmentToken {
     
     if (curr_termLeft > 0) {
         for (uint i=0; i< curr_datespan; i++) {
-            
-            if (curr_interestArr[i] == 0) continue;
             // 若到最後一期，為了平衡須強制將本金設為剩餘未還本金
             if (curr_termLeft == 1) {
-                curr_principleArr[i] = _amount;
-            } 
+                curr_principleArr[curr_datespan-1] = _amount;
+            }
+
+            if (curr_interestArr[i] == 0) continue;
+            
             // 如果還完則將term更新為0，並分配利息
             if (i < curr_datespan.sub(curr_termLeft)) {
                 curr_termdiv = curr_interestArr[i];
@@ -502,11 +506,11 @@ contract investmentToken {
     public
     onlyPlatform
   {
-    uint curr_principle = getClassPrincipleNotPaid(_loan_id, _class);
+    uint curr_principle = certificateMapping[_loan_id][_class].principle;
 
     for (uint j=0; j<trancheInvestor[_loan_id][_class].length; j++) {
         address investor = trancheGetInvestor(_loan_id, _class, j);
-        uint investorCredit = investorTranche[investor][_loan_id][_class].amount;
+        uint investorCredit = investorTranche[investor][_loan_id][_class].tranchePri;
         uint curr_inv_payback = _amount.mul(investorCredit).div(curr_principle);
         investorTranche[investor][_loan_id][_class].dividendIncome[_term] = curr_inv_payback;
     }
@@ -553,6 +557,10 @@ contract investmentToken {
     
     // loan_id class A, B, C的債權總金額
     uint total = getTotalPrincipleNotPaid(_loan_id);
+    // error handling
+    if (curr_payback > total) {
+        curr_payback = total;
+    }
     
     // iterate 三層並依據投資佔比分配payback
     for (uint i=1; i<4; i++){
@@ -565,12 +573,12 @@ contract investmentToken {
             investorTranche[investor][_loan_id][i].amount = investorCredit.sub(curr_inv_payback);
             // curr_payback_left = curr_payback_left.sub(curr_inv_payback);
         }
-        InterestRec memory curr_interestRec = interestRecMapping[_loan_id][i];
+        // InterestRec memory curr_interestRec = interestRecMapping[_loan_id][i];
 
         // 更新termLeft(期數減一)及interest arr的值（分配完歸零）
         uint classPrincipleNotPaid = getClassPrincipleNotPaid(_loan_id, i);
         
-        updateAndAllocate(_loan_id, i, classPrincipleNotPaid, curr_interestRec.pmt);
+        updateAndAllocate(_loan_id, i, classPrincipleNotPaid);
         
         // emit event
         // emit NormalPayback(_loan_id, i, classPrincipleNotPaid, curr_interestRec.termLeft.sub(1), curr_interestRec.interest);
@@ -580,7 +588,7 @@ contract investmentToken {
   } 
   
   // 這個function要接後端的pmt然後做到1. update interest array 2. allocate dividend
-  function updateAndAllocate (uint _loan_id, uint _class, uint _principleNotPaid, uint _pmt)
+  function updateAndAllocate (uint _loan_id, uint _class, uint _principleNotPaid)
     public
     onlyPlatform
   {
@@ -592,7 +600,7 @@ contract investmentToken {
     // 分配利息
     allocateDividend(_loan_id, _class, currIntPayable, curr_term);
     // 借錢企業應還(paid應大於currIntPayable)
-    uint paid = updateInterestArr(_loan_id, _class, _principleNotPaid, _pmt);
+    uint paid = updateInterestArr(_loan_id, _class, _principleNotPaid);
     // 更新termLeft(期數減一)及interest arr的值（分配完歸零）
     
     emit AllocateInfo(_loan_id, _class, currIntPayable, paid);
@@ -752,7 +760,7 @@ contract investmentToken {
         addInvestorPrinciple(_loan_id, i, currAddtoPrinciple);
 
         // 更新下期應付利息及本金
-        updateInterestArr(_loan_id, i, getClassPrincipleNotPaid(_loan_id, i), _pmt);
+        updateInterestArr(_loan_id, i, getClassPrincipleNotPaid(_loan_id, i));
         
     }
     

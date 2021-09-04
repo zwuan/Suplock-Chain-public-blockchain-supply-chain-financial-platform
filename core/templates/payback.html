@@ -41,17 +41,17 @@
             </div>            
             <div class="money_input">
                 <h2 class="title_text">剩餘本金：</h2>
-                <input type="text" class = "rec_comp" readonly='readonly'  value= "">
+                <input type="text" class = "rec_comp" readonly='readonly'  value= "{{ card.principleLeft }}">
             </div>  
             <div class="money_input">
                 <h2 class="title_text">累計繳息：</h2>
-                <input type="text" class = "rec_comp" readonly='readonly'  value= "">
+                <input type="text" class = "rec_comp" readonly='readonly'  value= "{{ card.accumulate_payback }}">
             </div>  
             <div class="money_input">
                 <h2 class="title_text">本期期數：</h2>
                 <input type="text" class="rec_comp" id="curr_term{{forloop.counter}}" readonly='readonly' placeholder='期數' value='{{card.curr_span}}'>
                 <h2 class="title_text">本期應還：</h2>
-                <input type="text" class = "rec_comp" readonly='readonly' id = 'return_this_month{{forloop.counter}}' placeholder = ''  value=''>
+                <input type="text" class = "rec_comp" readonly='readonly' id = 'return_this_month{{forloop.counter}}' placeholder = ''  value='{{card.pmt}}'>
             </div>
             <div class="money_input">
                 <h2 class="title_text">輸入還款金額：</h2>

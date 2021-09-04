@@ -820,6 +820,11 @@ invest_abi = json.loads('''[
 		"outputs": [
 			{
 				"internalType": "uint256",
+				"name": "tranchePri",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
 				"name": "amount",
 				"type": "uint256"
 			},
@@ -1044,11 +1049,6 @@ invest_abi = json.loads('''[
 				"internalType": "uint256",
 				"name": "_principleNotPaid",
 				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_pmt",
-				"type": "uint256"
 			}
 		],
 		"name": "updateAndAllocate",
@@ -1071,11 +1071,6 @@ invest_abi = json.loads('''[
 			{
 				"internalType": "uint256",
 				"name": "_amount",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_pmt",
 				"type": "uint256"
 			}
 		],
