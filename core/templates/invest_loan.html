@@ -27,8 +27,8 @@
                 <input type="text" style="display: none" name="_loan_id" value="{{ token_id }}">
                 <h2 class="title_text wh">轉入代幣</h2>
             </div>
-            <h2 class="buy_label wh">申購金額:</h2>
-            <div class="buy_input">
+            <h2 class="buy_label wh" id="inputAlert">申購金額:</h2>
+            <div class="buy_input" id = "butInput">
                 <input type="text" name="_amount" id="amount" class="buy_amount" placeholder = "請輸入金額">
                 <h3 class="wh">|</h3>
                 <h6 class="wh buy_all" id = "click_all">全部</h6>
@@ -43,9 +43,9 @@
             <div class="confirm_loan">
                 <select name="_class" class="select-1" id="select-1">
                     <option value="" >選擇風險等級</option>
-                    <option type="1" value="1">A: 年化利率{{ a_interest }}%</option>
-                    <option type="2" value="2">B: 年化利率{{ b_interest }}%</option>
-                    <option type="3" value="3">C: 年化利率{{ c_interest }}%</option>
+                    <option type="1" value="{{ a_interest }}">A: 年化利率{{ a_interest }}%</option>
+                    <option type="2" value="{{ b_interest }}">B: 年化利率{{ b_interest }}%</option>
+                    <option type="3" value="{{ c_interest }}">C: 年化利率{{ c_interest }}%</option>
                 </select>
             </div>
             <div class="loan_detail">
@@ -72,40 +72,66 @@
         return x;
     }      
     $('#amount').on('input',function(){
-        if ($('#amount').val().length){
-            $('#btn-real').prop('disabled', false);
-            $('#btn-real').css('display', "block");
-            $('#btn').css("display","none");
-            set_ref();
-            
+        if ($('#amount').val() < $('#limit').val()/DECIMALS){
+            if ($('#amount').val().length){
+                $('#btn-real').prop('disabled', false);
+                $('#btn-real').css('display', "block");
+                $('#btn').css("display","none");
+                set_ref();
+            }else{
+                $('#btn-real').prop('disabled', true);
+                $('#btn-real').css('display', "none");
+                $('#btn').css("display","block")
+            };
+            $("#inputAlert").html("申購金額:")
+            $("#inputAlert").addClass("wh");
+            $("#inputAlert").removeClass("red");
+            $("#butInput").removeClass("outline");
         }else{
+            $("#inputAlert").html("大於申購上限");
             $('#btn-real').prop('disabled', true);
             $('#btn-real').css('display', "none");
-            $('#btn').css("display","block")
-        }
+            $('#btn').css("display","block");
+            $("#inputAlert").addClass("red");
+            $("#inputAlert").removeClass("wh");
+            $("#butInput").addClass("outline");
+
+    }
     });
     $('#click_all').on('click', function(){
         $('#amount').val($('#limit').val()/DECIMALS);
         $('#btn').css("display","none");
         $('#btn-real').css('display', "block");
         $('#btn-real').prop('disabled', false);
-        set_ref(); 
+        $("#inputAlert").html("申購金額:")
+        $("#inputAlert").addClass("wh");
+        $("#inputAlert").removeClass("red");
+        $("#butInput").removeClass("outline");
+        set_ref();
     });
     $('#select-1').change(function(){
         set_ref();
     });
+    function PMT(interest, principle, term){
+        let pmt = interest * principle / (1-(1+interest)**-term);
+        return pmt;
+    }
+
+    term = {{ term|safe }};
     function set_ref() {
-        const interest = ($('#select-1').val()) / 100;
-        const amount = $('#amount').val()/DECIMALS;
-        let reference = parseInt(amount * interest / 4);
-        let ref_income = numberWithCommas(reference);
+        const interest = ($('#select-1').val()) / 100 / 12;
+        const amount = $('#amount').val();
+        let pmt = PMT(interest,amount,term);
+        let reference =parseInt(pmt * term);
+        let ref_income = numberWithCommas(reference-amount);
+        if (ref_income == "NaN"){
+            ref_income = 0;
+        }
         let str_ref_income = "參考收益: " + ref_income;
         $('#ref_income').html(str_ref_income);
         return str_ref_income
     }
-
     var avail_arr = {{ avail_arr|safe }};
-    console.log(avail_arr);
     $('#select-1').on('change', function(e){
         var optionSelected = $("option:selected", this).attr('type');
         switch (optionSelected) {

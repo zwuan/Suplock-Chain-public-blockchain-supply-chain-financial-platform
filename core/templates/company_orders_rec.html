@@ -34,7 +34,7 @@
         <form action="" method="POST">
             {% csrf_token %}
             <div class="add_title">
-                <h2 class="title_text">設定移轉廠商及貸款利率</h2>
+                <h2 class="title_text">設定融資金額及投資人分券利率</h2>
             </div>
             <!-- hidden input -->
             <input type="text" style="display: none;" name="orders_interest" id="orders_interest" value="">
@@ -51,12 +51,12 @@
                 <input type="text" class="rec_comp" readonly="readonly" id="orders_from_company_name" name="orders_from_company_name" value="">
             </div>
             <div class="money_input">
-                <h2 class="title_text">訂單金額：</h2>
-                <input type="text" class="rec_comp" id="orders_price" name="orders_price" placeholder="" value="">
+                <h2 class="title_text">融資金額：</h2>
+                <input type="text" class="rec_comp outline" id="orders_price" name="orders_price" placeholder="" value="">
             </div>
             <div class="money_input" style="display: none;">
                 <h2 class="title_text">設定利率:</h2>
-                <input type="text" name="rate" id="" value="10">
+                <input type="text" name="rate"  value="10">
             </div>
             <div class="add_money_btn">
                 <button class="submit_btn" type="button" id='sendloan' name="confirm">融資</button>
@@ -70,7 +70,7 @@
         <form action="" method="POST">
             {% csrf_token %}
             <div class="add_title">
-                <h2 class="title_text">設定融資金額及投資人分券利率</h2>
+                <h2 class="title_text">設定移轉廠商及貸款利率</h2>
             </div>
             <!-- hidden input -->
             <input type="text" style="display: none;" name="bToC_interest" id="bToC_interest" value="">
@@ -91,17 +91,16 @@
             <!-- 下拉選單dropdown -->
             <div class="money_input">
                  <h2 class="title_text">移轉廠商名稱：</h2>
-                    {{form.bToC_to_company_name}}
-                <!-- <input type="text" class="rec_comp" for readonly='readonly' id='bToC_to_company_name'
-                    name='bToC_to_company_name' value=''> -->
+                 {{form.bToC_to_company_name}}
+               
             </div>
             <div class="money_input">
                 <h2 class="title_text">移轉數量：</h2>
-                <input type="text" class="rec_comp" id="bToC_price" name="bToC_price" placeholder="" value="">
+                <input type="text" class="rec_comp outline" id="bToC_price" name="bToC_price" placeholder="" value="">
             </div>
             <div class="money_input" style="display: none;">
                 <h2 class="title_text">設定利率:</h2>
-                <input type="text" name="rate" id="" value="10">
+                <input type="text" name="rate"  value="10">
             </div>
             <div class='add_money_btn'>
                 <button class="submit_btn" type="button" id='sendbToC' name="confirm">移轉</button>

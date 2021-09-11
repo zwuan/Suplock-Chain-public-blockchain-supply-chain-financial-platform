@@ -5,7 +5,7 @@ class ListTextWidget(forms.TextInput):
         super(ListTextWidget, self).__init__(*args, **kwargs)
         self._name = name
         self._list = data_list
-        self.attrs.update({'list':'list_%s' % self._name, 'class':"rec_comp"})
+        self.attrs.update({'list':'list_%s' % self._name, 'class':"rec_comp outline"})
 
     def render(self, name, value, attrs=None, renderer=None):
         text_html = super(ListTextWidget, self).render(name, value, attrs=attrs)

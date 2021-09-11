@@ -37,7 +37,7 @@ body{
 }
 .buy_label{
     margin-top: 30px;
-    font-size: 14px;
+    font-size: 16px;
 }
 .buy_input{
     margin-top: 10px;
@@ -71,6 +71,10 @@ input::placeholder{
     border: none;
     height: 60%;
     width: 80%;
+}
+.outline{
+    border:1.5px solid #ff9100;
+    transition: 200ms ease-in;
 }
 .buy_all{
     margin-left: 10px;
@@ -145,6 +149,10 @@ input::placeholder{
     justify-content: space-between;
     align-items: center;
     border-top: 1px solid rgba(153, 153, 153, 0.726);
+}
+.red{
+    color: #ff9100;
+    transition: 200ms ease-in-out;
 }
 .select-1{
     width: 100%;

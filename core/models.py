@@ -3,6 +3,8 @@ from django.db.models.fields import BooleanField
 from django.contrib.auth.models import User
 import datetime
 
+from django.urls.base import clear_script_prefix
+
 RATE_CHOICES = (
     (6, '6%'),
     (8, '8%'),
@@ -25,7 +27,7 @@ LOAN_STATE = (
     (1, '融資中'),
     (2, '融資成功'),
     (3, '融資失敗'),
-    (4, '融資結束'),
+    (4, '借款結清'),
     (5, '違約')
 )
 CLASS_CHOICES = (
@@ -152,8 +154,8 @@ class Tranche(models.Model):
     loan_id = models.CharField(max_length=100, null=True, blank=True) ## tokenB的id, 因為太長所以用charfield
     riskClass = models.IntegerField(choices=TRANCHE_CHOICES, null=True, blank=True)  ## 分券種類
     amount = models.CharField(max_length=100, null=True, blank=True) ##tokenB金額
-    accu_earning = models.CharField(max_length=100, null=True, default='0') ## 融資多少錢
-
+    accu_earning = models.CharField(max_length=100, null=True, default='0') ## 利息累積多少錢
+    principle_remain =  models.CharField(max_length=100, null=True, blank=True) ## 剩餘本金（算irr)
 
 
 # investorDividend 資料表
@@ -175,3 +177,10 @@ class Payback_record(models.Model):
     tokenB = models.ForeignKey(TokenB, on_delete=models.CASCADE ,related_name='payback_loan_id', null=True,  blank=True)
     term = models.IntegerField(null=True, blank=True) ## 還錢的期數
     amount = models.TextField(null=True, blank=True)  ## 還錢的金額
+
+
+##每期分紅紀錄
+class Dividend_record(models.Model):
+    uni_tranche = models.ForeignKey(Tranche, on_delete=models.CASCADE ,related_name='dividend_record', null=True,  blank=True)
+    term = models.IntegerField(null=True, blank=True) ## 期數
+    principle_interest = models.TextField(null=True, blank=True) ##該期本利和

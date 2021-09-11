@@ -5,7 +5,7 @@ from django.shortcuts import render
 from django.http import HttpResponse 
 from web3 import Web3
 import web3
-from .models import Company, Company_orders, TokenB, Deposit, TokenA, LoanCertificate, Tranche, LoanPayable, Invest_user, Acc_rec_for_sale, Payback_record
+from .models import Company, Company_orders, TokenB, Deposit, TokenA, LoanCertificate, Tranche, LoanPayable, Invest_user, Acc_rec_for_sale, Payback_record, Dividend_record
 from core.solidity.abi import abi
 from core.solidity.erc865_abi import erc865_abi
 from core.solidity.bytecode import bytecode
@@ -44,6 +44,7 @@ from notifications.models import Notification ##通知模組
 from django.db.models import Avg,Count,Max,Min,Sum
 import math
 from decimal import Context, Decimal
+import numpy as np
 
 #預留空位給其他testnet
 provider_rpc = {
@@ -114,26 +115,37 @@ class invest_wallet(generic.ListView):
         sum=0
         tranche=[]
         for t in tranche_bought:
-            print(Invest.functions.investorTranche(_address, int(t.loan_id), t.riskClass).call({'from': account_from['address']}))
+            IRR = 0
+            if  t.dividend_record.all().exists():
+                tranche_record = t.dividend_record.all()
+                principle_interest_list = list(tranche_record.values_list('principle_interest',flat = True).order_by('id')) ##返回該tranche的每期還款本利和
+                begin_invest = 0 - int(int(t.amount) / DECIMALS)
+                principle_interest_list.insert(0,begin_invest)
+                IRR_list = list(map(float, principle_interest_list))
+                IRR = np.irr(IRR_list) 
+                print(IRR)
+                print(IRR_list)
+            else:
+                IRR = 0
+            ##print(Invest.functions.investorTranche(_address, int(t.loan_id), t.riskClass).call({'from': account_from['address']}))
             curr_dict = {}
             curr_dict['id'] = t.loanCertificate.tokenB.id
             curr_dict['company'] = t.loanCertificate.tokenB.initial_order.send_company.user
             curr_dict['interest'] = t.loanCertificate.interest
-            curr_dict['amount'] = int(t.amount) / DECIMALS
+            curr_dict['amount'] = int(int(t.amount) / DECIMALS)
             # curr_dict['pri_left'] = round(Invest.functions.investorTranche(_address, int(t.loan_id), t.riskClass).call({'from': account_from['address']})[1] / DECIMALS, 0)
-            curr_dict['pri_left'] = Invest.functions.investorTranche(_address, int(t.loan_id), t.riskClass).call({'from': account_from['address']})[1] / DECIMALS
-
-            curr_dict['accu_earning'] = round(Decimal(t.accu_earning), 0)
+            curr_dict['pri_left'] = round(Decimal(Invest.functions.investorTranche(_address, int(t.loan_id), t.riskClass).call({'from': account_from['address']})[1] / DECIMALS),0)                                                 
+            curr_dict['accu_earning'] = round(Decimal(t.accu_earning), 2)
             curr_dict['class_display'] = t.loanCertificate.tokenB.initial_order.get_class_type_display
             curr_dict['total_term'] = t.loanCertificate.date_span
             curr_dict['left_term'] = t.loanCertificate.curr_span
+            curr_dict['IRR'] = round(IRR*1200, 0)
 
             tranche.append(curr_dict)
-
             curr_accu = Decimal(t.accu_earning)
             sum+=curr_accu
 
-        context = {'tranche': tranche, 'past_earning':round(sum, 4), 'user':user, 'erc856':company_erc865}
+        context = {'tranche': tranche, 'past_earning':round(sum, 0), 'user':user, 'erc856':company_erc865}
         return render(request, 'invest_wallet.html',context) 
 
 class index(generic.View):
@@ -171,7 +183,7 @@ class invest_option(generic.ListView):
             curr_dic['interest'] = tokenB.interest
             curr_dic['start_date'] = tokenB.initial_order.start_date
             curr_dic['end_date'] = tokenB.initial_order.end_date
-            curr_dic['term_pri'] = termPri / DECIMALS
+            curr_dic['term_pri'] = round(termPri / DECIMALS)
             curr_dic['tx_hash'] = tokenB.transactionHash
             unique_card_arr.append(curr_dic)
 
@@ -204,6 +216,7 @@ class invest_loan(generic.View):
         context['token_id'] = tokenB.token_id
         trancheA = LoanCertificate.objects.filter(loan_id = tokenB.token_id)[0]
         context['a_interest'] = trancheA.interest
+        context['term'] = json.dumps(trancheA.date_span)
         
         trancheB = LoanCertificate.objects.filter(loan_id = tokenB.token_id)[1]
         context['b_interest'] = trancheB.interest
@@ -255,6 +268,17 @@ class invest_loan(generic.View):
             # 更新tokenB的tokenB_balance
             curr_tokenB = TokenB.objects.get(token_id=loan_id, class_type=4)
             curr_tokenB.already_loan -= Decimal(int(amount)/DECIMALS)
+            
+            ## 檢查投資人使否買完最後一筆--kevin
+            three_cer = LoanCertificate.objects.filter(loan_id=loan_id) ##filter出三筆
+            
+            checkCounter = 0
+            for cer in three_cer:
+                if cer.avail_amount == "0":
+                    checkCounter +=1 
+            if checkCounter == 3:
+                curr_tokenB.state = 2
+            print(checkCounter)
             curr_tokenB.save()
 
             if Tranche.objects.filter(investor=user, loan_id=loan_id, riskClass=riskClass).exists():
@@ -594,7 +618,8 @@ class company_order_rec(generic.ListView):
                     initial_order=order,
                     transactionHash=transactionHash,
                     already_loan = amount,
-                    tokenB_balance = amount
+                    tokenB_balance = amount,
+                    state = 1
                 ) 
                 ## update tokenB
                 tokenB_balance = tokenB.tokenB_balance - amount
@@ -903,7 +928,8 @@ class company_account_rec(generic.ListView):
                     transfer_count=0, 
                     initial_order=order,
                     transactionHash=transactionHash,
-                    tokenB_balance = amount
+                    tokenB_balance = amount,
+                    state = 1
                 ) 
                 ## update tokenB
                 tokenB_balance = tokenB.tokenB_balance - amount
@@ -947,7 +973,7 @@ class company_account_rec(generic.ListView):
                         riskClass=riskClass, 
                         transactionHash=str(logs[0]['transactionHash'].hex()),
                         avail_amount=principle,
-                    ) 
+                    )
 
 
                 content = {"txhash":logs[0]['transactionHash'].hex()} ##顯示到前端
@@ -1375,7 +1401,9 @@ class verification_OK(generic.ListView):
                     transfer_count=0, 
                     initial_order=order,
                     transactionHash=transactionHash,
-                    tokenB_balance = amount
+                    tokenB_balance = amount,
+                    state = 1
+                    
                 ) 
                 ## update tokenB
                 tokenB_balance = tokenB.tokenB_balance - amount
@@ -1383,7 +1411,9 @@ class verification_OK(generic.ListView):
                 tokenB.already_loan = already_loan # update company_orders already loan
                 tokenB.tokenB_balance =  tokenB_balance
                 tokenB.save()
-
+                '''
+                少loan certificate
+                '''
                 content = {"txhash":transactionHash} ##顯示到前端
                 return render(request, 'tx_result.html', content)
 
@@ -1471,7 +1501,6 @@ class payback_loan(generic.View):
             contract_address = ele.initial_order.send_company.contract_address ##找到初始發出者的合約
             tokenB_token_id = int(ele.token_id)   ##所有融資tokenB的鏈上id
             former_tokenB_id = loan_former_tokenB(contract_address,company_address,tokenB_token_id)
-            print(former_tokenB_id)
             parent_tokenB.append(former_tokenB_id)
             payback_token['state'] = ele.get_state_display ## 融資token的狀態 index 0
             payback_token['loan_amount'] = ele.amount ##融資金額
@@ -1489,10 +1518,13 @@ class payback_loan(generic.View):
             uni_payback['payback'] = all_loan_payable
 
                 
-            uni_payback['principleLeft'] = Invest.functions.getTotalPrincipleNotPaid(int(tokenB_token_id)).call({'from': account_from['address']})/DECIMALS
+            uni_payback['principleLeft'] = round(Invest.functions.getTotalPrincipleNotPaid(int(tokenB_token_id)).call({'from': account_from['address']})/DECIMALS,2)
             uni_payback['accumulate_payback'] = Payback_record.objects.filter(tokenB = ele).aggregate(Sum('amount'))['amount__sum']
             if curr_span == ele.date_span//30 :
-                uni_payback['pmt'] = int(Invest.functions.getTotalPrincipleNotPaid(int(tokenB_token_id)).call({'from': account_from['address']})/DECIMALS)
+                principle = Invest.functions.getTotalPrincipleNotPaid(int(tokenB_token_id)).call({'from': account_from['address']})/DECIMALS
+                print(ele.interest/100)
+                dividend = principle * (ele.interest / 100 / 12)
+                uni_payback['pmt'] = math.ceil(dividend+principle) 
             else:
                 uni_payback['pmt'] = ele.pmt ##pmt
 
@@ -1500,7 +1532,7 @@ class payback_loan(generic.View):
             uni_payback = {}
 
 
-        former_token = TokenB.objects.filter(token_id__in = parent_tokenB) ##!!!!來自同一筆會被算成一筆 
+        former_token = TokenB.objects.filter(token_id__in = parent_tokenB) ##!!!!來自同一筆會被算成一筆(Solved) 
         former_token_list = []
         print(parent_tokenB)
         for ele in parent_tokenB:
@@ -1511,7 +1543,6 @@ class payback_loan(generic.View):
             ### 剩於本金 累計繳息 本期應還 
             update_payback_token = all_payback_token[idx]
             update_payback_token['former_id'] = ele.id ## 資料庫裡的自動id
-
             update_payback_token['product'] = ele.initial_order.product ###最一開始的項目名稱
             update_payback_token['class_type'] = ele.get_class_type_display ##來源的種類
 
@@ -1590,7 +1621,20 @@ class payback_loan(generic.View):
             ### 實際償還本金
             amount = _amount - term_interest
             print('actually: ', amount)
-
+             ### 更改loan_certificate的期數
+            update_cer_set = LoanCertificate.objects.filter(loan_id = curr_tokenB.token_id)
+            for cer in update_cer_set:
+                for tranche in Tranche.objects.filter(loanCertificate=cer): ##拿到所有要更新的tranche
+                    tranche_owner = tranche.investor
+                    if tranche_owner.groups.filter(name = 'firm').exists():
+                        tranche_owner = Company.objects.filter(user = tranche_owner)[0]
+                    else:
+                        tranche_owner = Invest_user.objects.filter(user = tranche_owner)[0] 
+                    company = Web3.toChecksumAddress(tranche_owner.public_address)
+                    principle_remain = Decimal(Invest.functions.investorTranche(company, int(tranche.loan_id), tranche.riskClass).call({'from': account_from['address']})[1] / DECIMALS)
+                    tranche.principle_remain = principle_remain ##更新剩餘本金
+                    tranche.save()
+            
             ### 實際操作合約，這裡的payback吃本金
             tx_receipt = payback(_loan_id, int(amount*DECIMALS))
             
@@ -1599,8 +1643,7 @@ class payback_loan(generic.View):
             curr_tokenB.tokenB_balance = int(Invest.functions.getTotalPrincipleNotPaid(_loan_id).call({'from': account_from['address']})/DECIMALS)
             curr_tokenB.save()
 
-            ### 更改loan_certificate的期數
-            update_cer_set = LoanCertificate.objects.filter(loan_id = curr_tokenB.token_id)
+           
             for cer in update_cer_set:
                 ### 分潤給投資人
                 for tranche in Tranche.objects.filter(loanCertificate=cer):
@@ -1616,14 +1659,25 @@ class payback_loan(generic.View):
                     _term = cer.date_span - cer.curr_span
                     term_interest = Invest.functions.getTermInvestorDiv(company, int(tranche.loan_id) , cer.riskClass, _term).call({'from': account_from['address']})
                     print(term_interest)
+                    last_principle_remain = tranche.principle_remain ##還錢之前剩餘紀錄
                     pre_accu = Decimal(tranche.accu_earning)
                     tranche.accu_earning = pre_accu + Decimal(term_interest/DECIMALS)
+                    principle_remain_after_payback = Decimal(Invest.functions.investorTranche(company, int(tranche.loan_id), tranche.riskClass).call({'from': account_from['address']})[1] / DECIMALS)
+                    actual_principle_interest = Decimal(last_principle_remain) - principle_remain_after_payback + Decimal(term_interest/DECIMALS) ## 該期分紅實際本利和
+                    tranche.principle_remain = principle_remain_after_payback
                     tranche.save()
+                    print( Decimal(last_principle_remain),principle_remain_after_payback , Decimal(term_interest/DECIMALS))
+
+                    new_Div_record = Dividend_record.objects.create(
+                                    uni_tranche = tranche,
+                                    term = _term,
+                                    principle_interest = actual_principle_interest
+                                    )       
         
                 cer.curr_span -= 1
                 cer.save()
 
-
+                                                             
 
             ### 更新interest arr，為了可以正常還款（因為練下廠商富的金額會多於戀上廠商）
 
