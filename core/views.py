@@ -19,9 +19,9 @@ from django.views import generic
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.hashers import make_password
 from .forms import user_login, user_register, deposit, set_order_rate, companyListForm, set_loan,send_account_pay, buyTranche, paybackForm, acc_rec_form, buy_acc_rec
-from django.contrib import auth
+from django.contrib import auth, messages
 from django.shortcuts import render ,redirect
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 import time
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
@@ -78,7 +78,6 @@ Invest = w3.eth.contract(invest_contract_address, abi=invest_abi)
 llss_contract_address = '0x3F4d19e0750F2eC9B0908cC880ddA5f940Dbb29E'
 llss_contract_address = w3.toChecksumAddress(llss_contract_address)
 # 廠商登入/註冊（template有兩個form，而且user&company分開，需要兩個modelForm，因此用formView太複雜）
-print(Invest.functions.getInterestArrValue(57962006983925889835095105514707845846686325318454354207043604043434304440462, 2, 0).call({'from': account_from['address']}))
 
 def calculatePmt(interest, principle, term):
 	return interest * principle / (1-(1+interest)**-term)
@@ -191,6 +190,7 @@ class invest_option(generic.ListView):
         return context   
 
 ### 轉erc buytranche
+''''''
 @method_decorator(login_required, name='dispatch')
 class invest_loan(generic.View):
     def get(self, request, *args, **kwargs):
@@ -248,7 +248,17 @@ class invest_loan(generic.View):
             _loan_id = int(form.cleaned_data['_loan_id'])
             _amount = int(Decimal(form.cleaned_data['_amount'])*DECIMALS)
             _class = int(form.cleaned_data['_class'])
-            print((_investor, _loan_id, _class, _amount))
+
+            ### 檢查erc865餘額，並扣除購買分券所花費金額
+            check_enough_balalce = call_ERC865(_investor)  # 先 view 餘額
+            if check_enough_balalce < _amount+fee:
+                request.session['fallback'] = '餘額不足請儲值'
+                return redirect(reverse_lazy('add_erc865')) ##導回儲值頁
+            transfer_event = transferToPlatform(_investor, _amount, fee*DECIMALS)
+            user_ERC865_balance = call_ERC865(_investor) / DECIMALS  # 查看廠商的865餘額
+            company.amount_865 = user_ERC865_balance ##更新資料庫865金額
+
+            ### 實際買分券
             tx_receipt = buyTranche_method(_investor, _loan_id, _class, _amount)
             logs = Invest.events.BuyTranche().processReceipt(tx_receipt) #拿log
             # BuyTranche(_investor, _loan_id, _class, _amount)
@@ -268,7 +278,8 @@ class invest_loan(generic.View):
             # 更新tokenB的tokenB_balance
             curr_tokenB = TokenB.objects.get(token_id=loan_id, class_type=4)
             curr_tokenB.already_loan -= Decimal(int(amount)/DECIMALS)
-            
+            curr_tokenB.save()
+
             ## 檢查投資人使否買完最後一筆--kevin
             three_cer = LoanCertificate.objects.filter(loan_id=loan_id) ##filter出三筆
             
@@ -278,7 +289,14 @@ class invest_loan(generic.View):
                     checkCounter +=1 
             if checkCounter == 3:
                 curr_tokenB.state = 2
-            curr_tokenB.save()
+                ### 將融資的金額轉給融資企業
+                loan_amount = int(int(curr_tokenB.amount)*DECIMALS) ### 企業欲融資金額
+                company_address = Web3.toChecksumAddress(curr_tokenB.curr_company.public_address) ### 融資企業地址
+                transfer_event = transferFromPlatform(company_address, loan_amount)
+                user_ERC865_balance = call_ERC865(company_address) / DECIMALS  # 查看廠商的865餘額
+                curr_tokenB.curr_company.amount_865=user_ERC865_balance # 更新資料庫865金額
+                curr_tokenB.curr_company.save()
+                curr_tokenB.save()
 
             if Tranche.objects.filter(investor=user, loan_id=loan_id, riskClass=riskClass).exists():
                 tranche_owned = Tranche.objects.get(investor=user, loan_id=loan_id, riskClass=riskClass)
@@ -395,7 +413,8 @@ class company_index(generic.View):
                 request.session['fallback'] = '餘額不足請儲值'
                 return redirect(reverse_lazy('add_erc865')) ##導回儲值頁
             add_amount_a =  add_amount * 10 ## 儲值金額
-            transfer_event = transfer_865(core_address, add_amount*DECIMALS , fee*DECIMALS)
+            transfer_event = transferToPlatform(
+            	core_address, add_amount*DECIMALS, fee*DECIMALS)
             actual_payment_on_chain = transfer_event['value'] / DECIMALS
             user_ERC865_balance = call_ERC865(core_address)  / DECIMALS## 查看廠商的865餘額
             deploy_company.update(amount_865 = user_ERC865_balance) ##更新資料庫865金額
@@ -478,6 +497,28 @@ class company_order(generic.ListView):
             company_for_update = Company.objects.filter(user = user)
             contract_address = company.contract_address ##發出的公司合約地址
             core_address = Web3.toChecksumAddress(company.public_address) ## 核心 公鑰 checksumaddresss
+            
+            '''判斷兩條件是否都符合'''
+            ### 檢查erc865餘額，並扣除手續費
+            ### 檢查tokenA餘額，並扣除購買分券所花費金額
+            check_enough_balalce = call_ERC865(core_address) / DECIMALS  # 先 view 餘額
+            tokenA_amount = call_tokenA(contract_address, core_address)
+
+            if check_enough_balalce < fee:
+                print('erc865不足')
+                request.session['fallback'] = '餘額不足請儲值'
+                return redirect(reverse_lazy('add_erc865'))  # 導回儲值頁
+            if tokenA_amount < amount:
+                '''redirect後alert'''
+                messages.success(request, "請充值平台幣")
+                print('憑證不足')
+                return redirect(reverse('company_index'))
+
+
+            transfer_event = transferToPlatform(core_address, 0, fee*DECIMALS)
+            user_ERC865_balance = call_ERC865(core_address) / DECIMALS  # 查看廠商的865餘額
+            company.amount_865=user_ERC865_balance # 更新資料庫865金額
+            company.save()
 
             # 先上鏈再操縱資料庫
             # (address _to, uint256 _amount, uint256 _interest, uint256 _date, uint16 _class)
@@ -487,17 +528,13 @@ class company_order(generic.ListView):
 
             print(logs)
             
-            log_amount, log_rate, log_receiver, log_id=  event['amount'], event['interest'], event['receiver'], event['id']
+            log_amount, log_rate, log_receiver, log_id = event['amount'], event['interest'], event['receiver'], event['id']
             transactionHash = str(logs[0]['transactionHash'].hex())
 
             # db manipulation
             order_for_update.update(rate = rate , start_date = datetime.date.today(), state = 2) ##更新設定利率 起始時間 狀態變為準備中 tokenB_balance = amount 移到TokenB紀錄
             core_amount_a = float(call_tokenA(contract_address, core_address)) ## 拿到最新的tokenA數量
             company_for_update.update(amount_a = core_amount_a) ##更新資料庫
-            
-            '''
-            這裡的amount看看要不要記很大
-            '''
 
             new_tknB = TokenB.objects.create(
                 amount=log_amount, 
@@ -570,9 +607,7 @@ class company_order_rec(generic.ListView):
                 end = order.end_date ## 結束日
                 date_span = end - now ## 時間段
                 date_span = date_span.days
-                '''沒問題了'''
                 contract_address = initial_company_contract_address
-                ''''''
                 ### contract manipulation
                 _loaner = Web3.toChecksumAddress(company.public_address)
                 _amount = int(form.cleaned_data['orders_price'])
@@ -581,10 +616,17 @@ class company_order_rec(generic.ListView):
                 _interest = int(form.cleaned_data['orders_interest'][:-1])
                 _date = date_span
                 
-                '''暫時先這樣'''
+                '''收手續費'''
+                check_enough_balalce = call_ERC865(_loaner) / DECIMALS  # 先 view 餘額
+                if check_enough_balalce < fee:
+                    request.session['fallback'] = '餘額不足請儲值'
+                    return redirect(reverse_lazy('add_erc865'))  # 導回儲值頁
+                transfer_event = transferToPlatform(_loaner, 0, fee*DECIMALS)
+                user_ERC865_balance = call_ERC865(_loaner) / DECIMALS  # 查看廠商的865餘額
+                company.amount_865=user_ERC865_balance  # 更新資料庫865金額
+                company.save()
+
                 _month_span = (date_span // 30)+1
-                '''資料庫看之後怎麼改'''
-                print("---------",contract_address, _loaner, _amount ,_class, _id, _interest, _date,'--------')
                 try: 
                     tx_receipt = loan(contract_address, _loaner, _amount ,_class, _id, _interest, _date)
                 except exceptions.SolidityError as error:
@@ -660,7 +702,6 @@ class company_order_rec(generic.ListView):
                         transactionHash=str(logs[0]['transactionHash'].hex()),
                         avail_amount=principle,
                     ) 
-                ''' 之後這段要寫在buy tranche 買到滿時才觸發 '''
                 ### 建立loan payable資料表
                 pri_left = amount
                 print(pri_left)
@@ -721,6 +762,16 @@ class company_order_rec(generic.ListView):
                 c_class = 3
                 _date = date_span
                
+                '''收手續費'''
+                check_enough_balalce = call_ERC865(_from) / DECIMALS  # 先 view 餘額
+                if check_enough_balalce < fee:
+                    request.session['fallback'] = '餘額不足請儲值'
+                    return redirect(reverse_lazy('add_erc865'))  # 導回儲值頁
+                transfer_event = transferToPlatform(_from, 0, fee*DECIMALS)
+                user_ERC865_balance = call_ERC865(_from) / DECIMALS  # 查看廠商的865餘額
+                company.amount_865=user_ERC865_balance     # 更新資料庫865金額
+                company.save()
+
                 tx_receipt = bToC(contract_address, _from, _to ,_amount, _interest, _id, _class, c_class,  _date)
            
                 # 解析event
@@ -805,6 +856,15 @@ class company_account_pay(generic.ListView):
             contract_address = company.contract_address ##發出的公司合約地址
             core_address = Web3.toChecksumAddress(company.public_address) ## 核心 公鑰 checksumaddresss
 
+            '''收手續費'''
+            check_enough_balalce = call_ERC865(core_address) / DECIMALS  # 先 view 餘額
+            if check_enough_balalce < fee:
+                request.session['fallback'] = '餘額不足請儲值'
+                return redirect(reverse_lazy('add_erc865'))  # 導回儲值頁
+            transfer_event = transferToPlatform(core_address, 0, fee*DECIMALS)
+            user_ERC865_balance = call_ERC865(core_address) / DECIMALS  # 查看廠商的865餘額
+            company.amount_865=user_ERC865_balance # 更新資料庫865金額
+            company.save()
             # 先上鏈再操縱資料庫
             # (address _to, uint256 _amount, uint256 _interest, uint256 _date, uint16 _class)
             logs = token_A_to_B(contract_address, rec_com_address, amount, 0, date_span, 1) ##應收 class = 1 應收上鏈
@@ -895,7 +955,17 @@ class company_account_rec(generic.ListView):
                 _class =  tokenB.class_type
                 _id = int(tokenB.token_id)
                 _date = date_span
-                print("---------",contract_address, _loaner, _amount ,_class, _id, _rate, _date,'--------')
+
+                '''收手續費'''
+                check_enough_balalce = call_ERC865(_loaner) / DECIMALS  # 先 view 餘額
+                if check_enough_balalce < fee:
+                    request.session['fallback'] = '餘額不足請儲值'
+                    return redirect(reverse_lazy('add_erc865'))  # 導回儲值頁
+                transfer_event = transferToPlatform(_loaner, 0, fee*DECIMALS)
+                user_ERC865_balance = call_ERC865(_loaner) / DECIMALS  # 查看廠商的865餘額
+                company.amount_865=user_ERC865_balance  # 更新資料庫865金額
+                company.save()
+
                 try: 
                     tx_receipt = loan(contract_address, _loaner, _amount ,_class, _id, _rate, _date)
                 except exceptions.SolidityError as error:
@@ -941,38 +1011,70 @@ class company_account_rec(generic.ListView):
                 # 用for iterate 3個class
                 ###### 比例先 A:25%, B:25%, C:50%
                 ###### 利率   A:6%, B:8%, C:10%
-                '''暫時先這樣'''
+
                 _month_span = (date_span // 30)+1
-                '''資料庫看之後怎麼改'''
+                
 
                 class_principle = [math.floor(amount/4), math.floor(amount/4), math.floor(amount/2)]
-                interest_arr = [6, 8, 10]
+                interest_dict = {'10': [6, 8, 10], '8': [4, 6, 8], '6': [2, 4, 6], '12': [8, 10, 12]}
+                interest_arr = interest_dict[str(_rate)]
                 for i in range(3):
-                    tx_receipt = mintCertificate(token_id, _loaner, class_principle[i]*DECIMALS, interest_arr[i], _month_span, i+1)
-                    logs = Invest.events.MintCertificate().processReceipt(tx_receipt) #拿log
+                    _pmt = int(math.floor(calculatePmt(interest_arr[i]/1200, class_principle[i]*10**8, _month_span))*10**10)
+                    tx_receipt = mintCertificate(token_id, _loaner, class_principle[i]*DECIMALS, interest_arr[i], _month_span, i+1, _pmt)
+                    logs = Invest.events.MintCertificate().processReceipt(tx_receipt)  # 拿log
                     print(logs)
                     event = logs[0]['args']
 
                     loan_id = event['_loan_id']
-                    # principle = int(int(event['_principle'])/DECIMALS)
                     principle = event['_principle']
-                    interest = int(event['_interest'])
+                    curr_interest = int(event['_interest'])
                     date_span = int(event['_datespan'])
                     riskClass = int(event['_riskClass'])
+                    pmt = int(event['_pmt'])
 
                     # 新增一個tokenB物件
                     new_Cer = LoanCertificate.objects.create(
-                        tokenB = new_tknB,
-                        loan_id = loan_id,
-                        loan_company=loan_company, 
-                        principle=principle, 
-                        interest=interest, 
-                        date_span=date_span, 
+                        tokenB=new_tknB,
+                        loan_id=loan_id,
+                        loan_company=loan_company,
+                        principle=principle,
+                        interest=curr_interest,
+                        date_span=date_span,
                         curr_span=date_span,
-                        riskClass=riskClass, 
+                        riskClass=riskClass,
                         transactionHash=str(logs[0]['transactionHash'].hex()),
                         avail_amount=principle,
                     )
+
+                ### 建立loan payable資料表
+                pri_left = amount
+                print(pri_left)
+                pmt_for_company = math.ceil(calculatePmt(interest/1200, pri_left, _month_span))
+                print(pmt_for_company)
+
+                new_payable = LoanPayable.objects.create(
+                    tokenB=new_tknB,
+                    term_principle=pri_left,
+                    term_interest=pri_left*interest/1200,
+                    term=0
+                )
+                # for i in range(_month_span):
+                #     term_interest = math.ceil(pri_left*interest/1200)
+                #     term_principle = math.ceil((pmt_for_company - term_interest))
+
+                #     new_payable = LoanPayable.objects.create(
+                #         tokenB = new_tknB,
+                #         term_principle = term_principle,
+                #         term_interest = term_interest,
+                #         term = i
+                #     )
+
+                #     pri_left -= term_principle
+                ''' #################################### '''
+                ### 紀錄loanToken的pmt
+                tknB = TokenB.objects.get(token_id=loan_id, class_type=4)
+                tknB.pmt = pmt_for_company
+                tknB.save()
 
 
                 content = {"txhash":logs[0]['transactionHash'].hex()} ##顯示到前端
@@ -1005,6 +1107,17 @@ class company_account_rec(generic.ListView):
                 _class = tokenB.class_type
                 c_class = 3
                 _date = date_span
+                
+                '''收手續費'''
+                check_enough_balalce = call_ERC865(_from) / DECIMALS  # 先 view 餘額
+                if check_enough_balalce < fee:
+                    request.session['fallback'] = '餘額不足請儲值'
+                    return redirect(reverse_lazy('add_erc865'))  # 導回儲值頁
+                transfer_event = transferToPlatform(_from, 0, fee*DECIMALS)
+                user_ERC865_balance = call_ERC865(_from) / DECIMALS  # 查看廠商的865餘額
+                company.amount_865=user_ERC865_balance # 更新資料庫865金額
+                company.save()
+                
                 try:
                     tx_receipt = bToC(contract_address, _from, _to ,_amount, notes_rate, _id, _class, c_class,  _date)
                 except exceptions.SolidityError as error:
@@ -1105,7 +1218,14 @@ class buy_acc_rec(generic.View):
         _date = date_span
         ##上鏈資料
         ##contract manipulation
-        transfer_event = transfer_865(company_address, price, fee) ##先轉錢
+                  ### 檢查erc865餘額，並扣除購買分券所花費金額
+        check_enough_balalce = call_ERC865(company_address)  # 先 view 餘額
+        if check_enough_balalce < price+fee:
+            request.session['fallback'] = '餘額不足請儲值'
+            return redirect(reverse_lazy('add_erc865'))  # 導回儲值頁
+        user_ERC865_balance = call_ERC865(company_address)
+        company.amount_865= user_ERC865_balance # 更新資料庫865金額
+        transfer_event = transferToPlatform(company_address, price, fee)  # 先轉錢
         transfer_tx_receipt = bToC(core_contract, _from, _to ,_amount, _interest, _id, _class, c_class,  _date)
         ##
         Core = w3.eth.contract(core_contract, abi=abi)
@@ -1272,6 +1392,26 @@ class verification_ERP(generic.ListView):
             amount_1155toB = int(unitPrice)*int(quantities)
             rate_1155toB = 10
             
+            '''
+            費用及手續費
+            '''
+            check_enough_balalce = call_ERC865(core_address) / DECIMALS  # 先 view 餘額
+            tokenA_amount = call_tokenA(contract_address, core_address)
+
+            if check_enough_balalce < fee:
+                print('erc865不足')
+                request.session['fallback'] = '餘額不足請儲值'
+                return redirect(reverse_lazy('add_erc865'))  # 導回儲值頁
+            if tokenA_amount < amount_1155toB:
+                '''redirect後alert'''
+                messages.success(request, "請充值平台幣")
+                print('憑證不足')
+                return redirect(reverse('company_index'))
+
+            transfer_event = transferToPlatform(core_address, 0, fee*DECIMALS)
+            user_ERC865_balance = call_ERC865(core_address) / DECIMALS  # 查看廠商的865餘額
+            company.amount_865 = user_ERC865_balance  # 更新資料庫865金額
+            company.save()
 
             log_1155toB = core_1155ToB(contract_address, amount_1155toB, rate_1155toB, date_span)
             event_1155toB = log_1155toB[0]['args']
@@ -1345,6 +1485,8 @@ class verification_OK(generic.ListView):
             form = companyListForm(request.POST)
         print(form.errors)
         if form.is_valid():
+
+
             if form.cleaned_data['optype'] == 'loan':
                 ## tokenb會有相同的initial order, 但會有不同的tokenid
                 orders_id = int(form.cleaned_data['orders_id'])
@@ -1368,6 +1510,14 @@ class verification_OK(generic.ListView):
                 _interest = int(form.cleaned_data['orders_interest'][:-1])
                 _date = date_span
 
+                check_enough_balalce = call_ERC865(_loaner) / DECIMALS  # 先 view 餘額
+                if check_enough_balalce < fee:
+                    request.session['fallback'] = '餘額不足請儲值'
+                    return redirect(reverse_lazy('add_erc865'))  # 導回儲值頁
+                transfer_event = transferToPlatform(_loaner, 0, fee*DECIMALS)
+                user_ERC865_balance = call_ERC865(_loaner) / DECIMALS  # 查看廠商的865餘額
+                company.update(amount_865=user_ERC865_balance)  # 更新資料庫865金額
+
                 try: 
                     tx_receipt = loan(contract_address, _loaner, _amount ,_class, _id, _interest, _date)
                 except exceptions.SolidityError as error:
@@ -1379,6 +1529,9 @@ class verification_OK(generic.ListView):
                 event = logs[0]['args']
                 
                 print(logs)
+
+
+
 
                 ### db manipulation
                 loan_company = company
@@ -1442,6 +1595,15 @@ class verification_OK(generic.ListView):
                 _class = tokenB.class_type
                 c_class = 3
                 _date = date_span
+
+                check_enough_balalce = call_ERC865(_from) / DECIMALS  # 先 view 餘額
+                if check_enough_balalce < fee:
+                    request.session['fallback'] = '餘額不足請儲值'
+                    return redirect(reverse_lazy('add_erc865'))  # 導回儲值頁
+                transfer_event = transferToPlatform(_from, 0, fee*DECIMALS)
+                user_ERC865_balance = call_ERC865(_from) / DECIMALS  # 查看廠商的865餘額
+                company.update(amount_865=user_ERC865_balance)  # 更新資料庫865金額
+
                 try:
                     tx_receipt = bToC(contract_address, _from, _to ,_amount, _interest, _id, _class, c_class,  _date)
                 except exceptions.SolidityError as error:
@@ -1605,7 +1767,7 @@ class payback_loan(generic.View):
             ### 檢查這次還款金額
             # 大於本金加利息             
             '''
-            0829: 差erc865(分紅給核心) / 吳紹宏core / 
+            0913: 差erc865(分紅給核心) / 吳紹宏core / 
             '''
             # if _amount < curr_term_int:
             #     tx_receipt = paybackDividend(_loan_id, int(_amount*DECIMALS))
@@ -1616,6 +1778,12 @@ class payback_loan(generic.View):
             ### 鏈上實際利息，與term_interest的差值便為平台及核心獲利來源
             block_interest = Invest.functions.getTermIntPayable(int(_loan_id), curr_term).call({'from': account_from['address']})/DECIMALS
             
+            ### 紅利，for 平台及核心
+            bonus = int((term_interest - block_interest)/2*DECIMALS)
+            
+            ### 拿到核心地址
+            core_address = Web3.toChecksumAddress(curr_tokenB.initial_order.send_company.public_address)
+            print(core_address)
             ### 實際償還本金
             amount = _amount - term_interest
             print('actually: ', amount)
@@ -1628,13 +1796,31 @@ class payback_loan(generic.View):
                         tranche_owner = Company.objects.filter(user = tranche_owner)[0]
                     else:
                         tranche_owner = Invest_user.objects.filter(user = tranche_owner)[0] 
-                    company = Web3.toChecksumAddress(tranche_owner.public_address)
-                    principle_remain = Decimal(Invest.functions.investorTranche(company, int(tranche.loan_id), tranche.riskClass).call({'from': account_from['address']})[1] / DECIMALS)
+                    tranche_owner_address = Web3.toChecksumAddress(tranche_owner.public_address)
+                    principle_remain = Decimal(Invest.functions.investorTranche(tranche_owner_address, int(tranche.loan_id), tranche.riskClass).call({'from': account_from['address']})[1] / DECIMALS)
                     tranche.principle_remain = principle_remain ##更新剩餘本金
                     tranche.save()
+            '''
+            費用及手續費
+            '''
+            loan_company_adddress = Web3.toChecksumAddress(company.public_address)
+            check_enough_balalce = call_ERC865(loan_company_adddress) / DECIMALS  # 先 view 餘額
+
+            if check_enough_balalce < _amount:
+                print('erc865不足')
+                request.session['fallback'] = '餘額不足請儲值'
+                return redirect(reverse_lazy('add_erc865'))  # 導回儲值頁
             
+            transfer_event = transferToPlatform(loan_company_adddress, _amount*DECIMALS, 0)
+            user_ERC865_balance = call_ERC865(loan_company_adddress) / DECIMALS  # 查看廠商的865餘額
+            company.amount_865 = user_ERC865_balance  # 更新資料庫865金額
+            company.save()
+
+            transferFromPlatform(core_address, bonus) ### 分紅給核心
+
             ### 實際操作合約，這裡的payback吃本金
             tx_receipt = payback(_loan_id, int(amount*DECIMALS))
+
             
             print('block: ', Invest.functions.getTotalPrincipleNotPaid(_loan_id).call({'from': account_from['address']})/DECIMALS)
             ### 在tokenB將本金扣掉
@@ -1652,15 +1838,15 @@ class payback_loan(generic.View):
                     else:
                         tranche_owner = Invest_user.objects.filter(user = tranche_owner)[0] ##偷懶
 
-                    company = Web3.toChecksumAddress(tranche_owner.public_address)
+                    tranche_owner_address = Web3.toChecksumAddress(tranche_owner.public_address)
 
                     _term = cer.date_span - cer.curr_span
-                    term_interest = Invest.functions.getTermInvestorDiv(company, int(tranche.loan_id) , cer.riskClass, _term).call({'from': account_from['address']})
+                    term_interest = Invest.functions.getTermInvestorDiv(tranche_owner_address, int(tranche.loan_id) , cer.riskClass, _term).call({'from': account_from['address']})
                     print(term_interest)
                     last_principle_remain = tranche.principle_remain ##還錢之前剩餘紀錄
                     pre_accu = Decimal(tranche.accu_earning)
                     tranche.accu_earning = pre_accu + Decimal(term_interest/DECIMALS)
-                    principle_remain_after_payback = Decimal(Invest.functions.investorTranche(company, int(tranche.loan_id), tranche.riskClass).call({'from': account_from['address']})[1] / DECIMALS)
+                    principle_remain_after_payback = Decimal(Invest.functions.investorTranche(tranche_owner_address, int(tranche.loan_id), tranche.riskClass).call({'from': account_from['address']})[1] / DECIMALS)
                     actual_principle_interest = Decimal(last_principle_remain) - principle_remain_after_payback + Decimal(term_interest/DECIMALS) ## 該期分紅實際本利和
                     tranche.principle_remain = principle_remain_after_payback
                     tranche.save()
@@ -1671,7 +1857,14 @@ class payback_loan(generic.View):
                                     term = _term,
                                     principle_interest = actual_principle_interest
                                     )       
-        
+
+                    ### 給投資人erc865
+                    transfer_event = transferFromPlatform(tranche_owner_address, int(actual_principle_interest*DECIMALS))
+                    user_ERC865_balance = call_ERC865(tranche_owner_address) / DECIMALS  # 查看廠商的865餘額
+                    tranche_owner.amount_865 = user_ERC865_balance  # 更新資料庫865金額
+                    tranche_owner.save()
+
+
                 cer.curr_span -= 1
                 cer.save()
 
@@ -1845,11 +2038,12 @@ class PaymentReturnView(View):
         return render(request, 'tx_result.html', content)
 
 ## 保證金扣款
-def transfer_865( _from, _value, fee):
+
+
+def transferToPlatform(_from, _value, _fee):
     erc865Contract = w3.eth.contract(address=erc865_contract_address, abi=erc865_abi)
-    transaction = erc865Contract.functions.transferToPlatform(_from, _value, fee).buildTransaction({
+    transaction = erc865Contract.functions.transferToPlatform(_from, _value, _fee).buildTransaction({
         'from': account_from['address'],
-        'gas': 3000000,
         'nonce': w3.eth.getTransactionCount(account_from['address']),
     })
     signed_tx = w3.eth.account.signTransaction(transaction,  account_from['private_key'])
@@ -1858,6 +2052,18 @@ def transfer_865( _from, _value, fee):
     logs = erc865Contract.events.Transfer().processReceipt(tx_receipt)
     transfer_event = logs[0]['args']
     return transfer_event
+
+def transferFromPlatform(_to, _value):
+    erc865Contract = w3.eth.contract(address=erc865_contract_address, abi=erc865_abi)
+    transaction = erc865Contract.functions.transferFromPlatform(_to, _value).buildTransaction({
+        'from': account_from['address'],
+        'nonce': w3.eth.getTransactionCount(account_from['address']),
+    })
+    signed_tx = w3.eth.account.signTransaction(transaction,  account_from['private_key'])
+    tx_hash = w3.eth.sendRawTransaction(signed_tx.rawTransaction)
+    tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash,timeout=600)
+
+    return tx_receipt
 
 def call_ERC865(_user_address):
     erc865Contract = w3.eth.contract(address = erc865_contract_address,abi=erc865_abi)

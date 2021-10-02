@@ -35,7 +35,7 @@ contract Core{
     address public core; // 合約的持有者
     uint256 total_amount_A; //紀錄取得的tokenA總數
     uint256 total_amount_B; //紀錄發出的tokenB總數
-    address platform =  0x5B38Da6a701c568545dCfcB03FcB875f56beddC4; //部署人（平台）
+    address platform =  0xA3E58464444bC66b5bb7FB8e76D7F4fDE52126F2; //部署人（平台）
     //0x5B38Da6a701c568545dCfcB03FcB875f56beddC4
     
     //event 的部分
@@ -142,7 +142,7 @@ contract Core{
         emit tokenB_event(_from, _to, _tokenC.amount, _tokenC.class, _tokenC.id, _tokenC.interest, _tokenC.date);
         
     }
-    function _findTransaction(address _from, uint16 _class, uint _id) view internal onlyPlatform returns(uint256){
+    function _findTransaction(address _from, uint16 _class, uint _id) view public onlyPlatform returns(uint256){
         //iterator用時間（id）來尋找要用來操作的那筆TokenB
         uint256 transaction_time =_getTransaction(_from,_class); //這個是此地址在平台使用哪種Class的操作次數
         for (uint i = 1; i < transaction_time+1; i++){

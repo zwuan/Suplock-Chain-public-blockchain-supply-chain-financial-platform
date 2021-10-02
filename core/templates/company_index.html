@@ -152,7 +152,17 @@
 {% endif %}
 {% include 'footer.html' %} 
 <script type="text/javascript" src="{%static 'js/check_user.js' %}"></script>
-<script>
+<script type="text/javascript">
+    // 如果tokenA不夠，則alert
+    $(function () {
+        {% if messages %}
+        //whatever conditions and js code
+            {% for message in messages %}
+                alert('{{message}}');
+            {% endfor %}
+        {% endif %}
+    });
+    
     $(document).ready(async function () {
 
         $('#send').on('click',async  function (e) {
