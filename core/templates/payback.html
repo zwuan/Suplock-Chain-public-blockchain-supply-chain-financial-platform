@@ -137,17 +137,16 @@
         $('#ref_id' + i).val(ref_id);
   
     }
-
+    $('.make_id').on('click', function (e) {
     for(let i = 1; i < count + 1; i++){
         if ($("#state-"+i).text() == "融資成功" ){
-        $('.make_id').on('click', function (e) {
             let index = $(this).attr('id');
             pop_div = $('#pop_div' + index);
             pop_div.addClass('active');
             overlay.classList.add('active');
-        });
         }
     }
+    });
 
 
     overlay.addEventListener('click', () => {

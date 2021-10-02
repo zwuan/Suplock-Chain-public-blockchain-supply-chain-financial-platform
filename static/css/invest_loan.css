@@ -73,8 +73,8 @@ input::placeholder{
     width: 80%;
 }
 .outline{
-    border:1.5px solid #ff9100;
-    transition: 200ms ease-in;
+    border:2px solid #ff9100;
+    transition: 200ms ease-in-out;
 }
 .buy_all{
     margin-left: 10px;

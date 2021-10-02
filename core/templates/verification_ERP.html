@@ -149,10 +149,6 @@
             price.value = document.getElementById('price_id-'+i).innerHTML;
         });
     }
-    $('#send').on('click', function(e){
-        waiting.style.display = 'flex';
-        fade.style.display = 'none';
-    });
     $(document).ready(async function () {
         $('#send').on('click',async  function (e) {
             var curr_accounts = await ethereum.request({ method: 'eth_requestAccounts' });

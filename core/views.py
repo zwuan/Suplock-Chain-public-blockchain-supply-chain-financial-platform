@@ -217,7 +217,7 @@ class invest_loan(generic.View):
         trancheA = LoanCertificate.objects.filter(loan_id = tokenB.token_id)[0]
         context['a_interest'] = trancheA.interest
         context['term'] = json.dumps(trancheA.date_span)
-        
+
         trancheB = LoanCertificate.objects.filter(loan_id = tokenB.token_id)[1]
         context['b_interest'] = trancheB.interest
         
@@ -248,7 +248,7 @@ class invest_loan(generic.View):
             _loan_id = int(form.cleaned_data['_loan_id'])
             _amount = int(Decimal(form.cleaned_data['_amount'])*DECIMALS)
             _class = int(form.cleaned_data['_class'])
-
+            print((_investor, _loan_id, _class, _amount))
             tx_receipt = buyTranche_method(_investor, _loan_id, _class, _amount)
             logs = Invest.events.BuyTranche().processReceipt(tx_receipt) #拿log
             # BuyTranche(_investor, _loan_id, _class, _amount)
@@ -278,7 +278,6 @@ class invest_loan(generic.View):
                     checkCounter +=1 
             if checkCounter == 3:
                 curr_tokenB.state = 2
-            print(checkCounter)
             curr_tokenB.save()
 
             if Tranche.objects.filter(investor=user, loan_id=loan_id, riskClass=riskClass).exists():
@@ -1339,12 +1338,12 @@ class verification_OK(generic.ListView):
         user = self.request.user
         company = Company.objects.filter(user = user)[0]
         optype = request.POST['optype'] # optype decides which form to catch
-
+       
         if optype == 'loan':
             form = set_loan(request.POST)
         elif optype =='bToC':
             form = companyListForm(request.POST)
-
+        print(form.errors)
         if form.is_valid():
             if form.cleaned_data['optype'] == 'loan':
                 ## tokenb會有相同的initial order, 但會有不同的tokenid
@@ -1369,7 +1368,6 @@ class verification_OK(generic.ListView):
                 _interest = int(form.cleaned_data['orders_interest'][:-1])
                 _date = date_span
 
-               
                 try: 
                     tx_receipt = loan(contract_address, _loaner, _amount ,_class, _id, _interest, _date)
                 except exceptions.SolidityError as error:
@@ -1534,7 +1532,7 @@ class payback_loan(generic.View):
 
         former_token = TokenB.objects.filter(token_id__in = parent_tokenB) ##!!!!來自同一筆會被算成一筆(Solved) 
         former_token_list = []
-        print(parent_tokenB)
+    
         for ele in parent_tokenB:
             former_token = TokenB.objects.get(token_id = ele)
             former_token_list.append(former_token)
