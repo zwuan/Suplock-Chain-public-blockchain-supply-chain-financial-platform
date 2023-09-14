@@ -1324,7 +1324,7 @@ class wallet(generic.View):
         company = Company.objects.get(user = request.user)
         core_address = company.public_address ##公司錢包地址
         core_address = Web3.toChecksumAddress(core_address) #轉換成checksum address
-        amount_865 = call_ERC865(core_address)  / DECIMALS ## 先 view 餘額
+        amount_865 = int(call_ERC865(core_address)  / DECIMALS) ## 先 view 餘額
         core_amount_a = float(call_tokenA(company.contract_address, core_address))
         company_all_tokenB = TokenB.objects.filter(Q(curr_company = company) & (Q(class_type = 1)|Q(class_type = 2)| Q(class_type = 3)|Q(class_type = 5)))
         sum_receive_order = company_all_tokenB.aggregate(tokenB_sum = Sum('tokenB_balance'))

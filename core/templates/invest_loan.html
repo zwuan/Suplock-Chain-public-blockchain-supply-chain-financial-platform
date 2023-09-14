@@ -72,7 +72,7 @@
         return x;
     }      
     $('#amount').on('input',function(){
-        if ($('#amount').val() < $('#limit').val()/DECIMALS){
+        if ($('#amount').val() < $('#limit').val()/DECIMALS +1){
             if ($('#amount').val().length){
                 $('#btn-real').prop('disabled', false);
                 $('#btn-real').css('display', "block");
